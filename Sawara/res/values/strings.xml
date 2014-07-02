@@ -1,5 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Sawara</string>
+    <string name="app_name">さわらプロジェクト</string>
+    <string name="title_text">さわらプロジェクト</string>
+    <string name="search_button_text">さがす</string>
+    <string name="register_button_text">とうろくする</string>
 
 </resources>
