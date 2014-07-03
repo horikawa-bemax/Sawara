@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="base_color">#F375</color>
-    <color name="back_color">#FBC8</color>
+    <color name="main">#F375</color>
+    <color name="base">#FBC8</color>
+    <color name="accent">#f943</color>
+    <color name="base_click">#F9a6</color>
 </resources>
