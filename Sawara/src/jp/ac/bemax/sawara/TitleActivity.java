@@ -1,6 +1,7 @@
 package jp.ac.bemax.sawara;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -71,6 +72,9 @@ public class TitleActivity extends Activity implements OnClickListener{
 		switch(v.getId()){
 		case R.id.search_button:
 			// さがすボタンがクリックされたとき
+			
+			Intent intent = new Intent(this, SearchActivity.class);
+			startActivity(intent);
 			
 			/* ログ出力 */
 			Log.d("clicked Button","SearchButton");

@@ -4,5 +4,11 @@
     <string name="app_name">ぼくの、わたしの言葉事典</string>
     <string name="search_button_text">さがす</string>
     <string name="register_button_text">とうろくする</string>
+    <string name="title_activity_search">SearchActivity</string>
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>
