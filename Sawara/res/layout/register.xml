@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/base"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -28,6 +29,7 @@
 
             <Button
                 android:id="@+id/button1"
+                style="@style/sawaraButton"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
@@ -37,6 +39,7 @@
 
             <Button
                 android:id="@+id/button3"
+                style="@style/sawaraButton"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
@@ -76,10 +79,12 @@
                 android:id="@+id/editText1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="3" />
+                android:layout_weight="3"
+                android:background="@color/white" />
 
             <Button
                 android:id="@+id/button2"
+                style="@style/sawaraButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -94,6 +99,7 @@
 
             <Button
                 android:id="@+id/button4"
+                style="@style/sawaraButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/register" />
