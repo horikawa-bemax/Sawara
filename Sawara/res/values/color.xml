@@ -5,4 +5,5 @@
     <color name="accent">#ffa3</color>
     <color name="base_click">#f9a6</color>
     <color name="button_text">#f397</color>
+    <color name="dummy">#faaa</color>
 </resources>

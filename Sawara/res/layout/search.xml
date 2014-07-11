@@ -3,13 +3,16 @@
     android:id="@+id/LinearLayout2"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/base"
     android:orientation="vertical"
     tools:context="${packageName}.${activityClass}" >
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp" >
+
     </ListView>
 
 </LinearLayout>

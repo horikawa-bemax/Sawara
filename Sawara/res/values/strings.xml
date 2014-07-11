@@ -10,5 +10,10 @@
     <string name="title_section3">Section 3</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="what_is_this">これはなに？</string>
+    <string name="take_picture">しゃしんをとる</string>
+    <string name="search_picture">しゃしんをさがす</string>
+    <string name="input_by_voice">こえでにゅうりょく</string>
+    <string name="register">とうろく</string>
 
 </resources>

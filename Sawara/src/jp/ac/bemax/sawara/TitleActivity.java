@@ -67,13 +67,14 @@ public class TitleActivity extends Activity implements OnClickListener{
 	 */
 	@Override
 	public void onClick(View v) {
+		Intent intent = new Intent();
 		
 		/* クリックされたボタンによって分岐 */
 		switch(v.getId()){
 		case R.id.search_button:
 			// さがすボタンがクリックされたとき
 			
-			Intent intent = new Intent(this, SearchActivity.class);
+			intent.setClass(this, SearchActivity.class);
 			startActivity(intent);
 			
 			/* ログ出力 */
@@ -82,6 +83,8 @@ public class TitleActivity extends Activity implements OnClickListener{
 			break;
 		case R.id.register_button:
 			// とうろくするボタンがクリックされたとき
+			intent.setClass(this, RegisterActivity.class);
+			startActivity(intent);
 			
 			/* ログ出力 */
 			Log.d("clicked Button","RegistarButton");
