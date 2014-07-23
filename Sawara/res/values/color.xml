@@ -6,4 +6,5 @@
     <color name="base_click">#f9a6</color>
     <color name="button_text">#f397</color>
     <color name="dummy">#faaa</color>
+    <color name="white">#ffff</color>
 </resources>
