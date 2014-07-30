@@ -10,4 +10,5 @@
     <string name="search_picture">しゃしんをさがす</string>
     <string name="input_by_voice">こえでにゅうりょく</string>
     <string name="register">とうろく</string>
+    <string name="take_movie_button_text">動画を撮る</string>
 </resources>

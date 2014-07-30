@@ -16,7 +16,7 @@
         <ImageView
             android:id="@+id/picture_image_view"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:padding="@dimen/small_padding"
             android:src="@drawable/dummy_image" />
@@ -36,6 +36,15 @@
                 android:drawableLeft="@android:drawable/ic_menu_camera"
                 android:padding="@dimen/small_padding"
                 android:text="@string/take_picture" />
+
+            <Button
+                android:id="@+id/take_movie_button"
+                style="@style/sawaraButton"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:drawableLeft="@android:drawable/ic_menu_camera"
+                android:text="@string/take_movie_button_text" />
 
             <Button
                 android:id="@+id/search_picture_button"
@@ -59,7 +68,8 @@
         <TableRow
             android:id="@+id/tableRow1"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+            android:layout_height="0dp"
+            android:layout_weight="1" >
 
             <TextView
                 android:id="@+id/textView1"
@@ -73,12 +83,13 @@
         <TableRow
             android:id="@+id/tableRow2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+            android:layout_height="0dp"
+            android:layout_weight="1" >
 
             <EditText
-                android:id="@+id/editText1"
+                android:id="@+id/item_name"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="3"
                 android:background="@color/white" />
 
@@ -86,7 +97,7 @@
                 android:id="@+id/button2"
                 style="@style/sawaraButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/input_by_voice" />
 
@@ -95,10 +106,11 @@
         <TableRow
             android:id="@+id/tableRow3"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+            android:layout_height="0dp"
+            android:layout_weight="1" >
 
             <Button
-                android:id="@+id/button4"
+                android:id="@+id/register_egister_button"
                 style="@style/sawaraButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
