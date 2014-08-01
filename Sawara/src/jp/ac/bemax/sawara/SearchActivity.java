@@ -11,13 +11,13 @@ public class SearchActivity extends Activity{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.search);
+		//setContentView(R.layout.search);
 		
 		/* データベースへのアクセスアダプター */
 		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
 		
 		/* listViewへの紐付け */
-		listView = (ListView)findViewById(R.id.listView);
+		//listView = (ListView)findViewById(R.id.listView);
 
 		/* データベースからグループリストを読み込んでlistViewに反映 */
 		ArrayAdapter<String> adp = new ArrayAdapter<String>(

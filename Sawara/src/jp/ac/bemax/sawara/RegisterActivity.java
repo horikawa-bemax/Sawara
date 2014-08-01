@@ -47,21 +47,13 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.register);
+		//setContentView(R.layout.register);
 		
 		/* レイアウトの紐付け */
-		pictureView = (ImageView)findViewById(R.id.picture_image_view);
-		takePictureBtn = (Button)findViewById(R.id.take_picture_button);
-		takeMovieBtn = (Button)findViewById(R.id.take_movie_button);
-		searchPictureBtn = (Button)findViewById(R.id.search_picture_button);
-		registerBtn = (Button)findViewById(R.id.register_egister_button);
-		itemName = (EditText)findViewById(R.id.item_name);
+
 		
 		/* ボタンにリスナを登録 */
-		takePictureBtn.setOnClickListener(this);
-		takeMovieBtn.setOnClickListener(this);
-		searchPictureBtn.setOnClickListener(this);
-		registerBtn.setOnClickListener(this);
+
 		
 		/* アイテム */
 		item = new Item(this);
@@ -71,29 +63,31 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	public void onClick(View v) {
 		Intent intent;
 		
+		/*
 		switch(v.getId()){
 		// 写真ボタン
 		case R.id.take_picture_button:
-			/* 端末にある静止画撮影アクティビティを呼び出す */
+			
+			// 端末にある静止画撮影アクティビティを呼び出す
 			intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 			
-			/* 対応するアクティビティが存在する */
+			// 対応するアクティビティが存在する
 			if(intent.resolveActivity(getPackageManager()) != null){
 				
-				/* 保存するファイル名を決定 */
+				// 保存するファイル名を決定
 				String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 				String imageFileName = "JPEG_" + timeStamp + "_";
 				
-				/* 外部ストレージのURLをゲット*/
+				// 外部ストレージのURLをゲット
 				File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 				
 				try {
-					/* 呼び出したインテントが、画像を保存するファイルを指定 */
+					//呼び出したインテントが、画像を保存するファイルを指定
 					pictureFile = File.createTempFile(imageFileName, ".jpg", dir);
 				
-					/* 画像ファイルの作成に成功した場合 */
+					// 画像ファイルの作成に成功した場合
 					if(pictureFile != null){
-						/* 保存先ファイルを指定して、インテントを呼ぶ */
+						// 保存先ファイルを指定して、インテントを呼ぶ
 						intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(pictureFile));
 						startActivityForResult(intent, TAKE_PICTURE);
 					}
@@ -105,30 +99,30 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			break;
 		// ムービーボタン
 		case R.id.take_movie_button:
-			/* 呼び出すインテントを指定 */
+			// 呼び出すインテントを指定
 			intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 			
 			
 			startActivityForResult(intent, TAKE_MOVIE);
 			break;
 		case R.id.register_egister_button:
-			/* データベースに登録 */
+			// データベースに登録
 			Editable edit = itemName.getText();
 			
-			/* 名前があって、画像が読み込まれているならば*/
+			// 名前があって、画像が読み込まれているならば
 			if(edit.length() > 0 && (item.getImage_url().length() > 0 || item.getMovie_url().length() > 0)){
-				/* itemに名前を設定する */
+				// itemに名前を設定する
 				item.setName(itemName.getText().toString());
 				
-				/* データベースに新規追加する */
+				// データベースに新規追加する
 				item.newItem();
 				
-				/* itemをリセットする */
+				// itemをリセットする 
 				item = new Item(this);
 				itemName.setText("");
 				pictureView.setImageResource(R.drawable.dummy_image);
 				
-				/* 登録完了のメッセージ */
+				// 登録完了のメッセージ
 				Toast.makeText(this, "登録しました", Toast.LENGTH_LONG).show();
 				
 			}else{
@@ -143,6 +137,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			}
 			break;
 		}
+		*/
 	}
 
 	/* (非 Javadoc)

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">ぼくの、わたしの言葉事典</string>
     <string name="search_button_text">さがす</string>
     <string name="register_button_text">とうろくする</string>
@@ -11,4 +12,7 @@
     <string name="input_by_voice">こえでにゅうりょく</string>
     <string name="register">とうろく</string>
     <string name="take_movie_button_text">動画を撮る</string>
+    <string name="title_activity_item">ItemActivity</string>
+    <string name="hello_world">Hello world!</string>
+
 </resources>
