@@ -1,5 +1,7 @@
 package jp.ac.bemax.sawara;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -14,6 +16,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -25,13 +28,8 @@ import android.widget.TextView;
  * 2014/07/02
  */
 public class HomeActivity extends Activity implements OnClickListener{
-	private final int MAPSIZE = 8;
-	
-	private LinearLayout[] boxs;
-	private ImageView[] imageMap;
-	private VTextView[] vTextMap;
-	
-	
+	private GridView gView;
+	private ArrayList<Item> items;
 	
 	/* (非 Javadoc)
 	 * コンストラクタ
@@ -42,53 +40,31 @@ public class HomeActivity extends Activity implements OnClickListener{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
 		
-		boxs = new LinearLayout[MAPSIZE];
-		imageMap = new ImageView[MAPSIZE];
-		vTextMap = new VTextView[MAPSIZE];
+		// ウィジェットを登録 
+		gView = (GridView)findViewById(R.id.gridView);	
 		
-		for(int i=0; i<MAPSIZE; i++){
-			boxs[i] = (LinearLayout)findViewById(getResources().getIdentifier("box"+i, "id", getPackageName()));
-			int s = boxs[i].getWidth();
-			
-			LinearLayout.LayoutParams imgParam = new LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT);
-			imgParam.weight = 1.0f;
-			imageMap[i] = new ImageView(this);
-			imageMap[i].setImageResource(R.drawable.friend);
-			imageMap[i].setScaleType(ScaleType.CENTER);
-			
-			LinearLayout.LayoutParams vtxParam = new LinearLayout.LayoutParams(80, LayoutParams.MATCH_PARENT);
-			vTextMap[i] = new VTextView(this, null);
-			vTextMap[i].setText("このアイテムの、名前はなにかな");
-			
-			int size = 250;
-			boxs[i].addView(imageMap[i],imgParam);
-			boxs[i].addView(vTextMap[i],vtxParam);
-		}
-		
-		/* ウィジェットを登録 */
-		
-		
-		/* フォントを読み込む 
+		// フォントを読み込む 
 		Typeface yasashisa_B = Typeface.createFromAsset(getAssets(),"yasashisa_bold.ttf");
 		Typeface yasashisa = Typeface.createFromAsset(getAssets(),"yasashisa.ttf");
-		*/
 		
-		/* ウィジェットにフォントを適用する */
+		// ウィジェットにフォントを適用する
 		//titleView.setTypeface(yasashisa_B);
 		//searchButton.setTypeface(yasashisa);
 		//registerButton.setTypeface(yasashisa);
+		 
 		
-		/* リスナの登録 
-
+		// Itemsを読み込む
+		items = new ArrayList<Item>();
 		
-		/* ディスプレイ情報を取得 
-		WindowManager wm = getWindowManager();
-		Display display = wm.getDefaultDisplay();
-		DisplayMetrics dm = new DisplayMetrics();
-		display.getMetrics(dm);
-		density = dm.density;
-		Log.d("DisplayDensity",""+dm.density);
-		*/
+		ItemManager iManager = ItemManager.newItemManager(this);
+		Item item = iManager.newItem("ともだち","friend", null);
+		items.add(item);
+		item = iManager.newItem("じどうしゃ","car", null);
+		items.add(item);
+		
+		// 指定したレイアウトでItemを並べる
+		GridAdapter gAdapter = new GridAdapter(this, R.layout.list_item, items);
+		gView.setAdapter(gAdapter);
 	}
 
 	/* (非 Javadoc)

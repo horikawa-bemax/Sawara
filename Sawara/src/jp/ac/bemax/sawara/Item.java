@@ -1,5 +1,7 @@
 package jp.ac.bemax.sawara;
 
+import java.util.HashMap;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,43 +11,19 @@ import android.util.Log;
 
 public class Item {
 	private long rowId;
-	private String name;
-	private String image_url;
-	private String movie_url;
-	
 	private SQLiteOpenHelper helper;
-	private SawaraDBAdapter sdba;
+	private HashMap<String, String> colmn;
 	
-	public Item(Context context){
-		sdba = new SawaraDBAdapter(context);
-		helper = sdba.getHelper();
+	public Item(long rowId, SQLiteOpenHelper helper){
+		this.rowId = rowId;
+		this.helper = helper;
 	}
 	
-	public boolean newItem(){
+	public boolean updateItem(String name, String imageUrl, String movieUrl){
 		ContentValues values = new ContentValues();
 		values.put("item_name", name);
-		values.put("item_image", image_url);
-		values.put("item_movie", movie_url);
-		
-		SQLiteDatabase db = helper.getWritableDatabase();
-		rowId = db.insert("item_table", null, values);
-		db.close();
-		
-		// データベースの中身をログに表示する
-		dump();
-		
-		if(rowId != -1){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	public boolean updateItem(){
-		ContentValues values = new ContentValues();
-		values.put("item_name", name);
-		values.put("item_image", image_url);
-		values.put("item_movie", movie_url);
+		values.put("item_image", imageUrl);
+		values.put("item_movie", movieUrl);
 		
 		String[] s = {""+rowId};
 		SQLiteDatabase db = helper.getWritableDatabase();
@@ -68,6 +46,7 @@ public class Item {
 		db.close();
 		
 		if(ret > 0){
+			rowId = -1;
 			return true;
 		}else{
 			return false;
@@ -90,7 +69,7 @@ public class Item {
 		db.close();
 	}
 	
-	public void loadItem(long rowId){
+	public void loadItem(){
 		String sql = "select * from item_table where ROWID = ?";
 		String[] selectionArgs = {""+rowId};
 		SQLiteDatabase db = helper.getReadableDatabase();
@@ -98,41 +77,27 @@ public class Item {
 		
 		cr.moveToFirst();
 		
-		name = cr.getString(cr.getColumnIndex("item_name"));
-		image_url = cr.getString(cr.getColumnIndex("item_image"));
-		movie_url = cr.getString(cr.getColumnIndex("item_movie"));
+		colmn = new HashMap<String, String>();
+		colmn.put("item_name", cr.getString(cr.getColumnIndex("item_name")));
+		colmn.put("item_image", cr.getString(cr.getColumnIndex("item_image")));
+		colmn.put("item_movie", cr.getString(cr.getColumnIndex("item_movie")));
 		
 		db.close();
 	}
 	
-	public String getName() {
-		return name;
+	public String getName(){
+		loadItem();
+		return colmn.get("item_name");
 	}
 	
-	public void setName(String name) {
-		this.name = name;
-		if(rowId != 0)
-			updateItem();
+	public String getImageUrl(){
+		loadItem();
+		return colmn.get("item_image");
 	}
 	
-	public String getImage_url() {
-		return image_url;
-	}
-	
-	public void setImage_url(String image_url) {
-		this.image_url = image_url;
-		if(rowId != 0)
-			updateItem();
-	}
-	
-	public String getMovie_url() {
-		return movie_url;
-	}
-	
-	public void setMovie_url(String movie_url) {
-		this.movie_url = movie_url;
-		if(rowId != 0)
-			updateItem();
+	public String getMovieUrl(){
+		loadItem();
+		return colmn.get("item_movie");
 	}
 	
 	public void dump(){

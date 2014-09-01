@@ -56,7 +56,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 
 		
 		/* アイテム */
-		item = new Item(this);
+
 	}
 
 	@Override
@@ -184,7 +184,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 					pictureView.setImageBitmap(picture);
 					
 					/* ItemインスタンスにイメージURLを登録 */
-					item.setImage_url(pictureFile.getName());
+					//item.setImage_url(pictureFile.getName());
 					
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
