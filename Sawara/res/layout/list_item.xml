@@ -8,13 +8,12 @@
         android:id="@+id/imageView1"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:src="@drawable/friend" />
+        android:layout_weight="1" />
 
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/vTextView1"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="200dp"
         android:layout_weight="0.2" />
 
 </LinearLayout>
