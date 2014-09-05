@@ -1,6 +1,5 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,9 +8,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Environment;
+import android.view.Display;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.GridView;
@@ -24,6 +24,7 @@ import android.widget.GridView;
 public class HomeActivity extends Activity implements OnClickListener{
 	private GridView gView;
 	private ArrayList<Item> items;
+	private int itemHeight; 
 	
 	/* (非 Javadoc)
 	 * コンストラクタ
@@ -41,6 +42,12 @@ public class HomeActivity extends Activity implements OnClickListener{
 		//Typeface yasashisa_B = Typeface.createFromAsset(getAssets(),"yasashisa_bold.ttf");
 		//Typeface yasashisa = Typeface.createFromAsset(getAssets(),"yasashisa.ttf");
 		
+		// ディスプレイサイズを取得する
+		Display display = getWindowManager().getDefaultDisplay();
+		Point p = new Point();
+		display.getSize(p);
+		itemHeight = p.y / 2;
+		
 		// 初期化
 		items = new ArrayList<Item>();
 		ItemManager iManager = ItemManager.newItemManager(this);	
@@ -49,13 +56,11 @@ public class HomeActivity extends Activity implements OnClickListener{
 		String[] strs = {"ともだち","じどうしゃ","こうえん","いえ","いぬ","やま","でんしんばしら","ひこうき"};
 		String[] images = {"friend","car","park","house","dog","mountain","pole","airplane"};
 		InputStream is;
-		
 		for(int i=0; i<8; i++){
 			try {
 				is = getAssets().open("sample/"+images[i]+".jpg");
 				Bitmap bmp = BitmapFactory.decodeStream(is);
 				Item item = iManager.newItem(strs[i], bmp, null);
-				items.add(item);
 			} catch (IOException e) {
 				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
@@ -63,7 +68,7 @@ public class HomeActivity extends Activity implements OnClickListener{
 		}
 		
 		// 指定したレイアウトでItemを並べる
-		GridAdapter gAdapter = new GridAdapter(this, R.layout.list_item, items);
+		GridAdapter gAdapter = new GridAdapter(this, R.layout.list_item, iManager.getAllItems());
 		gView.setAdapter(gAdapter);
 	}
 

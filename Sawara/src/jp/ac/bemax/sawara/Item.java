@@ -1,33 +1,33 @@
 package jp.ac.bemax.sawara;
 
-import java.util.HashMap;
-
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+
+/**
+ * アイテムクラス
+ * @author Masaaki Horikawa
+ * 2014/09/05
+ */
 public class Item {
-	private long rowId;
-	private SQLiteOpenHelper helper;
-	private HashMap<String, String> colmn;
+	private static SQLiteOpenHelper helper;
+	private ContentValues values;
+	private long row_id;
 	
-	public Item(long rowId, SQLiteOpenHelper helper){
-		this.rowId = rowId;
-		this.helper = helper;
+	public Item(long id){
+		row_id = id;
+		values = new ContentValues();
 	}
 	
-	public boolean updateItem(String name, String imageUrl, String movieUrl){
-		ContentValues values = new ContentValues();
-		values.put("item_name", name);
-		values.put("item_image", imageUrl);
-		values.put("item_movie", movieUrl);
-		
-		String[] s = {""+rowId};
+	// データの更新を行う
+	public boolean updateItem(){
 		SQLiteDatabase db = helper.getWritableDatabase();
-		int rows = db.update("item_table", values, "ROWID = ?", s);
+		String[] args = {values.getAsString("ROWID")};
+		int rows = db.update("item_table", values, "ROWID = ?", args);
 		db.close();
 		
 		dump();
@@ -39,14 +39,18 @@ public class Item {
 		}
 	}
 	
+	public static void setHelper(SQLiteOpenHelper h){
+		helper = h;
+	}
+	
 	public boolean deleteItem(){
 		SQLiteDatabase db = helper.getWritableDatabase();
-		String[] s = {""+rowId};
-		int ret = db.delete("item_table", "ROWID = ", s);
+		String[] args = {""+row_id};
+		int ret = db.delete("item_table", "ROWID = ", args);
 		db.close();
 		
 		if(ret > 0){
-			rowId = -1;
+			values.clear();
 			return true;
 		}else{
 			return false;
@@ -71,33 +75,29 @@ public class Item {
 	
 	public void loadItem(){
 		String sql = "select * from item_table where ROWID = ?";
-		String[] selectionArgs = {""+rowId};
+		String[] args = {""+row_id};
 		SQLiteDatabase db = helper.getReadableDatabase();
-		Cursor cr = db.rawQuery(sql, selectionArgs);
+		Cursor cr = db.rawQuery(sql, args);
 		
 		cr.moveToFirst();
-		
-		colmn = new HashMap<String, String>();
-		colmn.put("item_name", cr.getString(cr.getColumnIndex("item_name")));
-		colmn.put("item_image", cr.getString(cr.getColumnIndex("item_image")));
-		colmn.put("item_movie", cr.getString(cr.getColumnIndex("item_movie")));
+		DatabaseUtils.cursorRowToContentValues(cr, values);
 		
 		db.close();
 	}
 	
 	public String getName(){
 		loadItem();
-		return colmn.get("item_name");
+		return values.getAsString("item_name");
 	}
 	
 	public String getImageUrl(){
 		loadItem();
-		return colmn.get("item_image");
+		return values.getAsString("item_image");
 	}
 	
 	public String getMovieUrl(){
 		loadItem();
-		return colmn.get("item_movie");
+		return values.getAsString("item_movie");
 	}
 	
 	public void dump(){

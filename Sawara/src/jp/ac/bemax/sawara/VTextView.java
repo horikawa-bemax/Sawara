@@ -12,7 +12,7 @@ public class VTextView extends View {
 
     private static final int TOP_SPACE = 20;
     private static final int BOTTOM_SPACE = 20;
-    private static final int FONT_SIZE = 40;
+    private static final int FONT_SIZE = 50;
 
     private Typeface mFace;
     private Paint mPaint;

@@ -6,16 +6,20 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 
 /**
  * ホーム画面のグリッドビューに並べる項目を扱うクラス
@@ -23,29 +27,39 @@ import android.widget.LinearLayout;
  * 2014/09/02
  */
 public class GridAdapter extends ArrayAdapter<Item>{
-	private Context context;
-	private int resourceId;
-	private List<Item> list;
+	private Context context;	// コンテキスト(HomeActivity)
+	private int resourceId;		// グリッドに表示するアイテムのレイアウトXML
+	private List<Item> list;	// グリッドに表示するアイテムのリスト
+	private Point dispSize; 	// 画面のサイズ
 	
 	public GridAdapter(Context context, int resource, List<Item> objects) {
 		super(context, resource, objects);
 		this.context = context;
 		this.resourceId = resource;
 		this.list = objects;
+		
+		// 画面のサイズを取得して、dispSizeにセットする
+		WindowManager wManager = ((Activity)context).getWindowManager();
+		dispSize = new Point();
+		wManager.getDefaultDisplay().getSize(dispSize);
 	}
 
+	/* (非 Javadoc)
+	 * @see android.widget.ArrayAdapter#getView(int, android.view.View, android.view.ViewGroup)
+	 */
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		if(convertView == null){
-			// 
+			// アイテム用のレイアウトXMLを読み込む
 			LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(resourceId, null);
 		}
-		// 各項目
+		// 表示するアイテムを取り出す
 		Item item = getItem(position);
-		//
+		
 		LinearLayout view = (LinearLayout)convertView;
-		// imageView
+		
+		// imageViewにitemの画像をセットする
 		ImageView imgView = (ImageView)view.findViewById(R.id.imageView1);
 		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 		try {
@@ -56,10 +70,14 @@ public class GridAdapter extends ArrayAdapter<Item>{
 			// TODO 自動生成された catch ブロック
 			e.printStackTrace();
 		}
+		
+		// 縦書きのtextViewにアイテムの値をセットする
 		VTextView vtView = (VTextView)view.findViewById(R.id.vTextView1);
+		float den = context.getResources().getDisplayMetrics().density;
+		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.y/2.3) );
+		vtView.setLayoutParams(params);
 		vtView.setText(item.getName());
-
-		item.dump();
+		
 		return view;
 	}
 }
