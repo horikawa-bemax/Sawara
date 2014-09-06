@@ -36,11 +36,7 @@ public class HomeActivity extends Activity implements OnClickListener{
 		setContentView(R.layout.home);
 		
 		// ウィジェットを登録 
-		gView = (GridView)findViewById(R.id.gridView);	
-		
-		// フォントを読み込む 
-		//Typeface yasashisa_B = Typeface.createFromAsset(getAssets(),"yasashisa_bold.ttf");
-		//Typeface yasashisa = Typeface.createFromAsset(getAssets(),"yasashisa.ttf");
+		gView = (GridView)findViewById(R.id.gridView);
 		
 		// ディスプレイサイズを取得する
 		Display display = getWindowManager().getDefaultDisplay();
@@ -70,6 +66,8 @@ public class HomeActivity extends Activity implements OnClickListener{
 		// 指定したレイアウトでItemを並べる
 		GridAdapter gAdapter = new GridAdapter(this, R.layout.list_item, iManager.getAllItems());
 		gView.setAdapter(gAdapter);
+		
+		gView.setOnItemClickListener(gAdapter);
 	}
 
 	/* (非 Javadoc)

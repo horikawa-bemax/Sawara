@@ -30,7 +30,13 @@ public class VTextView extends View {
     }
 
     public void setText(String text) {
+    	mPaint.setTextSize(FONT_SIZE);
         this.text = text;
+    }
+    
+    public void setText(String text, int size){
+    	mPaint.setTextSize(size);
+    	this.text = text;
     }
 
     @Override

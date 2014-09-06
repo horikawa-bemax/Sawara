@@ -85,6 +85,10 @@ public class Item {
 		db.close();
 	}
 	
+	public long getId(){
+		return row_id;
+	}
+	
 	public String getName(){
 		loadItem();
 		return values.getAsString("item_name");

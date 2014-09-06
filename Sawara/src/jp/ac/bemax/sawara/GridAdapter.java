@@ -8,6 +8,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -16,6 +17,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,7 +29,7 @@ import android.widget.LinearLayout.LayoutParams;
  * @author Masaaki Horikawa
  * 2014/09/02
  */
-public class GridAdapter extends ArrayAdapter<Item>{
+public class GridAdapter extends ArrayAdapter<Item> implements OnItemClickListener{
 	private Context context;	// コンテキスト(HomeActivity)
 	private int resourceId;		// グリッドに表示するアイテムのレイアウトXML
 	private List<Item> list;	// グリッドに表示するアイテムのリスト
@@ -42,6 +45,8 @@ public class GridAdapter extends ArrayAdapter<Item>{
 		WindowManager wManager = ((Activity)context).getWindowManager();
 		dispSize = new Point();
 		wManager.getDefaultDisplay().getSize(dispSize);
+		
+		//リスナ登録
 	}
 
 	/* (非 Javadoc)
@@ -60,7 +65,7 @@ public class GridAdapter extends ArrayAdapter<Item>{
 		LinearLayout view = (LinearLayout)convertView;
 		
 		// imageViewにitemの画像をセットする
-		ImageView imgView = (ImageView)view.findViewById(R.id.imageView1);
+		ImageView imgView = (ImageView)view.findViewById(R.id.list_item_image);
 		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 		try {
 			InputStream is = new FileInputStream(new File(dir, item.getImageUrl()));
@@ -72,12 +77,21 @@ public class GridAdapter extends ArrayAdapter<Item>{
 		}
 		
 		// 縦書きのtextViewにアイテムの値をセットする
-		VTextView vtView = (VTextView)view.findViewById(R.id.vTextView1);
+		VTextView vtView = (VTextView)view.findViewById(R.id.list_vTextView);
 		float den = context.getResources().getDisplayMetrics().density;
 		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.y/2.3) );
 		vtView.setLayoutParams(params);
 		vtView.setText(item.getName());
-		
+
 		return view;
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
+		Intent intent = new Intent();
+		Item item = list.get(position);
+		intent.putExtra("item_id", item.getId());
+		intent.setClass(context, ItemActivity.class);
+		context.startActivity(intent);		
 	}
 }

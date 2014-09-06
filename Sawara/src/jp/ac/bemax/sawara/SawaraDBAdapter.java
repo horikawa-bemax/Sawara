@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 public class SawaraDBAdapter{
 	private SQLiteOpenHelper helper;
@@ -63,7 +62,7 @@ public class SawaraDBAdapter{
 		public void onCreate(SQLiteDatabase db) {
 			/* テーブルを新規作成 */
 			db.execSQL("create table group_table (group_id integer primary key autoincrement, group_name nchar(20))");
-			db.execSQL("create table item_table (item_id integer primary key autoincrement, item_name nchar(30), item_image nchar(50), item_movie nchar(50))");
+			db.execSQL("create table item_table (item_id integer primary key autoincrement, item_name nchar(30) UNIQUE, item_image nchar(50), item_movie nchar(50))");
 			
 			/* group_tableに初期値を設定 */
 			for(String name: groupNames){
