@@ -48,21 +48,6 @@ public class HomeActivity extends Activity implements OnClickListener{
 		items = new ArrayList<Item>();
 		ItemManager iManager = ItemManager.newItemManager(this);	
 		
-		// Itemリストを作成（サンプル作成）
-		String[] strs = {"ともだち","じどうしゃ","こうえん","いえ","いぬ","やま","でんしんばしら","ひこうき"};
-		String[] images = {"friend","car","park","house","dog","mountain","pole","airplane"};
-		InputStream is;
-		for(int i=0; i<8; i++){
-			try {
-				is = getAssets().open("sample/"+images[i]+".jpg");
-				Bitmap bmp = BitmapFactory.decodeStream(is);
-				Item item = iManager.newItem(strs[i], bmp, null);
-			} catch (IOException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			}
-		}
-		
 		// 指定したレイアウトでItemを並べる
 		GridAdapter gAdapter = new GridAdapter(this, R.layout.list_item, iManager.getAllItems());
 		gView.setAdapter(gAdapter);

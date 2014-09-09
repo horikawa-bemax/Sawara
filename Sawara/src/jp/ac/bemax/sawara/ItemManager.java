@@ -16,6 +16,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.os.Environment;
+import android.util.Log;
 
 /**
  * アイテムをマネジメントするクラス
@@ -60,37 +61,18 @@ public class ItemManager {
 	/*
 	 * アイテムを新規作成する
 	 */
-	public Item newItem(String name, Bitmap image, String movieUrl){
+	public Item newItem(ContentValues values){
 		Item resultItem = null;
-		// 画像を保存する
-		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		String imageFileName = name + ".jpg";
+		// 
+		SQLiteDatabase db = null;
 		try{
-			// 画像をアプリの記憶領域に書き込む
-			FileOutputStream fos = new FileOutputStream(new File(dir, imageFileName));
-			image.compress(CompressFormat.JPEG, 100, fos);
-			fos.close();
-		
-			// DBに登録
-			ContentValues values = new ContentValues();
-			values.put("item_name", name);
-			values.put("item_image", imageFileName);
-			values.put("item_movie", movieUrl);
-			
-			SQLiteDatabase db = helper.getWritableDatabase();
+			db = helper.getWritableDatabase();
 			long rowId = db.insertOrThrow("item_table", null, values);
-			db.close();
-	
 			resultItem = new Item(rowId);
-		}catch(FileNotFoundException e){
-			// ファイル出力に失敗
-			e.printStackTrace();
-		}catch(IOException e){
-			// ファイルのcloseに失敗
-			e.printStackTrace();
 		}catch(SQLException e){
-			// SQLの例外処理
 			e.printStackTrace();
+		}finally{
+			db.close();
 		}
 		return resultItem;
 	}
@@ -108,5 +90,12 @@ public class ItemManager {
 		}
 		db.close();
 		return items;
+	}
+	
+	public void dump(){
+		List<Item> list = getAllItems();
+		for(Item item: list){
+			Log.d("item("+item.getId()+")", item.getName());
+		}
 	}
 }
