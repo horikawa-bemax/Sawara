@@ -1,10 +1,15 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.util.Log;
 
 
@@ -15,8 +20,11 @@ import android.util.Log;
  */
 public class Item {
 	private static SQLiteOpenHelper helper;
+	private static File imageDir;
+	private static File movieDir;
 	private ContentValues values;
 	private long row_id;
+
 	
 	public Item(long id){
 		row_id = id;
@@ -30,8 +38,6 @@ public class Item {
 		int rows = db.update("item_table", values, "ROWID = ?", args);
 		db.close();
 		
-		dump();
-		
 		if(rows > 0){
 			return true;
 		}else{
@@ -39,8 +45,9 @@ public class Item {
 		}
 	}
 	
-	public static void setHelper(SQLiteOpenHelper h){
-		helper = h;
+	public static void init(SQLiteOpenHelper hlp, File imgdir){
+		helper = hlp;
+		imageDir = imgdir;
 	}
 	
 	public boolean deleteItem(){
@@ -92,6 +99,17 @@ public class Item {
 	public String getName(){
 		loadItem();
 		return values.getAsString("item_name");
+	}
+	
+	public String getDescription(){
+		loadItem();
+		return values.getAsString("item_description");
+	}
+	
+	public Bitmap getImage(){
+		String pathName = imageDir.getPath() + "/" + getImageUrl();
+		Bitmap bmp = BitmapFactory.decodeFile(pathName);	
+		return bmp;
 	}
 	
 	public String getImageUrl(){

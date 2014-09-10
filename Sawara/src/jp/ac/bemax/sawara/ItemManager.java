@@ -44,8 +44,11 @@ public class ItemManager {
 		
 		// sawaraDBアダプタを登録
 		sdba = new SawaraDBAdapter(context);
+		
+		// Itemクラスのstatic変数を初期化
 		helper = sdba.getHelper();
-		Item.setHelper(helper);
+		File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+		Item.init(helper, imageDir);
 	}
 	
 	/*

@@ -109,7 +109,7 @@ public class SawaraDBAdapter{
 					values.put("item_name", strs[i]);
 					values.put("item_description", descriptions[i]);
 					values.put("item_image", imageFileName);
-					iManager.newItem(values);
+					db.insert("item_table", null, values);
 					
 				} catch (IOException e) {
 					e.printStackTrace();
