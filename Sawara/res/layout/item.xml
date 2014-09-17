@@ -2,22 +2,27 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal" >
+    android:orientation="horizontal"
+    android:padding="10dp" >
 
     <ImageView
         android:id="@+id/item_image"
         android:layout_width="100dp"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_margin="3dp" />
 
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/item_discription"
         android:layout_width="100dp"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_margin="3dp"
+        android:background="@drawable/text_back" />
 
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/item_name"
         android:layout_width="100dp"
         android:layout_height="match_parent"
-        android:background="@color/base" />
+        android:layout_margin="3dp"
+        android:background="@drawable/text_back" />
 
 </LinearLayout>

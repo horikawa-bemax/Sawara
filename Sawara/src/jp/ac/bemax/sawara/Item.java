@@ -6,12 +6,9 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
 import android.util.Log;
-
 
 /**
  * アイテムクラス
@@ -19,22 +16,23 @@ import android.util.Log;
  * 2014/09/05
  */
 public class Item {
-	private static SQLiteOpenHelper helper;
-	private static File imageDir;
-	private static File movieDir;
+	private ItemManager iManager;
 	private ContentValues values;
 	private long row_id;
 
 	
-	public Item(long id){
-		row_id = id;
+	public Item(ItemManager mng){
+		iManager = mng;
+		row_id = -1;
 		values = new ContentValues();
 	}
 	
-	// データの更新を行う
+	/**
+	 * データの更新を行う
+	 */
 	public boolean updateItem(){
-		SQLiteDatabase db = helper.getWritableDatabase();
-		String[] args = {values.getAsString("ROWID")};
+		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getWritableDatabase();
+		String[] args = {""+row_id};
 		int rows = db.update("item_table", values, "ROWID = ?", args);
 		db.close();
 		
@@ -45,18 +43,17 @@ public class Item {
 		}
 	}
 	
-	public static void init(SQLiteOpenHelper hlp, File imgdir){
-		helper = hlp;
-		imageDir = imgdir;
-	}
-	
+	/**
+	 * アイテムを消去する
+	 */
 	public boolean deleteItem(){
-		SQLiteDatabase db = helper.getWritableDatabase();
+		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getWritableDatabase();
 		String[] args = {""+row_id};
 		int ret = db.delete("item_table", "ROWID = ", args);
 		db.close();
 		
 		if(ret > 0){
+			row_id = -1;
 			values.clear();
 			return true;
 		}else{
@@ -64,6 +61,9 @@ public class Item {
 		}
 	}
 	
+	/**
+	 * アイテムを検索する
+	 */
 	public void searchItem(String[] cols, String[] vals){
 		String sql = "select * from item_table";
 		if(cols.length > 0){
@@ -75,15 +75,18 @@ public class Item {
 				sql += "and ";
 			}
 		}
-		SQLiteDatabase db = helper.getReadableDatabase();
+		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
 		Cursor cs = db.rawQuery(sql, vals);
 		db.close();
 	}
 	
+	/**
+	 * データベースからこのアイテムの情報を読み込む
+	 */
 	public void loadItem(){
 		String sql = "select * from item_table where ROWID = ?";
 		String[] args = {""+row_id};
-		SQLiteDatabase db = helper.getReadableDatabase();
+		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
 		Cursor cr = db.rawQuery(sql, args);
 		
 		cr.moveToFirst();
@@ -92,38 +95,72 @@ public class Item {
 		db.close();
 	}
 	
+	/**
+	 * 
+	 */
+	public void setId(long id){
+		row_id = id;
+	}
+	
+	/**
+	 * ROWIDを返す
+	 * @return ROWID
+	 */
 	public long getId(){
 		return row_id;
 	}
 	
+	/**
+	 * item_nameを返す
+	 * @return アイテムの名前
+	 */
 	public String getName(){
 		loadItem();
 		return values.getAsString("item_name");
 	}
 	
+	/**
+	 * item_descriptionを返す
+	 * @return アイテムの詳細
+	 */
 	public String getDescription(){
 		loadItem();
 		return values.getAsString("item_description");
 	}
 	
+	/**
+	 * アイテムの画像イメージを返す
+	 * @return アイテムの画像
+	 */
 	public Bitmap getImage(){
-		String pathName = imageDir.getPath() + "/" + getImageUrl();
+		String pathName = iManager.getImageFileDir().getPath() + "/" + getImageUrl();
 		Bitmap bmp = BitmapFactory.decodeFile(pathName);	
 		return bmp;
 	}
 	
+	/**
+	 * アイテムの画像イメージのURLを返す
+	 * @return アイテム画像のURL
+	 */
 	public String getImageUrl(){
 		loadItem();
 		return values.getAsString("item_image");
 	}
 	
+	/**
+	 * アイテムの動画のURLを返す
+	 * @return アイテム動画のURL
+	 */
 	public String getMovieUrl(){
 		loadItem();
 		return values.getAsString("item_movie");
 	}
 	
+	/**
+	 * item_tableの内容をLogに書き出す
+	 */
 	public void dump(){
-		SQLiteDatabase db = helper.getReadableDatabase();
+		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
 		Cursor cr = db.rawQuery("select * from item_table", null);
 		while(cr.moveToNext()){
 			Log.d("id_"+cr.getString(0), cr.getString(1)+":"+cr.getString(2)+":"+cr.getString(3));

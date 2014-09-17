@@ -3,25 +3,17 @@ package jp.ac.bemax.sawara;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.text.Editable;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 /**
  * 登録画面
@@ -32,25 +24,42 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private final byte TAKE_PICTURE = 0;
 	private final byte TAKE_MOVIE = 1;
 	
-	private ImageView pictureView;
-	private Button takePictureBtn;
-	private Button takeMovieBtn;
-	private Button searchPictureBtn;
-	private Button registerBtn;
-	private EditText itemName;
-	
 	private Bitmap picture;
 	private File pictureFile;
+	private ImageView imageView;
 	
 	private Item item;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//setContentView(R.layout.register);
+		setContentView(R.layout.register);
 		
 		/* レイアウトの紐付け */
-
+		imageView = (ImageView)findViewById(R.id.register_image);
+		
+		// インテントからデータを受け取る
+		Intent intent = getIntent();
+		String path = intent.getStringExtra("image_uri");
+	
+		// 画像のサイズを読み込む
+		BitmapFactory.Options opt = new BitmapFactory.Options();
+		opt.inJustDecodeBounds = true;
+		BitmapFactory.decodeFile(path, opt);
+	
+		// 読み込み時の精度を決定
+		int size = opt.outWidth;
+		if(opt.outHeight > size){
+			size = opt.outHeight;
+		}
+		opt.inSampleSize = size / 480;
+		
+		// 本格的に画像を読み込む
+		opt.inJustDecodeBounds = false;
+		Bitmap image = BitmapFactory.decodeFile(path, opt);
+		
+		// imageViewに画像を表示
+		imageView.setImageBitmap(image);
 		
 		/* ボタンにリスナを登録 */
 
@@ -159,7 +168,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			if(resultCode == RESULT_OK){
 				
 				try {
-					/* 画像保存先のInputStreamを取得 */
+					// 画像保存先のInputStreamを取得
 					inputStream = new FileInputStream(pictureFile);
 
 					/* 画像読み込まず、サイズだけを取得するオプションを指定 */
@@ -174,14 +183,14 @@ public class RegisterActivity extends Activity implements OnClickListener{
 					
 					/* 画像を取り込む際の精度を求める */
 					if(bitmapOptions.outHeight > bitmapOptions.outWidth){
-						bitmapOptions.inSampleSize =  bitmapOptions.outHeight / pictureView.getHeight();
+						//bitmapOptions.inSampleSize =  bitmapOptions.outHeight / pictureView.getHeight();
 					}else{
-						bitmapOptions.inSampleSize = bitmapOptions.outWidth / pictureView.getWidth();
+						//bitmapOptions.inSampleSize = bitmapOptions.outWidth / pictureView.getWidth();
 					}
 					
 					/* ここから本格的に画像取り込み */
 					picture = BitmapFactory.decodeFile(pictureFile.getPath(), bitmapOptions);
-					pictureView.setImageBitmap(picture);
+					//pictureView.setImageBitmap(picture);
 					
 					/* ItemインスタンスにイメージURLを登録 */
 					//item.setImage_url(pictureFile.getName());

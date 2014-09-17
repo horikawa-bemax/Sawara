@@ -37,7 +37,7 @@ public class ItemActivity extends Activity {
 		
 		// アイテムインスタンスを作成
 		ItemManager iManager = ItemManager.newItemManager(this);
-		Item item = new Item(rowId);
+		Item item = iManager.getItem(rowId);
 
 		// ディスプレイ情報を取得
 		DisplayMetrics dm = getResources().getDisplayMetrics();
@@ -45,16 +45,19 @@ public class ItemActivity extends Activity {
 		// アイテム名
 		itemName.setText(item.getName(), 100);
 		LayoutParams nameParams = new LayoutParams((int)(100*dm.density),LayoutParams.MATCH_PARENT);
+		nameParams.setMargins(3, 3, 3, 3);
 		itemName.setLayoutParams(nameParams);
 		
 		// アイテム説明
 		itemDescription.setText(item.getDescription());
 		LayoutParams descriptionParams = new LayoutParams((int)(300*dm.density), LayoutParams.MATCH_PARENT);
+		descriptionParams.setMargins(3, 3, 3, 3);
 		itemDescription.setLayoutParams(descriptionParams);
 		
 		// アイテム画像
 		itemImage.setImageBitmap(item.getImage());
 		LayoutParams imageParams = new LayoutParams((int)(dm.widthPixels/2), LayoutParams.MATCH_PARENT);
 		itemImage.setLayoutParams(imageParams);
+		
 	}
 }

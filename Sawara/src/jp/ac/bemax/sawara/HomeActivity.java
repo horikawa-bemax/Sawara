@@ -1,17 +1,27 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Display;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.GridView;
@@ -21,10 +31,13 @@ import android.widget.GridView;
  * @author Masaaki Horikawa
  * 2014/07/02
  */
-public class HomeActivity extends Activity implements OnClickListener{
+public class HomeActivity extends Activity{
 	private GridView gView;
 	private ArrayList<Item> items;
 	private int itemHeight; 
+	private File capturedFile;
+	
+	private final static int CAPTUER_IMAGE = 100;
 	
 	/* (非 Javadoc)
 	 * コンストラクタ
@@ -55,39 +68,71 @@ public class HomeActivity extends Activity implements OnClickListener{
 		gView.setOnItemClickListener(gAdapter);
 	}
 
-	/* (非 Javadoc)
-	 * ボタンがクリックされたときに呼び出されるメソッド
-	 * @see android.view.View.OnClickListener#onClick(android.view.View)
-	 */
 	@Override
-	public void onClick(View v) {
-		Intent intent = new Intent();
-		
-		/*
-		// クリックされたボタンによって分岐
-		switch(v.getId()){
-		case R.id.search_button:
-			// さがすボタンがクリックされたとき
-			
-			intent.setClass(this, SearchActivity.class);
-			startActivity(intent);
-			
-			// ログ出力
-			Log.d("clicked Button","SearchButton");
-			
-			break;
-		case R.id.register_button:
-			// とうろくするボタンがクリックされたとき
-			intent.setClass(this, RegisterActivity.class);
-			startActivity(intent);
-			
-			// ログ出力
-			Log.d("clicked Button","RegistarButton");
-		
-			break;
-		}
-		*/
-		
+	public boolean onCreateOptionsMenu(Menu menu) {
+		//
+		menu.add(0, 1, 0, "さくせい");
+		return true;
 	}
 	
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		// 写真を撮る
+		if(item.getItemId()==1){
+			// 保存先のパスとファイル名を指定
+			File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+			String filename = System.currentTimeMillis() + ".jpg";
+	        capturedFile = new File( dir, filename );
+			Uri fileUri = Uri.fromFile(capturedFile);
+			
+			// カメラアプリを呼び出すインテントを作成
+			Intent picIntent = new Intent();
+			picIntent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
+			picIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+			picIntent.addCategory(Intent.CATEGORY_DEFAULT);
+			
+			// カメラアプリを起動
+			startActivityForResult(picIntent, CAPTUER_IMAGE);
+		}
+		return true;
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// カメラアプリからの結果を処理
+		if(requestCode == CAPTUER_IMAGE){
+			
+			if(resultCode == RESULT_OK){
+				
+				// 画像保存先のパスを取得
+				if(data != null){
+					String path = data.getData().getPath();
+					if(!path.equals(capturedFile)){
+						// captureFileに保存し直し
+						FileOutputStream fos = null;
+						try {
+							fos = new FileOutputStream(capturedFile);
+							Bitmap bmp = BitmapFactory.decodeFile(path);
+							bmp.compress(CompressFormat.JPEG, 100, fos);
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						}finally{
+							try {
+								fos.close();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+				
+				// RegisterIntentを呼び出す
+				Intent intent = new Intent(this, jp.ac.bemax.sawara.RegisterActivity.class);
+				intent.putExtra("image_uri", capturedFile.getPath());
+				startActivity(intent);
+			}else{
+				Log.d("result", "canceled");
+			}
+		}
+	}
 }

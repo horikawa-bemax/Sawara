@@ -23,36 +23,36 @@ import android.util.Log;
  * @author Masaaki Horikawa
  * 2014/09/05
  */
-/**
- *
- * @author Masaaki Horikawa
- * 2014/09/06
- */
-/**
- *
- * @author Masaaki Horikawa
- * 2014/09/06
- */
 public class ItemManager {
 	private Context context;
 	private SQLiteOpenHelper helper;
 	private SawaraDBAdapter sdba;
+	private File imageFileDir;
+	private File movieFileDir;
 	private static ItemManager iManager;
 	
+	/**
+	 * 
+	 * ItemManager.javaコンストラクタ
+	 * @param context
+	 */
 	private ItemManager(Context context){
 		this.context = context;
 		
 		// sawaraDBアダプタを登録
 		sdba = new SawaraDBAdapter(context);
-		
-		// Itemクラスのstatic変数を初期化
 		helper = sdba.getHelper();
-		File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		Item.init(helper, imageDir);
+		
+		// ImageおよびMovieの保存先ディレクトリを登録
+		imageFileDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+		movieFileDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 	}
 	
-	/*
-	 * アイテムマネージャを新規作成する
+	/**
+	 * 新規のItemManagerを作成する
+	 * もしも、すでにItemManagerがあった場合には、それを利用する
+	 * @param context
+	 * @return ItemManager
 	 */
 	public static ItemManager newItemManager(Context context){
 		if(iManager == null){
@@ -61,8 +61,11 @@ public class ItemManager {
 		return iManager;
 	}
 	
-	/*
-	 * アイテムを新規作成する
+	/**
+	 * Itemオブジェクトを新規作成する
+	 * DBのitem_tableに、valuesの値をinsertする
+	 * @param values item_tableにinsertする値
+	 * @return Item アイテムオブジェクト
 	 */
 	public Item newItem(ContentValues values){
 		Item resultItem = null;
@@ -70,14 +73,27 @@ public class ItemManager {
 		SQLiteDatabase db = null;
 		try{
 			db = helper.getWritableDatabase();
-			long rowId = db.insertOrThrow("item_table", null, values);
-			resultItem = new Item(rowId);
-		}catch(SQLException e){
+			long rowId = db.insert("item_table", null, values);
+			resultItem = new Item(this);
+			resultItem.setId(rowId);
+		}catch(Exception e){
 			e.printStackTrace();
 		}finally{
 			db.close();
 		}
 		return resultItem;
+	}
+	
+	/**
+	 * 指定されたROWIDに対応したItemを返す
+	 * @param rowId
+	 * @return Itemオブジェクト
+	 */
+	public Item getItem(long rowId){
+		Item item = new Item(this);
+		item.setId(rowId);
+		
+		return item;
 	}
 	
 	/*
@@ -89,10 +105,36 @@ public class ItemManager {
 		SQLiteDatabase db = helper.getReadableDatabase();
 		Cursor cr = db.rawQuery("select * from item_table", null);
 		while(cr.moveToNext()){
-			items.add(new Item(cr.getLong(0)));
+			Item item = new Item(this);
+			item.setId(cr.getLong(0));
+			items.add(item);
 		}
 		db.close();
 		return items;
+	}
+	
+	/**
+	 * 画像イメージの保存先ディレクトリを返す
+	 * @return File 画像イメージの保存先ディレクトリ
+	 */
+	public File getImageFileDir(){
+		return imageFileDir;
+	}
+	
+	/**
+	 * 動画の保存先ディレクトリを返す
+	 * @return File 動画の保存先ディレクトリ
+	 */
+	public File getMovieFileDir(){
+		return movieFileDir;
+	}
+	
+	/**
+	 * データベースのヘルパーを返す
+	 * @return SQLiteOpenHelper ヘルパーオブジェクト
+	 */
+	public SQLiteOpenHelper getSQLiteOpenHelper(){
+		return helper;
 	}
 	
 	public void dump(){
