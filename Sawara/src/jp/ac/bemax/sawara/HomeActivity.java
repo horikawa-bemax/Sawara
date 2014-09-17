@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -33,11 +34,14 @@ import android.widget.GridView;
  */
 public class HomeActivity extends Activity{
 	private GridView gView;
+	private GridAdapter gAdapter;
 	private ArrayList<Item> items;
+	private ItemManager iManager;
 	private int itemHeight; 
 	private File capturedFile;
 	
 	private final static int CAPTUER_IMAGE = 100;
+	private final static int NEW_ITEM = 200;
 	
 	/* (非 Javadoc)
 	 * コンストラクタ
@@ -59,10 +63,10 @@ public class HomeActivity extends Activity{
 		
 		// 初期化
 		items = new ArrayList<Item>();
-		ItemManager iManager = ItemManager.newItemManager(this);	
+		iManager = ItemManager.newItemManager(this);	
 		
 		// 指定したレイアウトでItemを並べる
-		GridAdapter gAdapter = new GridAdapter(this, R.layout.list_item, iManager.getAllItems());
+		gAdapter = new GridAdapter(this, R.layout.list_item, iManager.getAllItems());
 		gView.setAdapter(gAdapter);
 		
 		gView.setOnItemClickListener(gAdapter);
@@ -99,40 +103,56 @@ public class HomeActivity extends Activity{
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// カメラアプリからの結果を処理
-		if(requestCode == CAPTUER_IMAGE){
-			
-			if(resultCode == RESULT_OK){
+		switch(requestCode){
+		case CAPTUER_IMAGE:
+			// カメラアプリからの結果を処理
+			if(requestCode == CAPTUER_IMAGE){
 				
-				// 画像保存先のパスを取得
-				if(data != null){
-					String path = data.getData().getPath();
-					if(!path.equals(capturedFile)){
-						// captureFileに保存し直し
-						FileOutputStream fos = null;
-						try {
-							fos = new FileOutputStream(capturedFile);
-							Bitmap bmp = BitmapFactory.decodeFile(path);
-							bmp.compress(CompressFormat.JPEG, 100, fos);
-						} catch (FileNotFoundException e) {
-							e.printStackTrace();
-						}finally{
+				if(resultCode == RESULT_OK){
+					
+					// 画像保存先のパスを取得
+					if(data != null){
+						String path = data.getData().getPath();
+						if(!path.equals(capturedFile)){
+							// captureFileに保存し直し
+							FileOutputStream fos = null;
 							try {
-								fos.close();
-							} catch (IOException e) {
+								fos = new FileOutputStream(capturedFile);
+								Bitmap bmp = BitmapFactory.decodeFile(path);
+								bmp.compress(CompressFormat.JPEG, 100, fos);
+							} catch (FileNotFoundException e) {
 								e.printStackTrace();
+							}finally{
+								try {
+									fos.close();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 							}
 						}
 					}
+					
+					// RegisterIntentを呼び出す
+					Intent intent = new Intent(this, jp.ac.bemax.sawara.RegisterActivity.class);
+					intent.putExtra("image_uri", capturedFile.getPath());
+					startActivityForResult(intent, NEW_ITEM);
+				}else{
+					Log.d("result", "canceled");
 				}
-				
-				// RegisterIntentを呼び出す
-				Intent intent = new Intent(this, jp.ac.bemax.sawara.RegisterActivity.class);
-				intent.putExtra("image_uri", capturedFile.getPath());
-				startActivity(intent);
-			}else{
-				Log.d("result", "canceled");
 			}
+			break;
+		
+		case NEW_ITEM:
+			// 新規アイテム登録
+			ContentValues cv = new ContentValues();
+			cv.put("item_name", data.getStringExtra("item_name"));
+			cv.put("item_description", data.getStringExtra("item_description"));
+			cv.put("item_image", data.getStringExtra("item_image"));
+			Item item = iManager.newItem(cv);
+			gAdapter.add(item);
+			gAdapter.notifyDataSetChanged();
+			
+			break;
 		}
 	}
 }

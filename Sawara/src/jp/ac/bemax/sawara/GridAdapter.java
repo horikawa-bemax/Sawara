@@ -45,7 +45,6 @@ public class GridAdapter extends ArrayAdapter<Item> implements OnItemClickListen
 		dispSize = new Point();
 		wManager.getDefaultDisplay().getSize(dispSize);
 		
-		//リスナ登録
 	}
 
 	/* (非 Javadoc)

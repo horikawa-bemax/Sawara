@@ -1,7 +1,5 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
-
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
