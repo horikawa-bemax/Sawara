@@ -10,7 +10,8 @@
         android:layout_height="match_parent"
         android:layout_margin="10dp"
         android:layout_weight="1"
-        android:background="@color/base" />
+        android:background="@color/base"
+        android:padding="5dp" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -54,11 +55,29 @@
             <requestFocus />
         </EditText>
 
+        <LinearLayout
+            android:id="@+id/register_movie_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <VideoView
+                android:id="@+id/register_video_view"
+                android:layout_width="120dp"
+                android:layout_height="100dp" />
+
+            <Button
+                android:id="@+id/register_movie_button"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:text="Movie" />
+
+        </LinearLayout>
+
         <Button
             android:id="@+id/register_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Button" />
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:text="とうろく" />
 
     </LinearLayout>
 

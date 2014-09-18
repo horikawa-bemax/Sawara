@@ -1,28 +1,18 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Bitmap.CompressFormat;
-import android.os.Environment;
-
 
 public class SawaraDBAdapter{
 	private SQLiteOpenHelper helper;
 	
-	/* 初期のグループ */
+	// 初期のグループ
 	private final String[] groupNames = {"おうち","がっこう","あそび","べんきょう","たのしい","こわい"}; 
 	
 	public SawaraDBAdapter(Context context) {
@@ -80,47 +70,6 @@ public class SawaraDBAdapter{
 			// group_tableに初期値を設定
 			for(String name: groupNames){
 				db.execSQL("insert into group_table(group_name) values ('"+ name +"')");
-			}
-			
-			// Itemリストを作成（サンプル作成）
-			String[] strs = {"ともだち","じどうしゃ","こうえん","いえ","いぬ","やま","でんしんばしら","ひこうき"};
-			String[] descriptions = {"なかよしなひと","どうろをはしるのりもの","みんながあそぶところ","おうち","わんわんとほえるいきもの","おおきくてたかい","みちのそばにたっているぼう","そらをとぶのりもの"};
-			String[] images = {"friend","car","park","house","dog","mountain","pole","airplane"};
-			InputStream inputStream = null;
-			FileOutputStream fileOutputStream = null;
-			
-			ItemManager iManager = ItemManager.newItemManager(context);
-			ContentValues values = new ContentValues();
-			for(int i=0; i<8; i++){
-				try {
-					// サンプル画像をassetから読み込む
-					inputStream = context.getAssets().open("sample/"+images[i]+".jpg");
-					Bitmap bmp = BitmapFactory.decodeStream(inputStream);
-					
-					// サンプル画像をアプリの記憶領域に書き込む準備
-					File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-					String imageFileName = images[i] + ".jpg";
-					
-					// 画像をアプリの記憶領域に書き込む
-					fileOutputStream = new FileOutputStream(new File(dir, imageFileName));
-					bmp.compress(CompressFormat.JPEG, 100, fileOutputStream);
-					
-					// DBにサンプルデータを登録する
-					values.put("item_name", strs[i]);
-					values.put("item_description", descriptions[i]);
-					values.put("item_image", imageFileName);
-					db.insert("item_table", null, values);
-					
-				} catch (IOException e) {
-					e.printStackTrace();
-				}finally{
-					try {
-						inputStream.close();
-						fileOutputStream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
 			}
 		}
 	

@@ -7,8 +7,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -16,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 /**
  * 登録画面
@@ -27,9 +30,12 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private ImageView imageView;
 	private TextView labelName, labelDescription;
 	private EditText textName, textDescription;
-	private Button submitButton;
+	private Button submitButton, movieButton;
+	private VideoView movieView;
 	
 	private String fileName;
+	
+	private final int MOVIE_CAPTUER = 300;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +49,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		textName = (EditText)findViewById(R.id.register_name);
 		textDescription = (EditText)findViewById(R.id.register_description);
 		submitButton = (Button)findViewById(R.id.register_button);
+		movieButton = (Button)findViewById(R.id.register_movie_button);
+		movieView = (VideoView)findViewById(R.id.register_video_view);
 		
 		// インテントからデータを受け取る
 		Intent intent = getIntent();
@@ -92,20 +100,56 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		textDescription.setTextSize(30);
 		textDescription.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 300));
 		
+		//
+		movieButton.setOnClickListener(this);
+		
 		// 登録ボタン
 		submitButton.setOnClickListener(this);
 	}
 
 	@Override
 	public void onClick(View v) {
-		// 結果を呼び出しもとActivityに返す
 		Intent intent = new Intent();
-		intent.putExtra("item_name", textName.getText().toString());
-		intent.putExtra("item_description", textDescription.getText().toString());
-		intent.putExtra("item_image", fileName);
-		setResult(RESULT_OK, intent);
 		
-		// Activityを終了
-		finish();
+		switch(v.getId()){
+		case R.id.register_button:
+			// 結果を呼び出しもとActivityに返す
+			intent.putExtra("item_name", textName.getText().toString());
+			intent.putExtra("item_description", textDescription.getText().toString());
+			intent.putExtra("item_image", fileName);
+			setResult(RESULT_OK, intent);
+			
+			// Activityを終了
+			finish();
+			break;
+		case R.id.register_movie_button:
+			File dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+			Uri uriPath = Uri.fromFile(dir);
+			
+			intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
+			intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPath);
+			intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
+			//intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
+			intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 1*1024*1024);
+			startActivityForResult(intent, MOVIE_CAPTUER);
+			break;
+		}
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// 
+		switch(requestCode){
+		case MOVIE_CAPTUER:
+			if(resultCode == RESULT_OK){
+				if(data != null){
+					Uri moviePath= data.getData();
+					movieView.setVideoURI(moviePath);
+					movieView.start();
+				}
+			}
+			
+			break;
+		}
 	}
 }
