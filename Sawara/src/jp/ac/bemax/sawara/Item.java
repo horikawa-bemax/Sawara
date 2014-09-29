@@ -13,7 +13,7 @@ import android.util.Log;
  * @author Masaaki Horikawa
  * 2014/09/05
  */
-public class Item {
+public class Item implements ListItem{
 	private ItemManager iManager;
 	private ContentValues values;
 	private long row_id;
@@ -164,5 +164,11 @@ public class Item {
 			Log.d("id_"+cr.getString(0), cr.getString(1)+":"+cr.getString(2)+":"+cr.getString(3));
 		}
 		db.close();
+	}
+
+	@Override
+	public int getType() {
+		// TODO 自動生成されたメソッド・スタブ
+		return ListItem.ITEM;
 	}
 }

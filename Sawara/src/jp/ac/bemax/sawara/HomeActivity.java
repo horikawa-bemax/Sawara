@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -66,7 +67,12 @@ public class HomeActivity extends Activity{
 		iManager = ItemManager.newItemManager(this);	
 		
 		// 指定したレイアウトでItemを並べる
-		gAdapter = new GridAdapter(this, R.layout.list_item, iManager.getAllItems());
+		List<ListItem> listItems = new ArrayList<ListItem>();
+		listItems.add(new ListButton("しんきとうろく",R.drawable.friend, this));
+		for(Item item: iManager.getAllItems()){
+			listItems.add(item);
+		}
+		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
 		gView.setAdapter(gAdapter);
 		
 		gView.setOnItemClickListener(gAdapter);

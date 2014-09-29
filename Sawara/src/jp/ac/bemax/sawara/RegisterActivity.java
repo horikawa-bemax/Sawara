@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -112,6 +113,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		Intent intent = new Intent();
 		
 		switch(v.getId()){
+		
+		// 登録ボタンが押された
 		case R.id.register_button:
 			// 結果を呼び出しもとActivityに返す
 			intent.putExtra("item_name", textName.getText().toString());
@@ -122,6 +125,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// Activityを終了
 			finish();
 			break;
+			
+		// movieボタンが押された
 		case R.id.register_movie_button:
 			File dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			Uri uriPath = Uri.fromFile(dir);
@@ -129,8 +134,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPath);
 			intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
-			//intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 10);
-			intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 1*1024*1024);
+			intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 20);
+			// intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 1);
 			startActivityForResult(intent, MOVIE_CAPTUER);
 			break;
 		}
@@ -141,15 +146,24 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		// 
 		switch(requestCode){
 		case MOVIE_CAPTUER:
+			
 			if(resultCode == RESULT_OK){
 				if(data != null){
 					Uri moviePath= data.getData();
 					movieView.setVideoURI(moviePath);
+					
 					movieView.start();
+					
 				}
 			}
 			
 			break;
 		}
+	}
+	
+	@Override
+	protected void onStop() {
+		// TODO 自動生成されたメソッド・スタブ
+		super.onStop();
 	}
 }

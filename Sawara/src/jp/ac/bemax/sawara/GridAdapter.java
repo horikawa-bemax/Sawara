@@ -28,13 +28,13 @@ import android.widget.LinearLayout.LayoutParams;
  * @author Masaaki Horikawa
  * 2014/09/02
  */
-public class GridAdapter extends ArrayAdapter<Item> implements OnItemClickListener{
+public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickListener{
 	private Context context;	// コンテキスト(HomeActivity)
 	private int resourceId;		// グリッドに表示するアイテムのレイアウトXML
-	private List<Item> list;	// グリッドに表示するアイテムのリスト
+	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
 	private Point dispSize; 	// 画面のサイズ
 	
-	public GridAdapter(Context context, int resource, List<Item> objects) {
+	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
 		this.context = context;
 		this.resourceId = resource;
@@ -58,28 +58,22 @@ public class GridAdapter extends ArrayAdapter<Item> implements OnItemClickListen
             convertView = inflater.inflate(resourceId, null);
 		}
 		// 表示するアイテムを取り出す
-		Item item = getItem(position);
+		ListItem listItem = getItem(position);
 		
 		LinearLayout view = (LinearLayout)convertView;
 		
 		// imageViewにitemの画像をセットする
 		ImageView imgView = (ImageView)view.findViewById(R.id.list_item_image);
 		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		try {
-			InputStream is = new FileInputStream(new File(dir, item.getImageUrl()));
-			Bitmap bmp = BitmapFactory.decodeStream(is);
-			imgView.setImageBitmap(bmp);
-		} catch (FileNotFoundException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		Bitmap bmp = listItem.getImage();
+		imgView.setImageBitmap(bmp);
 		
 		// 縦書きのtextViewにアイテムの値をセットする
 		VTextView vtView = (VTextView)view.findViewById(R.id.list_vTextView);
 		float den = context.getResources().getDisplayMetrics().density;
 		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.y/2.3) );
 		vtView.setLayoutParams(params);
-		vtView.setText(item.getName());
+		vtView.setText(listItem.getName());
 
 		return view;
 	}
@@ -87,9 +81,18 @@ public class GridAdapter extends ArrayAdapter<Item> implements OnItemClickListen
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
 		Intent intent = new Intent();
-		Item item = list.get(position);
-		intent.putExtra("item_id", item.getId());
-		intent.setClass(context, ItemActivity.class);
-		context.startActivity(intent);		
+		ListItem listItem = list.get(position);
+		int type = listItem.getType();
+		switch(type){
+		case ListItem.ITEM:
+			Item item = (Item)listItem;
+			intent.putExtra("item_id", item.getId());
+			intent.setClass(context, ItemActivity.class);
+			context.startActivity(intent);
+			break;
+		case ListItem.NEW:
+			intent.setClass(context, RegisterActivity.class);
+		}
+
 	}
 }
