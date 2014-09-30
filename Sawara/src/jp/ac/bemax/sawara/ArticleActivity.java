@@ -10,11 +10,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout.LayoutParams;
 
 /**
- * アイテムを表示するアクティビティ
+ * Articleを表示するアクティビティ
  * @author Masaaki Horikawa
  * 2014/09/10
  */
-public class ItemActivity extends Activity {
+public class ArticleActivity extends Activity {
 	private ImageView itemImage;
 	private VTextView itemDescription;
 	private VTextView itemName;
@@ -36,8 +36,8 @@ public class ItemActivity extends Activity {
 		long rowId = intent.getExtras().getLong("item_id");
 		
 		// アイテムインスタンスを作成
-		ItemManager iManager = ItemManager.newItemManager(this);
-		Item item = iManager.getItem(rowId);
+		ArticleManager iManager = ArticleManager.newItemManager(this);
+		Article item = iManager.getItem(rowId);
 
 		// ディスプレイ情報を取得
 		DisplayMetrics dm = getResources().getDisplayMetrics();

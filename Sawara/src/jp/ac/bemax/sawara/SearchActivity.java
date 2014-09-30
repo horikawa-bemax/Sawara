@@ -5,6 +5,11 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+/**
+ * 検索画面のアクティビティ
+ * @author Masaaki Horikawa
+ * 2014/09/30
+ */
 public class SearchActivity extends Activity{
 	private ListView listView;
 

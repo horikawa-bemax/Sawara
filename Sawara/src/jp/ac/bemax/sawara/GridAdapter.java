@@ -1,15 +1,11 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.List;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -85,9 +81,9 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		int type = listItem.getType();
 		switch(type){
 		case ListItem.ITEM:
-			Item item = (Item)listItem;
+			Article item = (Article)listItem;
 			intent.putExtra("item_id", item.getId());
-			intent.setClass(context, ItemActivity.class);
+			intent.setClass(context, ArticleActivity.class);
 			context.startActivity(intent);
 			break;
 		case ListItem.NEW:

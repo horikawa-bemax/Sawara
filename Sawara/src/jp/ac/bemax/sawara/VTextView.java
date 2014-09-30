@@ -8,6 +8,11 @@ import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 
+/**
+ * 縦書きのテキストView
+ * @author Masaaki Horikawa
+ * 2014/09/30
+ */
 public class VTextView extends View {
 
     private static final int TOP_SPACE = 20;

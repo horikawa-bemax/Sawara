@@ -9,17 +9,17 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 
 /**
- * アイテムクラス
+ * 言葉事典で取り扱う、１情報単位を表すクラス
  * @author Masaaki Horikawa
  * 2014/09/05
  */
-public class Item implements ListItem{
-	private ItemManager iManager;
+public class Article implements ListItem{
+	private ArticleManager iManager;
 	private ContentValues values;
 	private long row_id;
 
 	
-	public Item(ItemManager mng){
+	public Article(ArticleManager mng){
 		iManager = mng;
 		row_id = -1;
 		values = new ContentValues();

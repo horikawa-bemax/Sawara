@@ -4,6 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+/**
+ * GridView内に表示するボタンを表すクラス
+ * @author Masaaki Horikawa
+ * 2014/09/30
+ */
 public class ListButton implements ListItem{
 	private String name;
 	private int resId;

@@ -4,12 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -24,8 +21,6 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.GridView;
 
 /**
@@ -36,8 +31,8 @@ import android.widget.GridView;
 public class HomeActivity extends Activity{
 	private GridView gView;
 	private GridAdapter gAdapter;
-	private ArrayList<Item> items;
-	private ItemManager iManager;
+	private ArrayList<Article> items;
+	private ArticleManager iManager;
 	private int itemHeight; 
 	private File capturedFile;
 	
@@ -63,13 +58,13 @@ public class HomeActivity extends Activity{
 		itemHeight = p.y / 2;
 		
 		// 初期化
-		items = new ArrayList<Item>();
-		iManager = ItemManager.newItemManager(this);	
+		items = new ArrayList<Article>();
+		iManager = ArticleManager.newItemManager(this);	
 		
 		// 指定したレイアウトでItemを並べる
 		List<ListItem> listItems = new ArrayList<ListItem>();
 		listItems.add(new ListButton("しんきとうろく",R.drawable.friend, this));
-		for(Item item: iManager.getAllItems()){
+		for(Article item: iManager.getAllItems()){
 			listItems.add(item);
 		}
 		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
@@ -154,7 +149,7 @@ public class HomeActivity extends Activity{
 			cv.put("item_name", data.getStringExtra("item_name"));
 			cv.put("item_description", data.getStringExtra("item_description"));
 			cv.put("item_image", data.getStringExtra("item_image"));
-			Item item = iManager.newItem(cv);
+			Article item = iManager.newItem(cv);
 			gAdapter.add(item);
 			gAdapter.notifyDataSetChanged();
 			

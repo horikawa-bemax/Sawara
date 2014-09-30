@@ -19,24 +19,24 @@ import android.os.Environment;
 import android.util.Log;
 
 /**
- * アイテムをマネジメントするクラス
+ * ArticleとDBとの間に立ち、両者を中継するクラス
  * @author Masaaki Horikawa
  * 2014/09/05
  */
-public class ItemManager {
+public class ArticleManager {
 	private Context context;
 	private SQLiteOpenHelper helper;
 	private SawaraDBAdapter sdba;
 	private File imageFileDir;
 	private File movieFileDir;
-	private static ItemManager iManager;
+	private static ArticleManager iManager;
 	
 	/**
 	 * 
 	 * ItemManager.javaコンストラクタ
 	 * @param context
 	 */
-	private ItemManager(Context context){
+	private ArticleManager(Context context){
 		this.context = context;
 		
 		// sawaraDBアダプタを登録
@@ -54,9 +54,9 @@ public class ItemManager {
 	 * @param context
 	 * @return ItemManager
 	 */
-	public static ItemManager newItemManager(Context context){
+	public static ArticleManager newItemManager(Context context){
 		if(iManager == null){
-			iManager = new ItemManager(context);
+			iManager = new ArticleManager(context);
 		}
 		return iManager;
 	}
@@ -67,14 +67,14 @@ public class ItemManager {
 	 * @param values item_tableにinsertする値
 	 * @return Item アイテムオブジェクト
 	 */
-	public Item newItem(ContentValues values){
-		Item resultItem = null;
+	public Article newItem(ContentValues values){
+		Article resultItem = null;
 		// 
 		SQLiteDatabase db = null;
 		try{
 			db = helper.getWritableDatabase();
 			long rowId = db.insert("item_table", null, values);
-			resultItem = new Item(this);
+			resultItem = new Article(this);
 			resultItem.setId(rowId);
 		}catch(Exception e){
 			e.printStackTrace();
@@ -89,8 +89,8 @@ public class ItemManager {
 	 * @param rowId
 	 * @return Itemオブジェクト
 	 */
-	public Item getItem(long rowId){
-		Item item = new Item(this);
+	public Article getItem(long rowId){
+		Article item = new Article(this);
 		item.setId(rowId);
 		
 		return item;
@@ -100,12 +100,12 @@ public class ItemManager {
 	 * DB上のすべてのアイテムを取得して、そのリストを返す
 	 * @return アイテムのリスト
 	 */
-	public List<Item> getAllItems(){
-		List<Item> items = new ArrayList<Item>();
+	public List<Article> getAllItems(){
+		List<Article> items = new ArrayList<Article>();
 		SQLiteDatabase db = helper.getReadableDatabase();
 		Cursor cr = db.rawQuery("select * from item_table", null);
 		while(cr.moveToNext()){
-			Item item = new Item(this);
+			Article item = new Article(this);
 			item.setId(cr.getLong(0));
 			items.add(item);
 		}
@@ -138,8 +138,8 @@ public class ItemManager {
 	}
 	
 	public void dump(){
-		List<Item> list = getAllItems();
-		for(Item item: list){
+		List<Article> list = getAllItems();
+		for(Article item: list){
 			Log.d("item("+item.getId()+")", item.getName());
 		}
 	}
