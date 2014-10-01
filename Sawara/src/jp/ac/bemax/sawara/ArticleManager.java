@@ -62,9 +62,9 @@ public class ArticleManager {
 	}
 	
 	/**
-	 * Itemオブジェクトを新規作成する
-	 * DBのitem_tableに、valuesの値をinsertする
-	 * @param values item_tableにinsertする値
+	 * Articleオブジェクトを新規作成する
+	 * DBのarticle_tableに、valuesの値をinsertする
+	 * @param values article_tableにinsertする値
 	 * @return Item アイテムオブジェクト
 	 */
 	public Article newItem(ContentValues values){
@@ -73,7 +73,7 @@ public class ArticleManager {
 		SQLiteDatabase db = null;
 		try{
 			db = helper.getWritableDatabase();
-			long rowId = db.insert("item_table", null, values);
+			long rowId = db.insert("article_table", null, values);
 			resultItem = new Article(this);
 			resultItem.setId(rowId);
 		}catch(Exception e){
@@ -103,7 +103,7 @@ public class ArticleManager {
 	public List<Article> getAllItems(){
 		List<Article> items = new ArrayList<Article>();
 		SQLiteDatabase db = helper.getReadableDatabase();
-		Cursor cr = db.rawQuery("select * from item_table", null);
+		Cursor cr = db.rawQuery("select ROWID, * from article_table", null);
 		while(cr.moveToNext()){
 			Article item = new Article(this);
 			item.setId(cr.getLong(0));

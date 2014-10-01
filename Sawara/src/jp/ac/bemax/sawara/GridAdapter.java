@@ -25,10 +25,10 @@ import android.widget.LinearLayout.LayoutParams;
  * 2014/09/02
  */
 public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickListener{
-	private Context context;	// コンテキスト(HomeActivity)
-	private int resourceId;		// グリッドに表示するアイテムのレイアウトXML
+	private Context context;		// コンテキスト(HomeActivity)
+	private int resourceId;			// グリッドに表示するアイテムのレイアウトXML
 	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
-	private Point dispSize; 	// 画面のサイズ
+	private Point dispSize; 		// 画面のサイズ
 	
 	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
@@ -67,7 +67,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		// 縦書きのtextViewにアイテムの値をセットする
 		VTextView vtView = (VTextView)view.findViewById(R.id.list_vTextView);
 		float den = context.getResources().getDisplayMetrics().density;
-		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.y/2.3) );
+		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.x/5) );
 		vtView.setLayoutParams(params);
 		vtView.setText(listItem.getName());
 
@@ -86,8 +86,10 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 			intent.setClass(context, ArticleActivity.class);
 			context.startActivity(intent);
 			break;
-		case ListItem.NEW:
+		case ListItem.NEW_BUTTON:
 			intent.setClass(context, RegisterActivity.class);
+			context.startActivity(intent);
+			break;
 		}
 
 	}

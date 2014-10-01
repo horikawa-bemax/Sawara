@@ -82,7 +82,7 @@ public class Article implements ListItem{
 	 * データベースからこのアイテムの情報を読み込む
 	 */
 	public void loadItem(){
-		String sql = "select * from item_table where ROWID = ?";
+		String sql = "select * from article_table where ROWID = ?";
 		String[] args = {""+row_id};
 		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
 		Cursor cr = db.rawQuery(sql, args);
@@ -159,7 +159,7 @@ public class Article implements ListItem{
 	 */
 	public void dump(){
 		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
-		Cursor cr = db.rawQuery("select * from item_table", null);
+		Cursor cr = db.rawQuery("select ROWID, * from article_table", null);
 		while(cr.moveToNext()){
 			Log.d("id_"+cr.getString(0), cr.getString(1)+":"+cr.getString(2)+":"+cr.getString(3));
 		}

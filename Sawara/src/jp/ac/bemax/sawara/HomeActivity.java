@@ -31,8 +31,8 @@ import android.widget.GridView;
 public class HomeActivity extends Activity{
 	private GridView gView;
 	private GridAdapter gAdapter;
-	private ArrayList<Article> items;
-	private ArticleManager iManager;
+	private ArrayList<Category> items;
+	private CategoryManager cManager;
 	private int itemHeight; 
 	private File capturedFile;
 	
@@ -55,16 +55,16 @@ public class HomeActivity extends Activity{
 		Display display = getWindowManager().getDefaultDisplay();
 		Point p = new Point();
 		display.getSize(p);
-		itemHeight = p.y / 2;
+		itemHeight = p.x / 5;
 		
 		// 初期化
-		items = new ArrayList<Article>();
-		iManager = ArticleManager.newItemManager(this);	
+		items = new ArrayList<Category>();
+		cManager = CategoryManager.newCategoryManager(this);	
 		
 		// 指定したレイアウトでItemを並べる
 		List<ListItem> listItems = new ArrayList<ListItem>();
-		listItems.add(new ListButton("しんきとうろく",R.drawable.friend, this));
-		for(Article item: iManager.getAllItems()){
+		listItems.add(new NewButton(this));
+		for(Category item: cManager.getAllItems()){
 			listItems.add(item);
 		}
 		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
@@ -73,13 +73,16 @@ public class HomeActivity extends Activity{
 		gView.setOnItemClickListener(gAdapter);
 	}
 
+	/*
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		//
 		menu.add(0, 1, 0, "さくせい");
 		return true;
 	}
+	*/
 	
+	/*
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		// 写真を撮る
@@ -101,7 +104,9 @@ public class HomeActivity extends Activity{
 		}
 		return true;
 	}
+	*/
 	
+	/*
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch(requestCode){
@@ -145,15 +150,23 @@ public class HomeActivity extends Activity{
 		
 		case NEW_ITEM:
 			// 新規アイテム登録
-			ContentValues cv = new ContentValues();
-			cv.put("item_name", data.getStringExtra("item_name"));
-			cv.put("item_description", data.getStringExtra("item_description"));
-			cv.put("item_image", data.getStringExtra("item_image"));
-			Article item = iManager.newItem(cv);
+			ContentValues article_cv = new ContentValues();
+			article_cv.put("article_name", data.getStringExtra("article_name"));
+			article_cv.put("article_description", data.getStringExtra("article_description"));
+			//cv.put("article_image", data.getStringExtra("item_image"));
+			article_cv.put("article_reg_date", data.getLongExtra("article_reg_date", 0));
+			Article item = iManager.newItem(article_cv);
+			
+			ContentValues image_cv = new ContentValues();
+			image_cv.put("image_url", data.getStringExtra("article_image"));
+			image_cv.put("article_id", item.getId());
+			
+			
 			gAdapter.add(item);
 			gAdapter.notifyDataSetChanged();
 			
 			break;
 		}
 	}
+	*/
 }

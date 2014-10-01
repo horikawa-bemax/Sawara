@@ -66,11 +66,11 @@ public class SawaraDBAdapter{
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			// カテゴリテーブルを新規作成
-			String create_tag_table_sql = "create table tag_table " +
-					"(group_name text," +			// タグ名
+			String create_category_table_sql = "create table category_table " +
+					"(category_name text," +		// カテゴリ名
 					" view_position integer," +		// 表示位置
 					" update_date integer)";		// 更新日時
-			db.execSQL(create_tag_table_sql);
+			db.execSQL(create_category_table_sql);
 			
 			// アーティクルテーブルを新規作成
 			String create_article_table_sql = "create table article_table " +
@@ -78,11 +78,11 @@ public class SawaraDBAdapter{
 					" article_description," +					// 説明
 					" view_position integer," +					// 表示位置
 					" article_reg_date integer," +				// 登録日時
-					" article_update_date integer";				// 更新日時
+					" article_update_date integer)";			// 更新日時
 			db.execSQL(create_article_table_sql);
 			
 			String create_tag_article_table_sql = "create table category_article_table " +
-					"(tag_id integer not null," +			// タグID
+					"(category_id integer not null," +		// カテゴリID
 					" article_id integer not null," +		// アーティクルID
 					" unique (category_id, article_id))";	// ユニーク制約条件
 			db.execSQL(create_tag_article_table_sql);
@@ -101,28 +101,28 @@ public class SawaraDBAdapter{
 			
 			// アーティクルとイメージの結合ビューを作成
 			String create_article_image_view_sql = "create view article_image_view as " +
-					"select article_id, image_url " +
-					"from article_table inner join image_table " +
-					"on article_table.RQWID = image_table.article_id " +
+					"select A.ROWID article_id, image_url " +
+					"from article_table A inner join image_table B " +
+					"on A.ROWID = B.article_id " +
 					"order by article_id";
 			db.execSQL(create_article_image_view_sql);
 			
 			// アーティクルとムービーの結合ビューを作成
 			String create_article_movie_view_sql = "create view article_movie_view as " +
-					"select article_id, movie_url " +
-					"from article_table inner join movie_table " +
-					"on article_table.ROWID = movie_table.article_id " +
-					"order by article_id";
+					"select A.ROWID article_id, movie_url " +
+					"from article_table A inner join movie_table B " +
+					"on A.ROWID = B.article_id " +
+					"order by A.ROWID";
 			db.execSQL(create_article_movie_view_sql);
 			
 			// アーティクルごとのタグを表すビューを作成
 			String create_tags_on_article_view_sql = "create view tags_on_article_view as " +
-					"select tag_name, article_id" +
-					"from (article_table inner join tag_article_table " +
-					"on article_table.ROWID = tag_article_table.article_id) " +
-					"inner join tag_table " +
-					"on tag_article_table.tag_id = tag_table.ROWID " +
-					"order by article_id";
+					"select category_name, A.ROWID article_id" +
+					"from (article_table A inner join tag_article_table B " +
+					"on A.ROWID = B.article_id) " +
+					"inner join tag_table C " +
+					"on B.tag_id = C.ROWID " +
+					"order by A.ROWID";
 		}
 	
 		/* (非 Javadoc)

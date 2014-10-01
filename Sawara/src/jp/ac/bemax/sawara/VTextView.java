@@ -27,10 +27,10 @@ public class VTextView extends View {
 
     public VTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mFace = Typeface.createFromAsset(context.getAssets(),"yasashisa.ttf");
+        mFace = Typeface.createFromAsset(context.getAssets(),"HGRKK.TTC");
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setTextSize(FONT_SIZE);
-        mPaint.setColor(context.getResources().getColor(R.color.main));
+        mPaint.setColor(Color.BLACK);
         mPaint.setTypeface(mFace);
     }
 

@@ -9,7 +9,8 @@ import android.graphics.Bitmap;
  */
 public interface ListItem {
 	public static final int ITEM = 1;
-	public static final int NEW = 2;
+	public static final int CATEGORY = 2;
+	public static final int NEW_BUTTON = 3;
 	public int getType();
 	public long getId();
 	public String getName();

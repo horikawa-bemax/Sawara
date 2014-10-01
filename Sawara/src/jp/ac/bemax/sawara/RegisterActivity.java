@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -41,17 +40,9 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.register);
+		setContentView(R.layout.register1);
 		
 		// レイアウトの紐付け
-		imageView = (ImageView)findViewById(R.id.register_image);
-		labelName = (TextView)findViewById(R.id.register_label_name);
-		labelDescription = (TextView)findViewById(R.id.register_label_description);
-		textName = (EditText)findViewById(R.id.register_name);
-		textDescription = (EditText)findViewById(R.id.register_description);
-		submitButton = (Button)findViewById(R.id.register_button);
-		movieButton = (Button)findViewById(R.id.register_movie_button);
-		movieView = (VideoView)findViewById(R.id.register_video_view);
 		
 		// インテントからデータを受け取る
 		Intent intent = getIntent();
@@ -115,11 +106,12 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		switch(v.getId()){
 		
 		// 登録ボタンが押された
-		case R.id.register_button:
+		case R.id.register_next_button:
 			// 結果を呼び出しもとActivityに返す
-			intent.putExtra("item_name", textName.getText().toString());
-			intent.putExtra("item_description", textDescription.getText().toString());
-			intent.putExtra("item_image", fileName);
+			intent.putExtra("article_name", textName.getText().toString());
+			intent.putExtra("article_description", textDescription.getText().toString());
+			intent.putExtra("article_image", fileName);
+			intent.putExtra("article_reg_date", System.currentTimeMillis());
 			setResult(RESULT_OK, intent);
 			
 			// Activityを終了
