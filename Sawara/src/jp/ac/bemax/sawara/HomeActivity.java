@@ -33,6 +33,7 @@ public class HomeActivity extends Activity{
 	private GridAdapter gAdapter;
 	private ArrayList<Category> items;
 	private CategoryManager cManager;
+	private ArticleManager aManager;
 	private int itemHeight; 
 	private File capturedFile;
 	
@@ -59,17 +60,27 @@ public class HomeActivity extends Activity{
 		
 		// 初期化
 		items = new ArrayList<Category>();
-		cManager = CategoryManager.newCategoryManager(this);	
+		cManager = CategoryManager.newCategoryManager(this);
+		aManager = ArticleManager.newItemManager(this);
 		
-		// 指定したレイアウトでItemを並べる
+		// 指定したレイアウトでListItemを並べる
+		// 新規作成ボタン
 		List<ListItem> listItems = new ArrayList<ListItem>();
 		listItems.add(new NewButton(this));
+		// カテゴリー
 		for(Category item: cManager.getAllItems()){
 			listItems.add(item);
 		}
+		// カテゴリー登録されていないアーティクル
+		for(Article item: aManager.getAllItems()){
+			listItems.add(item);
+		}
+		
+		// グリッドビューにセット
 		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
 		gView.setAdapter(gAdapter);
 		
+		// 各アイテムをクリックした場合のリスナを登録
 		gView.setOnItemClickListener(gAdapter);
 	}
 

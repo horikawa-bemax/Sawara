@@ -1,6 +1,8 @@
 package jp.ac.bemax.sawara;
 
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -114,7 +116,7 @@ public class Article implements ListItem{
 	 */
 	public String getName(){
 		loadItem();
-		return values.getAsString("item_name");
+		return values.getAsString("article_name");
 	}
 	
 	/**
@@ -123,7 +125,7 @@ public class Article implements ListItem{
 	 */
 	public String getDescription(){
 		loadItem();
-		return values.getAsString("item_description");
+		return values.getAsString("article_description");
 	}
 	
 	/**
@@ -170,5 +172,14 @@ public class Article implements ListItem{
 	public int getType() {
 		// TODO 自動生成されたメソッド・スタブ
 		return ListItem.ITEM;
+	}
+
+	@Override
+	public void clicked(Context context) {
+		// 
+		Intent intent = new Intent();
+		intent.setClass(context, ArticleActivity.class);
+		intent.putExtra("article_id", row_id);
+		context.startActivity(intent);
 	}
 }

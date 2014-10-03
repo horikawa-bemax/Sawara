@@ -78,19 +78,6 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
 		Intent intent = new Intent();
 		ListItem listItem = list.get(position);
-		int type = listItem.getType();
-		switch(type){
-		case ListItem.ITEM:
-			Article item = (Article)listItem;
-			intent.putExtra("item_id", item.getId());
-			intent.setClass(context, ArticleActivity.class);
-			context.startActivity(intent);
-			break;
-		case ListItem.NEW_BUTTON:
-			intent.setClass(context, RegisterActivity.class);
-			context.startActivity(intent);
-			break;
-		}
-
+		listItem.clicked(context);
 	}
 }

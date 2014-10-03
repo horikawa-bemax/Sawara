@@ -1,5 +1,6 @@
 package jp.ac.bemax.sawara;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 
 /**
@@ -15,4 +16,5 @@ public interface ListItem {
 	public long getId();
 	public String getName();
 	public Bitmap getImage();
+	public void clicked(Context context);
 }

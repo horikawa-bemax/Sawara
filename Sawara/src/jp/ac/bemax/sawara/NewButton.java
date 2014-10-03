@@ -1,6 +1,7 @@
 package jp.ac.bemax.sawara;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -34,5 +35,13 @@ public class NewButton implements ListItem{
 	@Override
 	public Bitmap getImage() {
 		return BitmapFactory.decodeResource(context.getResources(), R.drawable.friend);
+	}
+
+	@Override
+	public void clicked(Context context) {
+		// 
+		Intent intent = new Intent();
+		intent.setClass(context, RegisterActivity.class);
+		context.startActivity(intent);		
 	}
 }

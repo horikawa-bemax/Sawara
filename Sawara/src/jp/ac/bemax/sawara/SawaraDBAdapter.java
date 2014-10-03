@@ -3,6 +3,7 @@ package jp.ac.bemax.sawara;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -123,6 +124,23 @@ public class SawaraDBAdapter{
 					"inner join tag_table C " +
 					"on B.tag_id = C.ROWID " +
 					"order by A.ROWID";
+			//db.execSQL(create_tags_on_article_view_sql);
+			
+			// サンプルデータセット
+			ContentValues cv = new ContentValues();
+			cv.put("category_name", "じどうしゃ");
+			cv.put("view_position", 1);
+			cv.put("update_date", System.currentTimeMillis());
+			db.insert("category_table", null, cv);
+			
+			cv = new ContentValues();
+			cv.put("article_name", "レガシィ");
+			cv.put("article_description", "スバルの旗艦車種");
+			cv.put("view_position", 1);
+			cv.put("article_reg_date", System.currentTimeMillis());
+			cv.put("article_update_date", System.currentTimeMillis());
+			db.insert("article_table", null, cv);
+			
 		}
 	
 		/* (非 Javadoc)

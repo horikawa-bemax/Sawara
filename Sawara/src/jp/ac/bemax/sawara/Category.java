@@ -1,5 +1,7 @@
 package jp.ac.bemax.sawara;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.graphics.Bitmap;
 
 /**
@@ -8,7 +10,18 @@ import android.graphics.Bitmap;
  * 2014/09/30
  */
 public class Category implements ListItem{
-
+	private long rowid;
+	private String categoryName;
+	private int viewPosition;
+	private long updateDate;
+	
+	public Category(long id, String name, int position){
+		rowid = id;
+		categoryName = name;
+		viewPosition = position;
+		updateDate = System.currentTimeMillis();
+	}
+	
 	@Override
 	public int getType() {
 		return ListItem.CATEGORY;
@@ -17,13 +30,17 @@ public class Category implements ListItem{
 	@Override
 	public long getId() {
 		// TODO 自動生成されたメソッド・スタブ
-		return 0;
+		return rowid;
 	}
 
+	public void setId(long id){
+		rowid = id;
+	}
+	
 	@Override
 	public String getName() {
 		// TODO 自動生成されたメソッド・スタブ
-		return null;
+		return categoryName;
 	}
 
 	@Override
@@ -32,4 +49,18 @@ public class Category implements ListItem{
 		return null;
 	}
 
+	@Override
+	public void clicked(Context context) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	public ContentValues getContentValues(){
+		ContentValues cv = new ContentValues();
+		cv.put("category_name", categoryName);
+		cv.put("view_position", viewPosition);
+		cv.put("update_date", updateDate);
+		
+		return cv;
+	}
 }

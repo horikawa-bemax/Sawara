@@ -44,6 +44,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		
 		// レイアウトの紐付け
 		
+		/*
 		// インテントからデータを受け取る
 		Intent intent = getIntent();
 		String path = intent.getStringExtra("image_uri");
@@ -68,10 +69,12 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		
 		// imageViewに画像を表示
 		imageView.setImageBitmap(image);
+		*/
 		
 		// テキストのフォントを指定 
-		Typeface tf = Typeface.createFromAsset(getAssets(),"yasashisa.ttf");
+		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
 		
+		/*
 		// 名前ラベルの設定
 		labelName.setTypeface(tf);
 		labelName.setTextSize(35);
@@ -97,6 +100,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		
 		// 登録ボタン
 		submitButton.setOnClickListener(this);
+		
+		*/
 	}
 
 	@Override
