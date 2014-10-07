@@ -1,22 +1,14 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.os.Environment;
-import android.util.Log;
+
 
 /**
  * ArticleとDBとの間に立ち、両者を中継するクラス
@@ -65,7 +57,7 @@ public class ArticleManager {
 		Cursor mCursor = db.rawQuery("select ROWID, * from article_table where ROWID = ?", selectionArgs);
 		if(mCursor.getCount() == 1){
 			mCursor.moveToNext();
-			article = new Article(mCursor.getString(1), mCursor.getString(2));
+			article = new Article(mCursor.getString(1), mCursor.getString(2), mCursor.getLong(3));
 			article.setId(mCursor.getLong(0));
 		}
 		return article;
@@ -80,7 +72,7 @@ public class ArticleManager {
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		Cursor cr = db.rawQuery("select ROWID, * from article_table", null);
 		while(cr.moveToNext()){
-			Article article = new Article(cr.getString(1), cr.getString(2));
+			Article article = new Article(cr.getString(1), cr.getString(2), cr.getLong(3));
 			article.setId(cr.getLong(0));
 			items.add(article);
 			String[] args = {"" + cr.getLong(0)};

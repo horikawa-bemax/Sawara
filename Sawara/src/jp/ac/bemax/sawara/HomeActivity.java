@@ -1,26 +1,14 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import android.app.Activity;
-import android.content.ContentValues;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Point;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Display;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.GridView;
 
 /**
@@ -82,6 +70,10 @@ public class HomeActivity extends Activity{
 		
 		// 各アイテムをクリックした場合のリスナを登録
 		gView.setOnItemClickListener(gAdapter);
+		
+		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
+		sdb.dump();
+		
 	}
 
 	/*

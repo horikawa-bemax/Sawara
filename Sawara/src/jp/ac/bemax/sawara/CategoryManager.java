@@ -8,6 +8,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.util.Log;
 
 /**
  * CategoryとDBとの間に立って、両者を中継するクラス
@@ -30,6 +35,50 @@ public class CategoryManager {
 			manager = new CategoryManager(c);
 		}
 		return manager;
+	}
+	
+	public Category newCategory(){
+		Category category = new Category();
+		
+		return category;
+	}
+	/**
+	 * カテゴリのイメージを作成して返す
+	 * @param id カテゴリのID
+	 * @return カテゴリのイメージ
+	 */
+	public Bitmap makeCategoryImage(long id){
+		Bitmap categoryImage = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
+		Canvas offScreen = new Canvas(categoryImage);
+		SQLiteDatabase db = mHelper.getReadableDatabase();
+		String[] args = {"" + id};
+		Cursor mCursor = db.rawQuery("select image_path from category_image_view where category_id = ?", args);
+		int size = mCursor.getCount();
+		for(int i=0; i<4 && mCursor.moveToNext(); i++){
+			String imagePath = mCursor.getString(0);
+			Bitmap image = BitmapFactory.decodeFile(imagePath);
+			int imageWidth = image.getWidth();
+			int imageHeight = image.getHeight();
+			int top, left, right, buttom;
+			if(imageWidth > imageHeight){
+				top = 0;
+				left = (imageWidth - imageHeight) / 2;
+				right = imageWidth - (imageWidth - imageHeight) / 2;
+				buttom = imageHeight;
+			}else{
+				top = (imageHeight - imageWidth) / 2;
+				left = 0;
+				right = imageWidth;
+				buttom = imageHeight - (imageHeight - imageWidth) / 2;
+			}
+			Rect srcRect = new Rect(left, top, right, buttom);
+			Rect dstRect = new Rect(i%2 * 200, i/2 * 200, (i%2+1) * 200, (i/2+1) * 200);
+			offScreen.drawBitmap(image, srcRect, dstRect, null);
+		}
+		Log.d("CursorSize",""+size);
+		db.close();
+		
+		return categoryImage;
 	}
 	
 	public long insert(Category category){
@@ -70,10 +119,15 @@ public class CategoryManager {
 		String[] selectionArgs = {};
 		Cursor mCursor = db.rawQuery(sql, selectionArgs);
 		while(mCursor.moveToNext()){
+			// カテゴリー作成
 			Category cat = new Category(mCursor.getString(1), mCursor.getInt(2));
 			cat.setId(mCursor.getLong(0));
+			// カテゴリのイメージ作成＆セット
+			Bitmap catImage = makeCategoryImage(mCursor.getLong(0));
+			cat.setImage(catImage);
 			list.add(cat);
 		}
+		db.close();
 		return list;
 	}
 }

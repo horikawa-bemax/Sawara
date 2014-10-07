@@ -17,6 +17,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.util.Log;
 
 /**
  * 言葉事典アプリのDBを扱うクラス
@@ -107,13 +108,12 @@ public class SawaraDBAdapter{
 					" article_id integer not null)";		// アーティクルID
 			db.execSQL(create_movie_table_sql);
 			
-			// アーティクルとイメージの結合ビューを作成
-			String create_article_image_view_sql = "create view article_image_view as " +
-					"select A.ROWID article_id, image_path " +
-					"from article_table A inner join image_table B " +
-					"on A.ROWID = B.article_id " +
-					"order by article_id";
-			db.execSQL(create_article_image_view_sql);
+			String create_category_image_view_sql = "create view category_image_view as " +
+					"select category_id, image_path " +
+					"from (category_article_table A inner join article_table B on A.article_id = B.ROWID) " +
+					"inner join image_table C on B.ROWID = C.article_id " +
+					"order by A.category_id";
+			db.execSQL(create_category_image_view_sql);
 			
 			// アーティクルとムービーの結合ビューを作成
 			String create_article_movie_view_sql = "create view article_movie_view as " +
@@ -146,16 +146,36 @@ public class SawaraDBAdapter{
 			cv.put("description", "スバルの旗艦車種");
 			cv.put("position", 1);
 			cv.put("modified", System.currentTimeMillis());
-			long artId = db.insert("article_table", null, cv);
+			long legId = db.insert("article_table", null, cv);
+			cv = new ContentValues();
+			cv.put("name", "R1");
+			cv.put("description", "スバルの軽");
+			cv.put("position", 2);
+			cv.put("modified", System.currentTimeMillis());
+			long r1Id = db.insert("article_table", null, cv);
 			//サンプル画像セット
 			File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			String filename = System.currentTimeMillis() + ".jpg";
-			File imageFile = new File(dir, filename);
+			// レガシィ
+			String filename = "legacy.jpg";
+			File legFile = new File(dir, filename);
 			try{
 				InputStream is = context.getAssets().open("legacy.jpg");
 				Bitmap image = BitmapFactory.decodeStream(is);
 				is.close();
-				FileOutputStream fos = new FileOutputStream(imageFile);
+				FileOutputStream fos = new FileOutputStream(legFile);
+				image.compress(CompressFormat.JPEG, 100, fos);
+				fos.close();
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+			// R1
+			filename = "r1.jpg";
+			File r1File = new File(dir, filename);
+			try{
+				InputStream is = context.getAssets().open("r1.jpg");
+				Bitmap image = BitmapFactory.decodeStream(is);
+				is.close();
+				FileOutputStream fos = new FileOutputStream(r1File);
 				image.compress(CompressFormat.JPEG, 100, fos);
 				fos.close();
 			}catch(IOException e){
@@ -163,13 +183,21 @@ public class SawaraDBAdapter{
 			}
 			// image_tableインポート
 			cv = new ContentValues();
-			cv.put("image_path", imageFile.getPath());
-			cv.put("article_id", artId);
+			cv.put("image_path", legFile.getPath());
+			cv.put("article_id", legId);
 			db.insert("image_table", null, cv);
-			// category_tableインポート
+			cv = new ContentValues();
+			cv.put("image_path", r1File.getPath());
+			cv.put("article_id", r1Id);
+			db.insert("image_table", null, cv);
+			// category_article_tableインポート
 			cv = new ContentValues();
 			cv.put("category_id", catId);
-			cv.put("article_id", artId);
+			cv.put("article_id", legId);
+			db.insert("category_article_table", null, cv);
+			cv = new ContentValues();
+			cv.put("category_id", catId);
+			cv.put("article_id", r1Id);
 			db.insert("category_article_table", null, cv);
 		}
 	
@@ -181,5 +209,42 @@ public class SawaraDBAdapter{
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			
 		}
+	}
+	
+	public void dump(){
+		SQLiteDatabase db = helper.getReadableDatabase();
+		Cursor cursor = db.rawQuery("select ROWID, * from article_table",null);
+		while(cursor.moveToNext()){
+			String str = "";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + ",";
+			}
+			Log.d("article", str);
+		}
+		cursor = db.rawQuery("select ROWID, * from category_table", null);
+		while(cursor.moveToNext()){
+			String str = "";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + ",";
+			}
+			Log.d("category", str);
+		}
+		cursor = db.rawQuery("select ROWID, * from category_article_table", null);
+		while(cursor.moveToNext()){
+			String str = "";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + ",";
+			}
+			Log.d("category_article", str);
+		}
+		cursor = db.rawQuery("select * from category_image_view", null);
+		while(cursor.moveToNext()){
+			String str = "";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + ",";
+			}
+			Log.d("category_image_view", str);
+		}
+		db.close();
 	}
 }

@@ -11,14 +11,43 @@ import android.graphics.Bitmap;
  */
 public class Category implements ListItem{
 	private long rowid;
-	private String categoryName;
-	private int viewPosition;
-	private long updateDate;
+	private String name;
+	private int position;
+	private long modified;
+	private Bitmap image;
 	
+	public void setImage(Bitmap image) {
+		this.image = image;
+	}
+
 	public Category(String name, int position){
-		categoryName = name;
-		viewPosition = position;
-		updateDate = System.currentTimeMillis();
+		this.name = name;
+		this.position = position;
+		modified = System.currentTimeMillis();
+	}
+	
+	public Category(){
+		
+	}
+
+	public int getPosition() {
+		return position;
+	}
+
+	public void setPosition(int position) {
+		this.position = position;
+	}
+
+	public long getModified() {
+		return modified;
+	}
+
+	public void setModified(long modified) {
+		this.modified = modified;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override
@@ -34,13 +63,13 @@ public class Category implements ListItem{
 	@Override
 	public String getName() {
 		// TODO 自動生成されたメソッド・スタブ
-		return categoryName;
+		return name;
 	}
 
 	@Override
 	public Bitmap getImage() {
-		// TODO 自動生成されたメソッド・スタブ
-		return null;
+		
+		return image;
 	}
 
 	@Override
@@ -51,9 +80,9 @@ public class Category implements ListItem{
 
 	public ContentValues getContentValues(){
 		ContentValues cv = new ContentValues();
-		cv.put("name", categoryName);
-		cv.put("position", viewPosition);
-		cv.put("modified", updateDate);
+		cv.put("name", name);
+		cv.put("position", position);
+		cv.put("modified", modified);
 		
 		return cv;
 	}

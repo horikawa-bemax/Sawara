@@ -1,16 +1,9 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
-
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.DatabaseUtils;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 /**
  * 言葉事典で取り扱う、１情報単位を表すクラス
@@ -21,20 +14,41 @@ public class Article implements ListItem{
 	private long rowid;
 	private String name;
 	private String description;
-	private long update;
+	private long modified;
 	private String[] imagePaths;
 	private String[] moviePaths;
 
 	
-	public Article(String name, String description){
+	public Article(String name, String description, long modified){
 		this.name = name;
 		this.description = description;
+		this.modified = modified;
+	}
+	
+	public Article(){
+		
 	}
 
 	public void setId(long id){
 		rowid = id;
 	}
 	
+	public long getModified() {
+		return modified;
+	}
+
+	public void setModified(long modified) {
+		this.modified = modified;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 	/**
 	 * ROWIDを返す
 	 * @return ROWID
