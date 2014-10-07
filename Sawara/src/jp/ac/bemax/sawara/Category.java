@@ -15,16 +15,10 @@ public class Category implements ListItem{
 	private int viewPosition;
 	private long updateDate;
 	
-	public Category(long id, String name, int position){
-		rowid = id;
+	public Category(String name, int position){
 		categoryName = name;
 		viewPosition = position;
 		updateDate = System.currentTimeMillis();
-	}
-	
-	@Override
-	public int getType() {
-		return ListItem.CATEGORY;
 	}
 
 	@Override
@@ -57,9 +51,9 @@ public class Category implements ListItem{
 
 	public ContentValues getContentValues(){
 		ContentValues cv = new ContentValues();
-		cv.put("category_name", categoryName);
-		cv.put("view_position", viewPosition);
-		cv.put("update_date", updateDate);
+		cv.put("name", categoryName);
+		cv.put("position", viewPosition);
+		cv.put("modified", updateDate);
 		
 		return cv;
 	}

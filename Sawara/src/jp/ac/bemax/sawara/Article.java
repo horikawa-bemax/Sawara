@@ -1,5 +1,7 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -16,90 +18,21 @@ import android.util.Log;
  * 2014/09/05
  */
 public class Article implements ListItem{
-	private ArticleManager iManager;
-	private ContentValues values;
-	private long row_id;
+	private long rowid;
+	private String name;
+	private String description;
+	private long update;
+	private String[] imagePaths;
+	private String[] moviePaths;
 
 	
-	public Article(ArticleManager mng){
-		iManager = mng;
-		row_id = -1;
-		values = new ContentValues();
+	public Article(String name, String description){
+		this.name = name;
+		this.description = description;
 	}
-	
-	/**
-	 * データの更新を行う
-	 */
-	public boolean updateItem(){
-		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getWritableDatabase();
-		String[] args = {""+row_id};
-		int rows = db.update("item_table", values, "ROWID = ?", args);
-		db.close();
-		
-		if(rows > 0){
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	/**
-	 * アイテムを消去する
-	 */
-	public boolean deleteItem(){
-		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getWritableDatabase();
-		String[] args = {""+row_id};
-		int ret = db.delete("item_table", "ROWID = ", args);
-		db.close();
-		
-		if(ret > 0){
-			row_id = -1;
-			values.clear();
-			return true;
-		}else{
-			return false;
-		}
-	}
-	
-	/**
-	 * アイテムを検索する
-	 */
-	public void searchItem(String[] cols, String[] vals){
-		String sql = "select * from item_table";
-		if(cols.length > 0){
-			sql += " where ";
-		}
-		for(int i=0; i<cols.length; i++){
-			sql += cols[i] + " = ? ";
-			if(i<cols.length-1){
-				sql += "and ";
-			}
-		}
-		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
-		Cursor cs = db.rawQuery(sql, vals);
-		db.close();
-	}
-	
-	/**
-	 * データベースからこのアイテムの情報を読み込む
-	 */
-	public void loadItem(){
-		String sql = "select * from article_table where ROWID = ?";
-		String[] args = {""+row_id};
-		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
-		Cursor cr = db.rawQuery(sql, args);
-		
-		cr.moveToFirst();
-		DatabaseUtils.cursorRowToContentValues(cr, values);
-		
-		db.close();
-	}
-	
-	/**
-	 * 
-	 */
+
 	public void setId(long id){
-		row_id = id;
+		rowid = id;
 	}
 	
 	/**
@@ -107,7 +40,7 @@ public class Article implements ListItem{
 	 * @return ROWID
 	 */
 	public long getId(){
-		return row_id;
+		return rowid;
 	}
 	
 	/**
@@ -115,63 +48,47 @@ public class Article implements ListItem{
 	 * @return アイテムの名前
 	 */
 	public String getName(){
-		loadItem();
-		return values.getAsString("article_name");
+		return name;
 	}
 	
 	/**
-	 * item_descriptionを返す
+	 * descriptionを返す
 	 * @return アイテムの詳細
 	 */
 	public String getDescription(){
-		loadItem();
-		return values.getAsString("article_description");
+		return description;
 	}
 	
+	public String[] getImagePaths() {
+		return imagePaths;
+	}
+
+	public void setImagePaths(String[] imagePaths) {
+		this.imagePaths = imagePaths;
+	}
+
+	public String[] getMoviePaths() {
+		return moviePaths;
+	}
+
+	public void setMoviePaths(String[] moviePaths) {
+		this.moviePaths = moviePaths;
+	}
+
 	/**
 	 * アイテムの画像イメージを返す
 	 * @return アイテムの画像
 	 */
 	public Bitmap getImage(){
-		String pathName = iManager.getImageFileDir().getPath() + "/" + getImageUrl();
-		Bitmap bmp = BitmapFactory.decodeFile(pathName);	
-		return bmp;
-	}
-	
-	/**
-	 * アイテムの画像イメージのURLを返す
-	 * @return アイテム画像のURL
-	 */
-	public String getImageUrl(){
-		loadItem();
-		return values.getAsString("item_image");
-	}
-	
-	/**
-	 * アイテムの動画のURLを返す
-	 * @return アイテム動画のURL
-	 */
-	public String getMovieUrl(){
-		loadItem();
-		return values.getAsString("item_movie");
-	}
-	
-	/**
-	 * item_tableの内容をLogに書き出す
-	 */
-	public void dump(){
-		SQLiteDatabase db = iManager.getSQLiteOpenHelper().getReadableDatabase();
-		Cursor cr = db.rawQuery("select ROWID, * from article_table", null);
-		while(cr.moveToNext()){
-			Log.d("id_"+cr.getString(0), cr.getString(1)+":"+cr.getString(2)+":"+cr.getString(3));
+		Bitmap image = null;
+		// 最初の画像イメージを返す
+		if(imagePaths.length > 0){
+			String imagePath = imagePaths[0];
+			if(imagePath != null){
+				image = BitmapFactory.decodeFile(imagePath);
+			}
 		}
-		db.close();
-	}
-
-	@Override
-	public int getType() {
-		// TODO 自動生成されたメソッド・スタブ
-		return ListItem.ITEM;
+		return image;
 	}
 
 	@Override
@@ -179,7 +96,7 @@ public class Article implements ListItem{
 		// 
 		Intent intent = new Intent();
 		intent.setClass(context, ArticleActivity.class);
-		intent.putExtra("article_id", row_id);
+		intent.putExtra("article_id", rowid);
 		context.startActivity(intent);
 	}
 }

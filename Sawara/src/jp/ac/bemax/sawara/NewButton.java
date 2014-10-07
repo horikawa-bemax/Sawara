@@ -16,11 +16,6 @@ public class NewButton implements ListItem{
 	public NewButton(Context context){
 		this.context = context;
 	}
-	
-	@Override
-	public int getType() {
-		return ListItem.NEW_BUTTON;
-	}
 
 	@Override
 	public long getId() {

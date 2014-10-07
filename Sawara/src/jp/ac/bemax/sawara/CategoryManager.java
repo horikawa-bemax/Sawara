@@ -70,7 +70,8 @@ public class CategoryManager {
 		String[] selectionArgs = {};
 		Cursor mCursor = db.rawQuery(sql, selectionArgs);
 		while(mCursor.moveToNext()){
-			Category cat = new Category(mCursor.getLong(0), mCursor.getString(1), mCursor.getInt(2));
+			Category cat = new Category(mCursor.getString(1), mCursor.getInt(2));
+			cat.setId(mCursor.getLong(0));
 			list.add(cat);
 		}
 		return list;

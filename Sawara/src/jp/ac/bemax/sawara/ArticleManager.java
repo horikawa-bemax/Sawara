@@ -24,11 +24,10 @@ import android.util.Log;
  * 2014/09/05
  */
 public class ArticleManager {
-	private Context context;
-	private SQLiteOpenHelper helper;
-	private SawaraDBAdapter sdba;
+	private SQLiteOpenHelper mHelper;
 	private File imageFileDir;
 	private File movieFileDir;
+	
 	private static ArticleManager iManager;
 	
 	/**
@@ -37,11 +36,9 @@ public class ArticleManager {
 	 * @param context
 	 */
 	private ArticleManager(Context context){
-		this.context = context;
-		
 		// sawaraDBアダプタを登録
-		sdba = new SawaraDBAdapter(context);
-		helper = sdba.getHelper();
+		SawaraDBAdapter sdb = new SawaraDBAdapter(context);
+		mHelper = sdb.getHelper();
 		
 		// ImageおよびMovieの保存先ディレクトリを登録
 		imageFileDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
@@ -60,54 +57,40 @@ public class ArticleManager {
 		}
 		return iManager;
 	}
-	
-	/**
-	 * Articleオブジェクトを新規作成する
-	 * DBのarticle_tableに、valuesの値をinsertする
-	 * @param values article_tableにinsertする値
-	 * @return Item アイテムオブジェクト
-	 */
-	public Article newItem(ContentValues values){
-		Article resultItem = null;
-		// 
-		SQLiteDatabase db = null;
-		try{
-			db = helper.getWritableDatabase();
-			long rowId = db.insert("article_table", null, values);
-			resultItem = new Article(this);
-			resultItem.setId(rowId);
-		}catch(Exception e){
-			e.printStackTrace();
-		}finally{
-			db.close();
+
+	public Article getArticle(long id){
+		Article article = null;
+		SQLiteDatabase db = mHelper.getReadableDatabase();
+		String[] selectionArgs = {"" + id};
+		Cursor mCursor = db.rawQuery("select ROWID, * from article_table where ROWID = ?", selectionArgs);
+		if(mCursor.getCount() == 1){
+			mCursor.moveToNext();
+			article = new Article(mCursor.getString(1), mCursor.getString(2));
+			article.setId(mCursor.getLong(0));
 		}
-		return resultItem;
+		return article;
 	}
 	
 	/**
-	 * 指定されたROWIDに対応したItemを返す
-	 * @param rowId
-	 * @return Itemオブジェクト
-	 */
-	public Article getItem(long rowId){
-		Article item = new Article(this);
-		item.setId(rowId);
-		
-		return item;
-	}
-	
-	/*
 	 * DB上のすべてのアイテムを取得して、そのリストを返す
 	 * @return アイテムのリスト
 	 */
 	public List<Article> getAllItems(){
 		List<Article> items = new ArrayList<Article>();
-		SQLiteDatabase db = helper.getReadableDatabase();
+		SQLiteDatabase db = mHelper.getReadableDatabase();
 		Cursor cr = db.rawQuery("select ROWID, * from article_table", null);
 		while(cr.moveToNext()){
-			Article item = new Article(this);
-			item.setId(cr.getLong(0));
-			items.add(item);
+			Article article = new Article(cr.getString(1), cr.getString(2));
+			article.setId(cr.getLong(0));
+			items.add(article);
+			String[] args = {"" + cr.getLong(0)};
+			Cursor cr2 = db.rawQuery("select * from image_table where article_id = ?", args);
+			int size = cr2.getCount();
+			String[] paths = new String[size];
+			while(cr2.moveToNext()){
+				paths[cr2.getPosition()] = cr2.getString(0);
+			}
+			article.setImagePaths(paths);
 		}
 		db.close();
 		return items;
@@ -128,19 +111,5 @@ public class ArticleManager {
 	public File getMovieFileDir(){
 		return movieFileDir;
 	}
-	
-	/**
-	 * データベースのヘルパーを返す
-	 * @return SQLiteOpenHelper ヘルパーオブジェクト
-	 */
-	public SQLiteOpenHelper getSQLiteOpenHelper(){
-		return helper;
-	}
-	
-	public void dump(){
-		List<Article> list = getAllItems();
-		for(Article item: list){
-			Log.d("item("+item.getId()+")", item.getName());
-		}
-	}
+
 }
