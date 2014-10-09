@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 
-
 /**
  * ArticleとDBとの間に立ち、両者を中継するクラス
  * @author Masaaki Horikawa
@@ -49,17 +48,44 @@ public class ArticleManager {
 		}
 		return iManager;
 	}
-
+	
 	public Article getArticle(long id){
 		Article article = null;
 		SQLiteDatabase db = mHelper.getReadableDatabase();
-		String[] selectionArgs = {"" + id};
-		Cursor mCursor = db.rawQuery("select ROWID, * from article_table where ROWID = ?", selectionArgs);
+		
+		String[] images, movies, selectionArgs = {"" + id};
+		Cursor mCursor, mCursor2;
+		// Articleの基本データを取り込み		
+		mCursor = db.rawQuery("select ROWID, * from article_table where ROWID = ?", selectionArgs);
 		if(mCursor.getCount() == 1){
 			mCursor.moveToNext();
-			article = new Article(mCursor.getString(1), mCursor.getString(2), mCursor.getLong(3));
+			
+			// 基本データ取り込み
+			article = new Article();
 			article.setId(mCursor.getLong(0));
-		}
+			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
+			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
+			article.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
+			
+			// 画像ファイルを取り込み
+			mCursor2 = db.rawQuery("select image_path from image_table where article_id = ?", selectionArgs);
+			images = new String[mCursor2.getCount()];
+			for(int i=0; mCursor2.moveToNext(); i++){
+				images[i] = mCursor2.getString(mCursor2.getColumnIndex("image_path"));
+			}
+			article.setImagePaths(images);
+			
+			// 動画ファイルを取り込み
+			mCursor2 = db.rawQuery("select movie_path from movie_table where article_id = ?", selectionArgs);
+			movies = new String[mCursor2.getCount()];
+			for(int i=0; mCursor2.moveToNext(); i++){
+				movies[i] = mCursor2.getString(mCursor2.getColumnIndex("movie_path"));
+			}
+			article.setMoviePaths(movies);
+		}	
+		
+		db.close();
+		
 		return article;
 	}
 	
@@ -70,19 +96,35 @@ public class ArticleManager {
 	public List<Article> getAllItems(){
 		List<Article> items = new ArrayList<Article>();
 		SQLiteDatabase db = mHelper.getReadableDatabase();
-		Cursor cr = db.rawQuery("select ROWID, * from article_table", null);
-		while(cr.moveToNext()){
-			Article article = new Article(cr.getString(1), cr.getString(2), cr.getLong(3));
-			article.setId(cr.getLong(0));
-			items.add(article);
-			String[] args = {"" + cr.getLong(0)};
-			Cursor cr2 = db.rawQuery("select * from image_table where article_id = ?", args);
-			int size = cr2.getCount();
-			String[] paths = new String[size];
-			while(cr2.moveToNext()){
-				paths[cr2.getPosition()] = cr2.getString(0);
+		Cursor mCursor, mCursor2;
+		String[] images, movies, selectionArgs = {""};
+		mCursor = db.rawQuery("select ROWID, * from article_table", null);
+		while(mCursor.moveToNext()){
+			// 基本データ取り込み
+			Article article = new Article();
+			article.setId(mCursor.getLong(0));
+			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
+			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
+			article.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
+			
+			// 検索条件を設定
+			selectionArgs[0] = "" + article.getId();
+			
+			// 画像ファイルを取り込み
+			mCursor2 = db.rawQuery("select image_path from image_table where article_id = ?", selectionArgs);
+			images = new String[mCursor2.getCount()];
+			for(int i=0; mCursor2.moveToNext(); i++){
+				images[i] = mCursor2.getString(mCursor2.getColumnIndex("image_path"));
 			}
-			article.setImagePaths(paths);
+			article.setImagePaths(images);
+			
+			// 動画ファイルを取り込み
+			mCursor2 = db.rawQuery("select movie_path from movie_table where article_id = ?", selectionArgs);
+			movies = new String[mCursor2.getCount()];
+			for(int i=0; mCursor2.moveToNext(); i++){
+				movies[i] = mCursor2.getString(mCursor2.getColumnIndex("movie_path"));
+			}
+			article.setMoviePaths(movies);
 		}
 		db.close();
 		return items;

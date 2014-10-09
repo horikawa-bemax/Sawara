@@ -1,6 +1,7 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +10,7 @@ import java.util.List;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
@@ -16,6 +18,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.os.Environment;
 import android.util.Log;
 
@@ -134,73 +137,89 @@ public class SawaraDBAdapter{
 			db.execSQL(create_categorys_on_article_view_sql);
 			
 		/****  サンプルデータセット ***/
-			// サンプルカテゴリセット
-			ContentValues cv = new ContentValues();
-			cv.put("name", "じどうしゃ");
-			cv.put("position", 1);
-			cv.put("modified", System.currentTimeMillis());
-			long catId = db.insert("category_table", null, cv);
-			// サンプルアーティクルセット
-			cv = new ContentValues();
-			cv.put("name", "レガシィ");
-			cv.put("description", "スバルの旗艦車種");
-			cv.put("position", 1);
-			cv.put("modified", System.currentTimeMillis());
-			long legId = db.insert("article_table", null, cv);
-			cv = new ContentValues();
-			cv.put("name", "R1");
-			cv.put("description", "スバルの軽");
-			cv.put("position", 2);
-			cv.put("modified", System.currentTimeMillis());
-			long r1Id = db.insert("article_table", null, cv);
-			//サンプル画像セット
-			File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			// レガシィ
-			String filename = "legacy.jpg";
-			File legFile = new File(dir, filename);
-			try{
-				InputStream is = context.getAssets().open("legacy.jpg");
-				Bitmap image = BitmapFactory.decodeStream(is);
-				is.close();
-				FileOutputStream fos = new FileOutputStream(legFile);
-				image.compress(CompressFormat.JPEG, 100, fos);
-				fos.close();
-			}catch(IOException e){
-				e.printStackTrace();
+			ContentValues cv, cv2;
+			File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+			
+			// CategoryTable
+			String[] catData = {"くるま","ひこうき"};
+			for(String cat: catData){
+				cv = new ContentValues();
+				cv.put("name", cat);
+				cv.put("position", 0);
+				cv.put("modified", System.currentTimeMillis());
+				long cId = db.insert("category_table", null, cv);
 			}
-			// R1
-			filename = "r1.jpg";
-			File r1File = new File(dir, filename);
-			try{
-				InputStream is = context.getAssets().open("r1.jpg");
-				Bitmap image = BitmapFactory.decodeStream(is);
-				is.close();
-				FileOutputStream fos = new FileOutputStream(r1File);
-				image.compress(CompressFormat.JPEG, 100, fos);
-				fos.close();
-			}catch(IOException e){
-				e.printStackTrace();
+			
+			// ArticleTable
+			String[][] artData = {
+					{"レガシィ","普通乗用車","legacy.jpg,legacy2.jpg","buss.mp4"},
+					{"アールワン","軽自動車","r1.jpg",""}};
+			for(String[] data : artData){
+				cv = new ContentValues();
+				cv.put("name", data[0]);
+				cv.put("description", data[1]);
+				cv.put("modified", System.currentTimeMillis());
+				long aId = db.insert("article_table", null, cv);
+				String[] images = data[2].split(",");
+				for(String img : images){
+					if(img.length()>0 && copyFromAssets(imageDir, img)){
+						File f = new File(imageDir, img);
+						cv2 = new ContentValues();
+						cv2.put("image_path", f.getPath());
+						cv2.put("article_id", aId);
+						db.insert("image_table", null, cv2);
+					}
+				}
+				String[] movies = data[3].split(",");
+				for(String mov : movies){
+					if(mov.length()>0 && copyFromAssets(movieDir, mov)){
+						File f = new File(movieDir, mov);
+						cv2 = new ContentValues();
+						cv2.put("movie_path", f.getPath());
+						cv2.put("article_id", aId);
+						db.insert("movie_table", null, cv2);
+					}
+				}
 			}
-			// image_tableインポート
-			cv = new ContentValues();
-			cv.put("image_path", legFile.getPath());
-			cv.put("article_id", legId);
-			db.insert("image_table", null, cv);
-			cv = new ContentValues();
-			cv.put("image_path", r1File.getPath());
-			cv.put("article_id", r1Id);
-			db.insert("image_table", null, cv);
-			// category_article_tableインポート
-			cv = new ContentValues();
-			cv.put("category_id", catId);
-			cv.put("article_id", legId);
-			db.insert("category_article_table", null, cv);
-			cv = new ContentValues();
-			cv.put("category_id", catId);
-			cv.put("article_id", r1Id);
-			db.insert("category_article_table", null, cv);
+			
+			// Category_Article_table
+			int[][] ca = {{1,1},{1,2}};
+			for(int[] d: ca){
+				cv = new ContentValues();
+				cv.put("category_id", d[0]);
+				cv.put("article_id", d[1]);
+				db.insert("category_article_table", null, cv);
+			}
 		}
 	
+		public boolean copyFromAssets(File dir ,String filename){
+			boolean copied = false;
+			byte[] buffer = new byte[1024*4];
+			File outFile = new File(dir, filename);
+			InputStream is = null;
+			FileOutputStream fos = null;
+			try{
+				is = context.getAssets().open(filename);
+				fos = new FileOutputStream(outFile);
+				int num = -1;
+				while(-1 != (num = is.read(buffer))){
+					fos.write(buffer, 0, buffer.length);
+				}
+				copied = true;
+			}catch(IOException e){
+				e.printStackTrace();
+			}finally{
+				try{
+					fos.close();
+					is.close();
+				}catch(IOException e){
+					e.printStackTrace();
+				}
+			}
+			return copied;
+		}
+		
 		/* (非 Javadoc)
 		 * データベースがアップデートされたときに実行される
 		 * @see android.database.sqlite.SQLiteOpenHelper#onUpgrade(android.database.sqlite.SQLiteDatabase, int, int)
@@ -211,6 +230,9 @@ public class SawaraDBAdapter{
 		}
 	}
 	
+	/**
+	 * データベースをダンプする
+	 */
 	public void dump(){
 		SQLiteDatabase db = helper.getReadableDatabase();
 		Cursor cursor = db.rawQuery("select ROWID, * from article_table",null);
@@ -237,6 +259,25 @@ public class SawaraDBAdapter{
 			}
 			Log.d("category_article", str);
 		}
+		
+		cursor = db.rawQuery("select ROWID, * from image_table", null);
+		while(cursor.moveToNext()){
+			String str = "";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + ",";
+			}
+			Log.d("image_table", str);
+		}
+		
+		cursor = db.rawQuery("select ROWID, * from movie_table", null);
+		while(cursor.moveToNext()){
+			String str = "";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + ",";
+			}
+			Log.d("movie_table", str);
+		}
+		
 		cursor = db.rawQuery("select * from category_image_view", null);
 		while(cursor.moveToNext()){
 			String str = "";

@@ -47,6 +47,9 @@ public class HomeActivity extends Activity{
 		itemHeight = p.x / 5;
 		
 		// 初期化
+		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
+		sdb.dump();
+		
 		items = new ArrayList<Category>();
 		cManager = CategoryManager.newCategoryManager(this);
 		aManager = ArticleManager.newItemManager(this);
@@ -70,10 +73,7 @@ public class HomeActivity extends Activity{
 		
 		// 各アイテムをクリックした場合のリスナを登録
 		gView.setOnItemClickListener(gAdapter);
-		
-		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
-		sdb.dump();
-		
+
 	}
 
 	/*

@@ -15,69 +15,117 @@ public class Category implements ListItem{
 	private int position;
 	private long modified;
 	private Bitmap image;
-	
-	public void setImage(Bitmap image) {
-		this.image = image;
-	}
 
+	/**
+	 * Category.javaコンストラクタ
+	 * @param name
+	 * @param position
+	 */
 	public Category(String name, int position){
 		this.name = name;
 		this.position = position;
 		modified = System.currentTimeMillis();
 	}
 	
+	/**
+	 * Category.javaコンストラクタ
+	 */
 	public Category(){
 		
 	}
+	
+	/**
+	 * カテゴリのイメージをセットする
+	 * @param image
+	 */
+	public void setImage(Bitmap image) {
+		this.image = image;
+	}	
 
+	/**
+	 * カテゴリの表示順をゲットする
+	 * @return 表示順
+	 */
 	public int getPosition() {
 		return position;
 	}
 
+	/**
+	 * カテゴリの表示順をセットする
+	 * @param position 表示順
+	 */
 	public void setPosition(int position) {
 		this.position = position;
 	}
 
+	/**
+	 * カテゴリの更新日時をゲットする
+	 * @return 更新日時
+	 */
 	public long getModified() {
 		return modified;
 	}
 
+	/**
+	 * カテゴリの更新日時をセットする
+	 * @param modified 更新日時
+	 */
 	public void setModified(long modified) {
 		this.modified = modified;
 	}
 
+	/**
+	 * カテゴリの名前をセットする
+	 * @param name カテゴリの名前
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * カテゴリのIDをゲットする
+	 */
 	@Override
 	public long getId() {
-		// TODO 自動生成されたメソッド・スタブ
 		return rowid;
 	}
 
+	/**
+	 * カテゴリのIDセットする
+	 * @param id カテゴリのID
+	 */
 	public void setId(long id){
 		rowid = id;
 	}
 	
+	/**
+	 * カテゴリの名前をゲットする
+	 */
 	@Override
 	public String getName() {
-		// TODO 自動生成されたメソッド・スタブ
 		return name;
 	}
 
+	/**
+	 * カテゴリの画像をゲットする
+	 */
 	@Override
 	public Bitmap getImage() {
-		
 		return image;
 	}
 
+	/**
+	 * カテゴリのアイコンをクリックした時の処理
+	 */
 	@Override
 	public void clicked(Context context) {
-		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
+	/**
+	 * カテゴリから得られたContentValues
+	 * @return ContentValues
+	 */
 	public ContentValues getContentValues(){
 		ContentValues cv = new ContentValues();
 		cv.put("name", name);

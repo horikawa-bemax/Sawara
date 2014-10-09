@@ -17,34 +17,50 @@ public class Article implements ListItem{
 	private long modified;
 	private String[] imagePaths;
 	private String[] moviePaths;
-
 	
-	public Article(String name, String description, long modified){
-		this.name = name;
-		this.description = description;
-		this.modified = modified;
-	}
-	
+	/**
+	 * Article.javaコンストラクタ
+	 */
 	public Article(){
 		
 	}
 
+	/**
+	 * 
+	 * @param id
+	 */
 	public void setId(long id){
 		rowid = id;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public long getModified() {
 		return modified;
 	}
 
+	/**
+	 * 
+	 * @param modified
+	 */
 	public void setModified(long modified) {
 		this.modified = modified;
 	}
 
+	/**
+	 * 
+	 * @param name
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * 
+	 * @param description
+	 */
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -73,18 +89,34 @@ public class Article implements ListItem{
 		return description;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public String[] getImagePaths() {
 		return imagePaths;
 	}
 
+	/**
+	 * 
+	 * @param imagePaths
+	 */
 	public void setImagePaths(String[] imagePaths) {
 		this.imagePaths = imagePaths;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public String[] getMoviePaths() {
 		return moviePaths;
 	}
 
+	/**
+	 * 
+	 * @param moviePaths
+	 */
 	public void setMoviePaths(String[] moviePaths) {
 		this.moviePaths = moviePaths;
 	}
@@ -105,6 +137,9 @@ public class Article implements ListItem{
 		return image;
 	}
 
+	/**
+	 * Articleのアイコンをクリックしたときの処理
+	 */
 	@Override
 	public void clicked(Context context) {
 		// 
