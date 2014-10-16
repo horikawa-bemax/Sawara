@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
  * 2014/09/30
  */
 public class Category implements ListItem{
+	private CategoryManager mManager;
 	private long rowid;
 	private String name;
 	private int position;
@@ -20,18 +21,19 @@ public class Category implements ListItem{
 	 * Category.javaコンストラクタ
 	 * @param name
 	 * @param position
-	 */
+	 
 	public Category(String name, int position){
 		this.name = name;
 		this.position = position;
 		modified = System.currentTimeMillis();
 	}
+	*/
 	
 	/**
 	 * Category.javaコンストラクタ
 	 */
-	public Category(){
-		
+	public Category(CategoryManager manager){
+		mManager = manager;
 	}
 	
 	/**
@@ -107,14 +109,6 @@ public class Category implements ListItem{
 	}
 
 	/**
-	 * カテゴリの画像をゲットする
-	 */
-	@Override
-	public Bitmap getImage() {
-		return image;
-	}
-
-	/**
 	 * カテゴリのアイコンをクリックした時の処理
 	 */
 	@Override
@@ -133,5 +127,11 @@ public class Category implements ListItem{
 		cv.put("modified", modified);
 		
 		return cv;
+	}
+
+	@Override
+	public Bitmap getImage() {
+		Bitmap image = mManager.makeCategoryImage(this.rowid);
+		return image;
 	}
 }

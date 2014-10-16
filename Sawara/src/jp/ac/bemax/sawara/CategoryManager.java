@@ -38,7 +38,7 @@ public class CategoryManager {
 	}
 	
 	public Category newCategory(){
-		Category category = new Category();
+		Category category = new Category(this);
 		
 		return category;
 	}
@@ -52,7 +52,7 @@ public class CategoryManager {
 		Canvas offScreen = new Canvas(categoryImage);
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String[] args = {"" + id};
-		Cursor mCursor = db.rawQuery("select image_path from category_image_view where category_id = ?", args);
+		Cursor mCursor = db.rawQuery("select article_id from category_article_table where category_id = ?", args);
 		int size = mCursor.getCount();
 		for(int i=0; i<6 && mCursor.moveToNext(); i++){
 			String imagePath = mCursor.getString(0);
@@ -120,7 +120,9 @@ public class CategoryManager {
 		Cursor mCursor = db.rawQuery(sql, selectionArgs);
 		while(mCursor.moveToNext()){
 			// カテゴリー作成
-			Category cat = new Category(mCursor.getString(1), mCursor.getInt(2));
+			Category cat = new Category(this);
+			cat.setName(mCursor.getString(1));
+			cat.setPosition(mCursor.getInt(2));
 			cat.setId(mCursor.getLong(0));
 			// カテゴリのイメージ作成＆セット
 			Bitmap catImage = makeCategoryImage(mCursor.getLong(0));

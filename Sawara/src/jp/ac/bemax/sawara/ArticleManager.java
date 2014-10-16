@@ -3,11 +3,18 @@ package jp.ac.bemax.sawara;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Environment;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 /**
  * ArticleとDBとの間に立ち、両者を中継するクラス
@@ -15,11 +22,12 @@ import android.os.Environment;
  * 2014/09/05
  */
 public class ArticleManager {
+	private Context context;
 	private SQLiteOpenHelper mHelper;
 	private File imageFileDir;
 	private File movieFileDir;
 	
-	private static ArticleManager iManager;
+	private static ArticleManager aManager;
 	
 	/**
 	 * 
@@ -27,6 +35,7 @@ public class ArticleManager {
 	 * @param context
 	 */
 	private ArticleManager(Context context){
+		this.context = context;
 		// sawaraDBアダプタを登録
 		SawaraDBAdapter sdb = new SawaraDBAdapter(context);
 		mHelper = sdb.getHelper();
@@ -43,15 +52,17 @@ public class ArticleManager {
 	 * @return ItemManager
 	 */
 	public static ArticleManager newItemManager(Context context){
-		if(iManager == null){
-			iManager = new ArticleManager(context);
+		if(aManager == null){
+			aManager = new ArticleManager(context);
 		}
-		return iManager;
+		return aManager;
 	}
 	
-	public Article getArticle(long id){
+	public static Article getArticle(long id, Context context){
 		Article article = null;
-		SQLiteDatabase db = mHelper.getReadableDatabase();
+		SawaraDBAdapter sdb = new SawaraDBAdapter(context);
+		SQLiteOpenHelper helper = sdb.getHelper();
+		SQLiteDatabase db = helper.getReadableDatabase();
 		
 		String[] images, movies, selectionArgs = {"" + id};
 		Cursor mCursor, mCursor2;
@@ -61,7 +72,7 @@ public class ArticleManager {
 			mCursor.moveToNext();
 			
 			// 基本データ取り込み
-			article = new Article();
+			article = new Article(aManager);
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
@@ -101,7 +112,7 @@ public class ArticleManager {
 		mCursor = db.rawQuery("select ROWID, * from article_table", null);
 		while(mCursor.moveToNext()){
 			// 基本データ取り込み
-			Article article = new Article();
+			Article article = new Article(this);
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
@@ -146,4 +157,30 @@ public class ArticleManager {
 		return movieFileDir;
 	}
 
+	
+	/**
+	 * @param article
+	 * @return
+	 */
+	public Bitmap createArticleImage(Article article){
+		Bitmap image = null;
+		// 最初の画像イメージを返す
+		String[] imagePaths = article.getImagePaths();
+		String[] moviePaths = article.getMoviePaths();
+		if(imagePaths.length > 0){
+			String imagePath = imagePaths[0];
+			if(imagePath != null){
+				image = BitmapFactory.decodeFile(imagePath);
+			}
+		}else if(moviePaths.length > 0){
+			// TODO このままでは、NULL
+			String moviePath = moviePaths[0];
+			Uri uri = Uri.fromFile(new File(moviePath));
+			SurfaceView sv = new SurfaceView(context);
+			SurfaceHolder sh = sv.getHolder();
+			MediaPlayer mp = MediaPlayer.create(context, uri, sh);
+			image = sv.getDrawingCache();
+		}
+		return image;
+	}
 }

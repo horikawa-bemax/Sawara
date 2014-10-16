@@ -3,7 +3,6 @@ package jp.ac.bemax.sawara;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 /**
  * 言葉事典で取り扱う、１情報単位を表すクラス
@@ -11,6 +10,7 @@ import android.graphics.BitmapFactory;
  * 2014/09/05
  */
 public class Article implements ListItem{
+	private ArticleManager mManager;
 	private long rowid;
 	private String name;
 	private String description;
@@ -21,8 +21,8 @@ public class Article implements ListItem{
 	/**
 	 * Article.javaコンストラクタ
 	 */
-	public Article(){
-		
+	public Article(ArticleManager manager){
+		mManager = manager;
 	}
 
 	/**
@@ -126,15 +126,7 @@ public class Article implements ListItem{
 	 * @return アイテムの画像
 	 */
 	public Bitmap getImage(){
-		Bitmap image = null;
-		// 最初の画像イメージを返す
-		if(imagePaths.length > 0){
-			String imagePath = imagePaths[0];
-			if(imagePath != null){
-				image = BitmapFactory.decodeFile(imagePath);
-			}
-		}
-		return image;
+		return mManager.createArticleImage(this);
 	}
 
 	/**

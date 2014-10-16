@@ -1,12 +1,14 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Environment;
 import android.view.LayoutInflater;
