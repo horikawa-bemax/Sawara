@@ -1,9 +1,13 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,8 +15,10 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -23,15 +29,16 @@ import android.widget.VideoView;
  * 2014/07/23
  */
 public class RegisterActivity extends Activity implements OnClickListener{
-	
-	private ImageView imageView;
-	private TextView labelName, labelDescription;
-	private EditText textName, textDescription;
-	private Button submitButton, movieButton;
-	private VideoView movieView;
+	private GridView registerGridView;
+	private Button registerImageButton;
+	private Button registerMovieButton;
+	private Button registerNextButton;
+	private List<Bitmap> imageList; 
+	private ArrayAdapter<Bitmap> mAdapter;
 	
 	private String fileName;
 	
+	private final int IMAGE_CAPTUER = 200;
 	private final int MOVIE_CAPTUER = 300;
 	
 	@Override
@@ -40,113 +47,116 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		setContentView(R.layout.register1);
 		
 		// レイアウトの紐付け
+		registerGridView = (GridView)findViewById(R.id.register_grid_view);
+		registerImageButton = (Button)findViewById(R.id.register_image_button);
+		registerMovieButton = (Button)findViewById(R.id.register_movie_button);
+		registerNextButton = (Button)findViewById(R.id.register_next_button);
 		
-		/*
-		// インテントからデータを受け取る
-		Intent intent = getIntent();
-		String path = intent.getStringExtra("image_uri");
-		File file = new File(path);
-		fileName = file.getName();
-	
-		// 画像のサイズを読み込む
-		BitmapFactory.Options opt = new BitmapFactory.Options();
-		opt.inJustDecodeBounds = true;
-		BitmapFactory.decodeFile(path, opt);
-	
-		// 読み込み時の精度を決定
-		int size = opt.outWidth;
-		if(opt.outHeight > size){
-			size = opt.outHeight;
-		}
-		opt.inSampleSize = size / 480;
+		//
+		imageList = new ArrayList<Bitmap>();
 		
-		// 本格的に画像を読み込む
-		opt.inJustDecodeBounds = false;
-		Bitmap image = BitmapFactory.decodeFile(path, opt);
-		
-		// imageViewに画像を表示
-		imageView.setImageBitmap(image);
-		*/
+		// クリックリスナー
+		registerImageButton.setOnClickListener(this);
+		registerMovieButton.setOnClickListener(this);
+		registerNextButton.setOnClickListener(this);
+
+		//
+		imageList = new ArrayList<Bitmap>();
+		mAdapter = new ArrayAdapter<Bitmap>(this, R.layout.image_item, imageList);
+		registerGridView.setAdapter(mAdapter);
 		
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
-		
-		/*
-		// 名前ラベルの設定
-		labelName.setTypeface(tf);
-		labelName.setTextSize(35);
-		labelName.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 100));
-		
-		// 説明ラベルの設定
-		labelDescription.setTypeface(tf);
-		labelDescription.setTextSize(35);
-		labelDescription.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 100));
-		
-		// 名前入力の設定
-		textName.setTypeface(tf);
-		textName.setTextSize(30);
-		textName.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 100));
-		
-		// 説明入力の設定
-		textDescription.setTypeface(tf);
-		textDescription.setTextSize(30);
-		textDescription.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, 300));
-		
-		//
-		movieButton.setOnClickListener(this);
-		
-		// 登録ボタン
-		submitButton.setOnClickListener(this);
-		
-		*/
 	}
 
 	@Override
 	public void onClick(View v) {
 		Intent intent = new Intent();
+		File dir = null;
+		Uri uriPath = null;
 		
 		switch(v.getId()){
 		
 		// 登録ボタンが押された
 		case R.id.register_next_button:
 			// 結果を呼び出しもとActivityに返す
-			intent.putExtra("article_name", textName.getText().toString());
-			intent.putExtra("article_description", textDescription.getText().toString());
-			intent.putExtra("article_image", fileName);
-			intent.putExtra("article_reg_date", System.currentTimeMillis());
-			setResult(RESULT_OK, intent);
+
 			
 			// Activityを終了
 			finish();
 			break;
 			
-		// movieボタンが押された
-		case R.id.register_movie_button:
-			File dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-			Uri uriPath = Uri.fromFile(dir);
+		case R.id.register_image_button:
+			// 保存先を作成
+			dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+			String filename = "" + System.currentTimeMillis() + ".jpg";
+			uriPath = Uri.fromFile(new File(dir, filename));
 			
+			// 写真撮影用の暗黙インテントを呼び出す準備
+			intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
+			intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPath);
+			
+			// インテントを呼び出す
+			startActivityForResult(intent, IMAGE_CAPTUER);
+			break;
+		
+		case R.id.register_movie_button:
+			// 保存先を作成
+			dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+			uriPath = Uri.fromFile(dir);
+			
+			// 動画撮影用の暗黙院展とを呼び出す準備
 			intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPath);
 			intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
 			intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 20);
-			// intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 1);
+			
+			// インテントを呼び出す
 			startActivityForResult(intent, MOVIE_CAPTUER);
 			break;
 		}
 	}
 
+	/* 
+	 * (非 Javadoc)
+	 * @see android.app.Activity#onActivityResult(int, int, android.content.Intent)
+	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// 
+		Uri uriPath = null;
+		
 		switch(requestCode){
+		case IMAGE_CAPTUER:
+			// 画像のサイズを読み込む
+			if(data != null){
+				uriPath = data.getData();
+				String path = uriPath.getPath();
+				
+				BitmapFactory.Options opt = new BitmapFactory.Options();
+				opt.inJustDecodeBounds = true;
+				BitmapFactory.decodeFile(path, opt);
+			
+				// 読み込み時の精度を決定
+				int size = opt.outWidth;
+				if(opt.outHeight > size){
+					size = opt.outHeight;
+				}
+				opt.inSampleSize = size / 480;
+				
+				// 本格的に画像を読み込む
+				opt.inJustDecodeBounds = false;
+				Bitmap image = BitmapFactory.decodeFile(path, opt);
+				
+				imageList.add(image);
+				mAdapter.notifyDataSetChanged();
+				
+			}
+			break;
 		case MOVIE_CAPTUER:
 			
 			if(resultCode == RESULT_OK){
 				if(data != null){
-					Uri moviePath= data.getData();
-					movieView.setVideoURI(moviePath);
-					
-					movieView.start();
+					Uri moviePath = data.getData();
 					
 				}
 			}
