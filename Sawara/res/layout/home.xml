@@ -3,15 +3,45 @@
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal" >
+    android:orientation="vertical" >
 
     <GridView
         android:id="@+id/gridView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.44"
         android:numColumns="4"
         android:stretchMode="columnWidth" >
-
     </GridView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp" >
+
+        <Button
+            android:id="@+id/register_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginLeft="27dp"
+            android:text="Button" />
+
+        <Button
+            android:id="@+id/update_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="23dp"
+            android:layout_toRightOf="@+id/register_button"
+            android:text="Button" />
+
+        <Button
+            android:id="@+id/setting_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="26dp"
+            android:text="Button" />
+    </RelativeLayout>
 
 </LinearLayout>

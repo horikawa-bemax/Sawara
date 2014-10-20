@@ -7,13 +7,6 @@
     android:orientation="horizontal"
     android:padding="5dp" >
 
-    <ImageView
-        android:id="@+id/list_item_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@color/main" />
-
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/list_vTextView"
         android:layout_width="match_parent"
@@ -22,5 +15,12 @@
         android:background="@color/base"
         android:paddingBottom="2dp"
         android:paddingTop="2dp" />
+    
+    <ImageView
+        android:id="@+id/list_item_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@color/main" />
 
 </LinearLayout>
