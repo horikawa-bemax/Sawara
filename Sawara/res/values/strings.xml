@@ -14,5 +14,8 @@
     <string name="take_movie_button_text">動画を撮る</string>
     <string name="title_activity_item">ItemActivity</string>
     <string name="hello_world">Hello world!</string>
+    <string name="new_button">しんき</string>
+    <string name="update_button">こうしん</string>
+    <string name="setting_button">せってい</string>
 
 </resources>

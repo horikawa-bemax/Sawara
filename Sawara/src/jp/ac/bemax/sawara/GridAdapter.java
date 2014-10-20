@@ -2,6 +2,7 @@ package jp.ac.bemax.sawara;
 
 import java.io.File;
 import java.util.List;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
+
 
 /**
  * ホーム画面のグリッドビューに並べる項目を扱うクラス

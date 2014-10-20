@@ -1,47 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/LinearLayout1"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
+    <Button
+        android:id="@+id/new_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/new_button" />
+
+    <Button
+        android:id="@+id/update_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignBaseline="@+id/new_button"
+        android:layout_alignBottom="@+id/new_button"
+        android:layout_toRightOf="@+id/new_button"
+        android:text="@string/update_button" />
+
+    <Button
+        android:id="@+id/setting_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignBaseline="@+id/new_button"
+        android:layout_alignBottom="@+id/new_button"
+        android:layout_alignParentRight="true"
+        android:text="@string/setting_button" />
+
     <GridView
         android:id="@+id/gridView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.44"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/new_button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
         android:numColumns="4"
         android:stretchMode="columnWidth" >
+
     </GridView>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="100dp" >
-
-        <Button
-            android:id="@+id/register_button"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_marginLeft="27dp"
-            android:text="Button" />
-
-        <Button
-            android:id="@+id/update_button"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="23dp"
-            android:layout_toRightOf="@+id/register_button"
-            android:text="Button" />
-
-        <Button
-            android:id="@+id/setting_button"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginRight="26dp"
-            android:text="Button" />
-    </RelativeLayout>
-
-</LinearLayout>
+</RelativeLayout>

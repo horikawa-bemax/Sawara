@@ -48,31 +48,31 @@ public class CategoryManager {
 	 * @return カテゴリのイメージ
 	 */
 	public Bitmap makeCategoryImage(long id){
-		Bitmap categoryImage = Bitmap.createBitmap(400, 400, Bitmap.Config.ARGB_8888);
+		Bitmap categoryImage = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888);
 		Canvas offScreen = new Canvas(categoryImage);
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String[] args = {"" + id};
 		Cursor mCursor = db.rawQuery("select image_path from category_image_view where category_id = ?", args);
 		int size = mCursor.getCount();
-		for(int i=0; i<4 && mCursor.moveToNext(); i++){
+		for(int i=0; i<6 && mCursor.moveToNext(); i++){
 			String imagePath = mCursor.getString(0);
 			Bitmap image = BitmapFactory.decodeFile(imagePath);
 			int imageWidth = image.getWidth();
 			int imageHeight = image.getHeight();
 			int top, left, right, buttom;
-			if(imageWidth > imageHeight){
+			if(imageWidth * 3 > imageHeight * 4){
 				top = 0;
-				left = (imageWidth - imageHeight) / 2;
-				right = imageWidth - (imageWidth - imageHeight) / 2;
+				left = (imageWidth - imageHeight * 4 / 3) / 2;
+				right = imageWidth - (imageWidth - imageHeight * 4 / 3) / 2;
 				buttom = imageHeight;
 			}else{
-				top = (imageHeight - imageWidth) / 2;
+				top = (imageHeight - imageWidth * 3 / 4) / 2;
 				left = 0;
 				right = imageWidth;
-				buttom = imageHeight - (imageHeight - imageWidth) / 2;
+				buttom = imageHeight - (imageHeight - imageWidth * 3 / 4) / 2;
 			}
 			Rect srcRect = new Rect(left, top, right, buttom);
-			Rect dstRect = new Rect(i%2 * 200, i/2 * 200, (i%2+1) * 200, (i/2+1) * 200);
+			Rect dstRect = new Rect(i%2 * 200, i/2 * 150, (i%2+1) * 200, (i/2+1) * 150);
 			offScreen.drawBitmap(image, srcRect, dstRect, null);
 		}
 		Log.d("CursorSize",""+size);
