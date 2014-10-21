@@ -16,13 +16,13 @@
         android:layout_width="100dp"
         android:layout_height="match_parent"
         android:layout_margin="3dp"
-        android:background="@drawable/text_back" />
+        android:background="@drawable/vtext_back" />
 
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/item_name"
         android:layout_width="100dp"
         android:layout_height="match_parent"
         android:layout_margin="3dp"
-        android:background="@drawable/text_back" />
+        android:background="@drawable/vtext_back" />
 
 </LinearLayout>
