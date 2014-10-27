@@ -1,4 +1,5 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
+    
     <style name="AppTheme" parent="@android:style/Theme.Light">
         <item name="android:background">@style/sawaraButton</item>
     </style>
@@ -7,24 +8,44 @@
 		<item name="android:button">@style/sawaraButton</item>
     </style>
     
-    <style name="MyTheme">  
-        <item name="MyColor">#ff0000</item> 
-        <item name="buttonBack">@drawable/gorst</item>
-    </style>  
+    <style name="GorstTheme">
+        <item name="mainColor">#220033</item> 
+        <item name="baseColor">#AA88ff</item>
+        <item name="buttonBack">@drawable/default_button_back</item>
+        <item name="mainBack">@drawable/gorst_back</item>
+        <item name="frameBack">@drawable/bat_frame</item>
+    </style>
+    
+    <style name="HeratTheme">
+        <item name="mainColor">#ffAAAA</item> 
+        <item name="baseColor">#FFCCCC</item>
+        <item name="buttonBack">@drawable/default_button_back</item>
+        <item name="mainBack">@drawable/heart_back</item>   
+        <item name="frameBack">@drawable/girl_frame</item>
+    </style>
+    
+    <style name="StarTheme">
+        <item name="mainColor">#334499</item> 
+        <item name="baseColor">#55ccff</item>
+        <item name="buttonBack">@drawable/default_button_back</item>
+        <item name="mainBack">@drawable/star_back</item>
+        <item name="frameBack">@drawable/default_frame_back</item>
+    </style>
+    
+    <style name="DefaultTheme">
+        <item name="mainColor">@color/main</item> 
+        <item name="baseColor">@color/base</item>
+        <item name="buttonBack">@drawable/default_button_back</item>
+        <item name="mainBack">@color/base</item>
+        <item name="frameBack">@drawable/default_frame_back</item>
+    </style>
     
     <style name="sawaraButton">
-        <item name="android:background">@drawable/button</item>
+        <item name="android:background">@drawable/default_button_back</item>
         <item name="android:textColor">@color/button_text</item>
         <item name="android:padding">5dp</item>
         <item name="android:layout_margin">5dp</item>
     </style>
-    
-    <style name="gorst_frame">
-        <item name="android:background">@drawable/bat_frame</item>
-    </style>
-    
-    <style name="gorst_back">
-        <item name="android:background">@drawable/gorst_back</item>
-    </style>
+
 
 </resources>

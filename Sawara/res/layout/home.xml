@@ -3,6 +3,7 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/mainBack"
     android:orientation="vertical" >
 
     <Button
@@ -12,7 +13,8 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:background="?attr/buttonBack"
-        android:text="@string/new_button" />
+        android:text="@string/new_button"
+        android:textColor="?attr/baseColor" />
 
     <Button
         android:id="@+id/update_button"
@@ -21,7 +23,9 @@
         android:layout_alignBaseline="@+id/new_button"
         android:layout_alignBottom="@+id/new_button"
         android:layout_toRightOf="@+id/new_button"
-        android:text="@string/update_button" />
+        android:background="?attr/buttonBack"
+        android:text="@string/update_button"
+        android:textColor="?attr/baseColor" />
 
     <Button
         android:id="@+id/setting_button"
@@ -30,7 +34,9 @@
         android:layout_alignBaseline="@+id/new_button"
         android:layout_alignBottom="@+id/new_button"
         android:layout_alignParentRight="true"
-        android:text="@string/setting_button" />
+        android:background="?attr/buttonBack"
+        android:text="@string/setting_button"
+        android:textColor="?attr/baseColor" />
 
     <GridView
         android:id="@+id/gridView"

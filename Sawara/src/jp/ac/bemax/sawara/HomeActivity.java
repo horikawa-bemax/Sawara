@@ -8,7 +8,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Display;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -20,7 +25,9 @@ import android.widget.RelativeLayout;
  * @author Masaaki Horikawa
  * 2014/07/02
  */
-public class HomeActivity extends Activity implements OnClickListener{
+public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener{
+	static final int THEME_CHANGE = 0;
+	private Handler handler;
 	private GridView gView;
 	private GridAdapter gAdapter;
 	private ArrayList<Category> items;
@@ -36,17 +43,86 @@ public class HomeActivity extends Activity implements OnClickListener{
 	private final static int CAPTUER_IMAGE = 100;
 	private final static int NEW_ITEM = 200;
 	
-	/* (非 Javadoc)
-	 * コンストラクタ
-	 * @see android.app.Activity#onCreate(android.os.Bundle)
-	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.home);
 		
-		// デフォルトのテーマに設定
-		Thema.themaID = 0;
+		// ディスプレイサイズを取得する
+		Display display = getWindowManager().getDefaultDisplay();
+		Point p = new Point();
+		display.getSize(p);
+		itemHeight = p.x / 5;
+		
+		/***********
+		 * データベースアクセス
+		 ***********/
+		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
+		sdb.dump();
+		
+		// 表示アイテム
+		items = new ArrayList<Category>();
+		cManager = CategoryManager.newCategoryManager(this);
+		aManager = ArticleManager.newItemManager(this);
+
+		listItems = new ArrayList<ListItem>();
+		//listItems.add(new NewButton(thisObj));
+		// カテゴリー
+		for(Category item: cManager.getAllItems()){
+			listItems.add(item);
+		}
+		// カテゴリー登録されていないアーティクル
+		for(Article item: aManager.getAllItems()){
+			listItems.add(item);
+		}
+		// グリッドビューにセット
+		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
+		
+		/**************
+		 *  ハンドラーの設定
+		 **************/
+		final HomeActivity thisObj = this;
+		handler = new Handler(){
+
+			@Override
+			public void handleMessage(Message msg) {
+				super.handleMessage(msg);
+				
+				switch(msg.what){
+				case THEME_CHANGE:
+					/***********
+					 * 画面コンテンツの初期化
+					 ***********/
+					setContentView(R.layout.home);
+					
+					layout = (RelativeLayout)findViewById(R.id.RelativeLayout1);
+					
+					settingButton = (Button)findViewById(R.id.setting_button);
+					settingButton.setOnClickListener(thisObj);
+					
+					newButton = (Button)findViewById(R.id.new_button);
+					newButton.setOnClickListener(thisObj);
+					
+					// ウィジェットを登録 
+					gView = (GridView)findViewById(R.id.gridView);
+					
+					gView.setAdapter(gAdapter);
+					
+					// 各アイテムをクリックした場合のリスナを登録
+					gView.setOnItemClickListener(gAdapter);
+					
+				}
+			}
+			
+		};
+		
+		handler.sendEmptyMessage(THEME_CHANGE);
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		/*
+		setContentView(R.layout.home);
 		
 		layout = (RelativeLayout)findViewById(R.id.RelativeLayout1);
 		
@@ -85,24 +161,46 @@ public class HomeActivity extends Activity implements OnClickListener{
 		for(Article item: aManager.getAllItems()){
 			listItems.add(item);
 		}
-		
-		// 各アイテムをクリックした場合のリスナを登録
-		gView.setOnItemClickListener(gAdapter);
 
-	}
-	
-	@Override
-	protected void onStart() {
-		super.onStart();
-		
-		// レイアウトにテーマの設定
-		layout.setBackgroundResource(Thema.getBackgroundResource());
-		
 		// グリッドビューにセット
 		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
 		gView.setAdapter(gAdapter);
+		
+		// 各アイテムをクリックした場合のリスナを登録
+		gView.setOnItemClickListener(gAdapter);
+		*/
 	}
-
+	
+	//@Override
+	//protected void onStart() {
+		//super.onStart();
+		
+		// レイアウトにテーマの設定
+		//layout.setBackgroundResource(Thema.getBackgroundResource());
+		
+		// グリッドビューにセット
+		//gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
+		//gView.setAdapter(gAdapter);
+	//}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuItem gorstItem = menu.add(Menu.NONE, 0,Menu.NONE, "おばけ");
+		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "はーと");
+		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "ほし");
+		
+		gorstItem.setIcon(R.drawable.gorst);
+		//gorstItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+		gorstItem.setOnMenuItemClickListener(this);
+		
+		heartItem.setIcon(R.drawable.heart);
+		heartItem.setOnMenuItemClickListener(this);
+		
+		starItem.setIcon(R.drawable.star);
+		starItem.setOnMenuItemClickListener(this);
+		
+		return true;
+	}
 
 	@Override
 	public void onClick(View v) {
@@ -113,13 +211,27 @@ public class HomeActivity extends Activity implements OnClickListener{
 			startActivity(intent);
 			break;
 		case R.id.setting_button:
-			intent = new Intent(this, SettingActivity.class);
-			startActivity(intent);
-			
 			break;
 		}
 	}
 
+	@Override
+	public boolean onMenuItemClick(MenuItem item) {
+		switch(item.getItemId()){
+		case 0:
+			this.setTheme(R.style.GorstTheme);
+			break;
+		case 1:
+			this.setTheme(R.style.HeratTheme);
+			break;
+		case 2:
+			this.setTheme(R.style.StarTheme);
+			break;
+		}
+		handler.sendEmptyMessage(THEME_CHANGE);
+		return true;
+	}
+	
 	/*
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
