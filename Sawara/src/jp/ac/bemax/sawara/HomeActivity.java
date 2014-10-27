@@ -5,24 +5,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.view.Display;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 
 /**
  * ホーム画面のアクティビティ
  * @author Masaaki Horikawa
  * 2014/07/02
  */
-public class HomeActivity extends Activity{
+public class HomeActivity extends Activity implements OnClickListener{
 	private GridView gView;
 	private GridAdapter gAdapter;
 	private ArrayList<Category> items;
+	private List<ListItem> listItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
 	private int itemHeight; 
 	private File capturedFile;
+	private RelativeLayout layout;
+	private Button settingButton;
+	private Button newButton;
 	
 	private final static int CAPTUER_IMAGE = 100;
 	private final static int NEW_ITEM = 200;
@@ -35,6 +44,17 @@ public class HomeActivity extends Activity{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
+		
+		// デフォルトのテーマに設定
+		Thema.themaID = 0;
+		
+		layout = (RelativeLayout)findViewById(R.id.RelativeLayout1);
+		
+		settingButton = (Button)findViewById(R.id.setting_button);
+		settingButton.setOnClickListener(this);
+		
+		newButton = (Button)findViewById(R.id.new_button);
+		newButton.setOnClickListener(this);
 		
 		// ウィジェットを登録 
 		gView = (GridView)findViewById(R.id.gridView);
@@ -55,7 +75,7 @@ public class HomeActivity extends Activity{
 		
 		// 指定したレイアウトでListItemを並べる
 		// 新規作成ボタン
-		List<ListItem> listItems = new ArrayList<ListItem>();
+		listItems = new ArrayList<ListItem>();
 		listItems.add(new NewButton(this));
 		// カテゴリー
 		for(Category item: cManager.getAllItems()){
@@ -66,13 +86,38 @@ public class HomeActivity extends Activity{
 			listItems.add(item);
 		}
 		
-		// グリッドビューにセット
-		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
-		gView.setAdapter(gAdapter);
-		
 		// 各アイテムをクリックした場合のリスナを登録
 		gView.setOnItemClickListener(gAdapter);
 
+	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		// レイアウトにテーマの設定
+		layout.setBackgroundResource(Thema.getBackgroundResource());
+		
+		// グリッドビューにセット
+		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
+		gView.setAdapter(gAdapter);
+	}
+
+
+	@Override
+	public void onClick(View v) {
+		Intent intent = null;
+		switch(v.getId()){
+		case R.id.new_button:
+			intent = new Intent(this, RegisterActivity.class);
+			startActivity(intent);
+			break;
+		case R.id.setting_button:
+			intent = new Intent(this, SettingActivity.class);
+			startActivity(intent);
+			
+			break;
+		}
 	}
 
 	/*

@@ -65,6 +65,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 		Bitmap bmp = listItem.getImage();
 		imgView.setImageBitmap(bmp);
+		imgView.setBackgroundResource(Thema.getFrameResource());
 		
 		// 縦書きのtextViewにアイテムの値をセットする
 		VTextView vtView = (VTextView)view.findViewById(R.id.list_vTextView);

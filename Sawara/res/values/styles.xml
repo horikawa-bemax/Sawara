@@ -1,15 +1,30 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <style name="AppBaseTheme" parent="android:Theme.Light"></style>
-
-    <!-- Application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
+    <style name="AppTheme" parent="@android:style/Theme.Light">
+        <item name="android:background">@style/sawaraButton</item>
     </style>
+    
+    <style name="AppBaseTheme" parent="@android:style/Theme.Light">
+		<item name="android:button">@style/sawaraButton</item>
+    </style>
+    
+    <style name="MyTheme">  
+        <item name="MyColor">#ff0000</item> 
+        <item name="buttonBack">@drawable/gorst</item>
+    </style>  
     
     <style name="sawaraButton">
         <item name="android:background">@drawable/button</item>
         <item name="android:textColor">@color/button_text</item>
         <item name="android:padding">5dp</item>
         <item name="android:layout_margin">5dp</item>
+    </style>
+    
+    <style name="gorst_frame">
+        <item name="android:background">@drawable/bat_frame</item>
+    </style>
+    
+    <style name="gorst_back">
+        <item name="android:background">@drawable/gorst_back</item>
     </style>
 
 </resources>
