@@ -30,7 +30,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	static final int THEME_CHANGE = 0;
 	
 	private Handler mHandler;
-	private ActionBar mActionBar;
+	//private ActionBar mActionBar;
 	private GridView gView;
 	private GridAdapter gAdapter;
 	private ArrayList<Category> items;
@@ -52,7 +52,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		display.getSize(p);
 		
 		// アクションバー
-		mActionBar = getActionBar();
+		//mActionBar = getActionBar();
 		
 		/***********
 		 * データベースアクセス
@@ -120,71 +120,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		
 		mHandler.sendEmptyMessage(THEME_CHANGE);
 	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-		/*
-		setContentView(R.layout.home);
-		
-		layout = (RelativeLayout)findViewById(R.id.RelativeLayout1);
-		
-		settingButton = (Button)findViewById(R.id.setting_button);
-		settingButton.setOnClickListener(this);
-		
-		newButton = (Button)findViewById(R.id.new_button);
-		newButton.setOnClickListener(this);
-		
-		// ウィジェットを登録 
-		gView = (GridView)findViewById(R.id.gridView);
-		
-		// ディスプレイサイズを取得する
-		Display display = getWindowManager().getDefaultDisplay();
-		Point p = new Point();
-		display.getSize(p);
-		itemHeight = p.x / 5;
-		
-		// 初期化
-		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
-		sdb.dump();
-		
-		items = new ArrayList<Category>();
-		cManager = CategoryManager.newCategoryManager(this);
-		aManager = ArticleManager.newItemManager(this);
-		
-		// 指定したレイアウトでListItemを並べる
-		// 新規作成ボタン
-		listItems = new ArrayList<ListItem>();
-		listItems.add(new NewButton(this));
-		// カテゴリー
-		for(Category item: cManager.getAllItems()){
-			listItems.add(item);
-		}
-		// カテゴリー登録されていないアーティクル
-		for(Article item: aManager.getAllItems()){
-			listItems.add(item);
-		}
-
-		// グリッドビューにセット
-		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
-		gView.setAdapter(gAdapter);
-		
-		// 各アイテムをクリックした場合のリスナを登録
-		gView.setOnItemClickListener(gAdapter);
-		*/
-	}
-	
-	//@Override
-	//protected void onStart() {
-		//super.onStart();
-		
-		// レイアウトにテーマの設定
-		//layout.setBackgroundResource(Thema.getBackgroundResource());
-		
-		// グリッドビューにセット
-		//gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
-		//gView.setAdapter(gAdapter);
-	//}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -192,14 +127,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "はーと");
 		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "ほし");
 		
-		gorstItem.setIcon(R.drawable.gorst);
+		gorstItem.setIcon(R.drawable.theme_gorst_back);
 		//gorstItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 		gorstItem.setOnMenuItemClickListener(this);
 		
-		heartItem.setIcon(R.drawable.heart);
+		heartItem.setIcon(R.drawable.theme_heart);
 		heartItem.setOnMenuItemClickListener(this);
 		
-		starItem.setIcon(R.drawable.star);
+		starItem.setIcon(R.drawable.theme_star_back);
 		starItem.setOnMenuItemClickListener(this);
 		
 		return true;

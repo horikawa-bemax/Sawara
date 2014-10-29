@@ -54,17 +54,17 @@
                 android:id="@+id/gorst_image"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:src="@drawable/gorst" />
+                android:src="@drawable/theme_gorst_back" />
             <ImageView
                 android:id="@+id/heart_image"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:src="@drawable/heart" />
+                android:src="@drawable/theme_heart" />
             <ImageView
                 android:id="@+id/star_image"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:src="@drawable/star" />
+                android:src="@drawable/theme_star_back" />
         </LinearLayout>
     </HorizontalScrollView>
 
