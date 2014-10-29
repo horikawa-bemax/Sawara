@@ -1,9 +1,9 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.HorizontalScrollView;
 import android.widget.RelativeLayout;
 
 /**
@@ -27,21 +28,19 @@ import android.widget.RelativeLayout;
  */
 public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener{
 	static final int THEME_CHANGE = 0;
-	private Handler handler;
+	
+	private Handler mHandler;
+	private ActionBar mActionBar;
 	private GridView gView;
 	private GridAdapter gAdapter;
 	private ArrayList<Category> items;
 	private List<ListItem> listItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
-	private int itemHeight; 
-	private File capturedFile;
 	private RelativeLayout layout;
 	private Button settingButton;
 	private Button newButton;
-	
-	private final static int CAPTUER_IMAGE = 100;
-	private final static int NEW_ITEM = 200;
+	private HorizontalScrollView mHSView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +50,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		Display display = getWindowManager().getDefaultDisplay();
 		Point p = new Point();
 		display.getSize(p);
-		itemHeight = p.x / 5;
+		
+		// アクションバー
+		mActionBar = getActionBar();
 		
 		/***********
 		 * データベースアクセス
@@ -81,7 +82,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		 *  ハンドラーの設定
 		 **************/
 		final HomeActivity thisObj = this;
-		handler = new Handler(){
+		mHandler = new Handler(){
 
 			@Override
 			public void handleMessage(Message msg) {
@@ -102,6 +103,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					newButton = (Button)findViewById(R.id.new_button);
 					newButton.setOnClickListener(thisObj);
 					
+					mHSView = (HorizontalScrollView)findViewById(R.id.horizontalScrollView);
+					mHSView.setVisibility(View.INVISIBLE);
+					
 					// ウィジェットを登録 
 					gView = (GridView)findViewById(R.id.gridView);
 					
@@ -109,13 +113,12 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					
 					// 各アイテムをクリックした場合のリスナを登録
 					gView.setOnItemClickListener(gAdapter);
-					
 				}
 			}
 			
 		};
 		
-		handler.sendEmptyMessage(THEME_CHANGE);
+		mHandler.sendEmptyMessage(THEME_CHANGE);
 	}
 
 	@Override
@@ -211,6 +214,11 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			startActivity(intent);
 			break;
 		case R.id.setting_button:
+			if(mHSView.getVisibility() == View.INVISIBLE){
+				mHSView.setVisibility(View.VISIBLE);
+			}else{
+				mHSView.setVisibility(View.INVISIBLE);
+			}
 			break;
 		}
 	}
@@ -228,7 +236,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			this.setTheme(R.style.StarTheme);
 			break;
 		}
-		handler.sendEmptyMessage(THEME_CHANGE);
+		mHandler.sendEmptyMessage(THEME_CHANGE);
 		return true;
 	}
 	
