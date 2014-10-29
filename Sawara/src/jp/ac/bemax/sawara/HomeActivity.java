@@ -1,5 +1,12 @@
 package jp.ac.bemax.sawara;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,8 +15,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -53,6 +62,60 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		
 		// アクションバー
 		//mActionBar = getActionBar();
+
+		/***********
+		 * 設定ファイルの処理
+		 ***********/
+		File dir = getFilesDir();
+		File f = new File(dir, "config.ini");
+		FileWriter fw = null;
+		if(!f.exists()){
+			try {
+				fw = new FileWriter(f);
+				// システムの初期設定を書き込む
+				fw.write("theme = GorstTheme");			
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}finally{
+				try {
+					fw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		FileReader fr = null;
+		BufferedReader br = null;
+		try{
+			// 初期設定ファイルから読み込む
+			fr = new FileReader(f);
+			br = new BufferedReader(fr);
+			String s;
+			while((s = br.readLine()) != null){
+				String[] ss = s.split("=");
+				
+				// テーマの初期設定を処理
+				if(ss[0].trim().equals("theme")){
+					// 文字列からリソースIDを取得
+					int resid = getResources().getIdentifier(ss[1].trim(), "style", getPackageName());
+					// テーマをセットする
+					setTheme(resid);
+				}
+			}
+		}catch(FileNotFoundException e){
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			try{
+				br.close();
+				fr.close();
+			}catch(IOException e){
+				e.printStackTrace();
+			}
+		}
 		
 		/***********
 		 * データベースアクセス
