@@ -16,7 +16,7 @@
         <item name="frameBack">@drawable/theme_gorst_frame</item>
     </style>
     
-    <style name="HeratTheme">
+    <style name="HeartTheme">
         <item name="mainColor">#ffAAAA</item> 
         <item name="baseColor">#FFCCCC</item>
         <item name="buttonBack">@drawable/theme_default_button</item>

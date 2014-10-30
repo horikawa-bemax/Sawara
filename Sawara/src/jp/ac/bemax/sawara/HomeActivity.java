@@ -1,12 +1,6 @@
 package jp.ac.bemax.sawara;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,56 +60,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		/***********
 		 * 設定ファイルの処理
 		 ***********/
-		File dir = getFilesDir();
-		File f = new File(dir, "config.ini");
-		FileWriter fw = null;
-		if(!f.exists()){
-			try {
-				fw = new FileWriter(f);
-				// システムの初期設定を書き込む
-				fw.write("theme = GorstTheme");			
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}finally{
-				try {
-					fw.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+		Configuration.confFile = new File(getFilesDir(), "sawara.conf");
+		
+		if(!Configuration.confFile.exists()){
+			Configuration.makeConfFile();
 		}
-		FileReader fr = null;
-		BufferedReader br = null;
-		try{
-			// 初期設定ファイルから読み込む
-			fr = new FileReader(f);
-			br = new BufferedReader(fr);
-			String s;
-			while((s = br.readLine()) != null){
-				String[] ss = s.split("=");
-				
-				// テーマの初期設定を処理
-				if(ss[0].trim().equals("theme")){
-					// 文字列からリソースIDを取得
-					int resid = getResources().getIdentifier(ss[1].trim(), "style", getPackageName());
-					// テーマをセットする
-					setTheme(resid);
-				}
-			}
-		}catch(FileNotFoundException e){
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}finally{
-			try{
-				br.close();
-				fr.close();
-			}catch(IOException e){
-				e.printStackTrace();
-			}
-		}
+		String themeVal = Configuration.getConfig("theme");
+		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
+		setTheme(resid);
 		
 		/***********
 		 * データベースアクセス
@@ -226,12 +178,15 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(item.getItemId()){
 		case 0:
 			this.setTheme(R.style.GorstTheme);
+			Configuration.setConfig("theme", "GorstTheme");
 			break;
 		case 1:
-			this.setTheme(R.style.HeratTheme);
+			this.setTheme(R.style.HeartTheme);
+			Configuration.setConfig("theme", "HeartTheme");
 			break;
 		case 2:
 			this.setTheme(R.style.StarTheme);
+			Configuration.setConfig("theme", "StarTheme");
 			break;
 		}
 		mHandler.sendEmptyMessage(THEME_CHANGE);
