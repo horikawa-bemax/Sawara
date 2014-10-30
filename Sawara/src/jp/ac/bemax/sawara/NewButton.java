@@ -29,7 +29,7 @@ public class NewButton implements ListItem{
 
 	@Override
 	public Bitmap getImage() {
-		return BitmapFactory.decodeResource(context.getResources(), R.drawable.friend);
+		return BitmapFactory.decodeResource(context.getResources(), R.drawable.icon);
 	}
 
 	@Override
