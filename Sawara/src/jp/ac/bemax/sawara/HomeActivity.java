@@ -140,14 +140,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "はーと");
 		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "ほし");
 		
-		gorstItem.setIcon(R.drawable.theme_gorst_back);
+		gorstItem.setIcon(R.drawable.theme_gorst_back_image);
 		//gorstItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 		gorstItem.setOnMenuItemClickListener(this);
 		
-		heartItem.setIcon(R.drawable.theme_heart);
+		heartItem.setIcon(R.drawable.theme_heart_back_image);
 		heartItem.setOnMenuItemClickListener(this);
 		
-		starItem.setIcon(R.drawable.theme_star_back);
+		starItem.setIcon(R.drawable.theme_star_back_image);
 		starItem.setOnMenuItemClickListener(this);
 		
 		return true;

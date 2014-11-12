@@ -12,9 +12,7 @@
         android:layout_height="100dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:background="?attr/buttonBack"
-        android:text="@string/new_button"
-        android:textColor="?attr/baseColor" />
+        android:background="?attr/newButtonBack" />
 
     <Button
         android:id="@+id/update_button"
@@ -22,7 +20,7 @@
         android:layout_height="100dp"
         android:layout_alignBottom="@+id/new_button"
         android:layout_toRightOf="@+id/new_button"
-        android:background="?attr/buttonBack"
+        android:background="?attr/newButtonBack"
         android:text="@string/update_button"
         android:textColor="?attr/baseColor" />
 
@@ -32,7 +30,7 @@
         android:layout_height="100dp"
         android:layout_alignBottom="@+id/new_button"
         android:layout_alignParentRight="true"
-        android:background="?attr/buttonBack"
+        android:background="?attr/settingButtonBack"
         android:text="@string/setting_button"
         android:textColor="?attr/baseColor" />
     
@@ -54,17 +52,17 @@
                 android:id="@+id/gorst_image"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:src="@drawable/theme_gorst_back" />
+                android:src="@drawable/theme_gorst_back_image" />
             <ImageView
                 android:id="@+id/heart_image"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:src="@drawable/theme_heart" />
+                android:src="@drawable/theme_heart_back_image" />
             <ImageView
                 android:id="@+id/star_image"
                 android:layout_width="wrap_content"
                 android:layout_height="100dp"
-                android:src="@drawable/theme_star_back" />
+                android:src="@drawable/theme_star_back_image" />
         </LinearLayout>
     </HorizontalScrollView>
 

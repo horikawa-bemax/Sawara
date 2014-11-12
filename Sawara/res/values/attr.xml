@@ -3,7 +3,9 @@
     <declare-styleable name="KJTheme">
         <attr name="mainColor" format="color"></attr>
         <attr name="baseColor" format="color"></attr>
-        <attr name="buttonBack" format="reference"></attr>
+        <attr name="accentColor" format="color"></attr>
+        <attr name="newButtonBack" format="reference"></attr>
+         <attr name="settingButtonBack" format="reference"></attr>       
         <attr name="mainBack" format="reference"></attr>
         <attr name="frameBack" format="reference"></attr>
     </declare-styleable>
