@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <jp.ac.bemax.sawara.VTextView
+        android:id="@+id/register_name"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/vtext_back"
+        android:layout_margin="5dp" />
+
+    <jp.ac.bemax.sawara.VTextView
+        android:id="@+id/register_description"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@id/register_name"
+        android:background="@drawable/vtext_back"
+        android:layout_margin="5dp" />
+
+    <Button
+        android:id="@+id/register_albam_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@id/register_description"
+        android:background="?attr/newButtonBack"
+        android:layout_margin="5dp"
+        android:text="" />
+    
+    <Button
+        android:id="@+id/register_movie_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@id/register_albam_button"
+        android:background="?attr/newButtonBack"
+        android:layout_margin="5dp"
+        android:text="" />
+    
+     <Button
+         android:id="@+id/register_photo_button"
+         android:layout_width="100dp"
+         android:layout_height="100dp"
+         android:layout_alignParentBottom="true"
+         android:layout_toLeftOf="@id/register_movie_button"
+         android:background="?attr/newButtonBack"
+         android:layout_margin="5dp"
+         android:text="" />
+
+     <GridView
+         android:id="@+id/register_image_viewer"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         android:layout_above="@+id/register_albam_button"
+         android:layout_alignParentTop="true"
+         android:layout_toLeftOf="@+id/register_description"
+         android:layout_toRightOf="@+id/register_tag_viewer"
+         android:background="@color/white"
+         android:numColumns="2"
+         android:layout_margin="5dp" >
+
+     </GridView>
+
+     <GridView
+         android:id="@+id/register_tag_viewer"
+         android:layout_width="120dp"
+         android:layout_height="match_parent"
+         android:layout_alignParentLeft="true"
+         android:layout_alignParentTop="true"
+         android:background="?attr/baseColor"
+         android:numColumns="1"
+         android:layout_margin="5dp" >
+
+     </GridView>
+
+</RelativeLayout>

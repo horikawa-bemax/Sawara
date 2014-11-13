@@ -52,7 +52,7 @@ public class CategoryManager {
 		Canvas offScreen = new Canvas(categoryImage);
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String[] args = {"" + id};
-		Cursor mCursor = db.rawQuery("select article_id from category_article_table where category_id = ?", args);
+		Cursor mCursor = db.rawQuery("select image_path from image_table where article_id in (select article_id from category_article_table where category_id = ?)", args);
 		int size = mCursor.getCount();
 		for(int i=0; i<6 && mCursor.moveToNext(); i++){
 			String imagePath = mCursor.getString(0);

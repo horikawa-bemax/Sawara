@@ -44,8 +44,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.register1);
-		
+		setContentView(R.layout.register);
+		/*
 		// レイアウトの紐付け
 		registerGridView = (GridView)findViewById(R.id.register_grid_view);
 		registerImageButton = (Button)findViewById(R.id.register_image_button);
@@ -65,6 +65,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		mAdapter = new ArrayAdapter<Bitmap>(this, R.layout.image_item, imageList);
 		registerGridView.setAdapter(mAdapter);
 		
+		*/
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
 	}
