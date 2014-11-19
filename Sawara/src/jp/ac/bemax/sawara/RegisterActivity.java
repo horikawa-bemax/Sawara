@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,6 +16,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
@@ -72,11 +74,12 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		registerPhotoButton.setOnClickListener(this);
 		registerName.setOnClickListener(this);
 		registerDiscription.setOnClickListener(this);
-		
-		// 編集可能にする
-		registerName.setFocusableInTouchMode(true);
-		registerDiscription.setFocusableInTouchMode(true);
 
+		registerName.setFocusableInTouchMode(true);
+		registerName.setTextSize(100);
+		registerDiscription.setFocusableInTouchMode(true);
+		registerDiscription.setTextSize(80);
+		
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
 	}
@@ -122,10 +125,6 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// インテントを呼び出す
 			startActivityForResult(intent, MOVIE_CAPTUER);
 			break;
-		case R.id.register_name:
-			
-		case R.id.register_description:
-			
 		}
 	}
 
