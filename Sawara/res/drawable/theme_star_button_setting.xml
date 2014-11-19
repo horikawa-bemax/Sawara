@@ -7,10 +7,10 @@
 		            <stroke 
 		  	    		android:color="@color/star_accent"
 		  	    		android:width="1dp"/>
-		    
+		            
 		  			<solid 
 		  	    		android:color="@color/star_main"/>
-		  	
+		   			
 		   			<corners 
 		        		android:bottomRightRadius="10dp"
 		    			android:bottomLeftRadius="10dp"  

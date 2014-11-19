@@ -16,4 +16,5 @@
     <color name="button_text">#f397</color>
     <color name="dummy">#faaa</color>
     <color name="white">#ffff</color>
+    <color name="focuse">#fffd</color>
 </resources>

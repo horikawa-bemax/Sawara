@@ -17,9 +17,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -29,12 +27,17 @@ import android.widget.VideoView;
  * 2014/07/23
  */
 public class RegisterActivity extends Activity implements OnClickListener{
-	private GridView registerGridView;
-	private Button registerImageButton;
+	private VTextView registerName;
+	private VTextView registerDiscription;
+	private Button registerAlbamButton;
 	private Button registerMovieButton;
-	private Button registerNextButton;
-	private List<Bitmap> imageList; 
-	private ArrayAdapter<Bitmap> mAdapter;
+	private Button registerPhotoButton;
+	private GridView registerImageViewer;
+	private GridView registerTagViewer;
+	private List<Bitmap> imageList;
+	private List<VTextView> tagList;
+	private ArrayAdapter<Bitmap> imageViewerAdapter;
+	private ArrayAdapter<VTextView> tagViewerAdapter;
 	
 	private String fileName;
 	
@@ -45,27 +48,35 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.register);
-		/*
+		
 		// レイアウトの紐付け
-		registerGridView = (GridView)findViewById(R.id.register_grid_view);
-		registerImageButton = (Button)findViewById(R.id.register_image_button);
+		registerName = (VTextView)findViewById(R.id.register_name);
+		registerDiscription = (VTextView)findViewById(R.id.register_description);
+		registerAlbamButton = (Button)findViewById(R.id.register_albam_button);
 		registerMovieButton = (Button)findViewById(R.id.register_movie_button);
-		registerNextButton = (Button)findViewById(R.id.register_next_button);
+		registerPhotoButton = (Button)findViewById(R.id.register_photo_button);
+		registerImageViewer = (GridView)findViewById(R.id.register_image_viewer);
+		registerTagViewer = (GridView)findViewById(R.id.register_tag_viewer);
 		
-		//
+		// イメージビューアの設定
 		imageList = new ArrayList<Bitmap>();
+		imageViewerAdapter = new ArrayAdapter<Bitmap>(this, R.layout.image_item, imageList);
+		registerImageViewer.setAdapter(imageViewerAdapter);
 		
-		// クリックリスナー
-		registerImageButton.setOnClickListener(this);
+		// タグビューアの設定
+		tagList = new ArrayList<VTextView>();
+		
+		// クリックリスナー登録
+		registerAlbamButton.setOnClickListener(this);
 		registerMovieButton.setOnClickListener(this);
-		registerNextButton.setOnClickListener(this);
-
-		//
-		imageList = new ArrayList<Bitmap>();
-		mAdapter = new ArrayAdapter<Bitmap>(this, R.layout.image_item, imageList);
-		registerGridView.setAdapter(mAdapter);
+		registerPhotoButton.setOnClickListener(this);
+		registerName.setOnClickListener(this);
+		registerDiscription.setOnClickListener(this);
 		
-		*/
+		// 編集可能にする
+		registerName.setFocusableInTouchMode(true);
+		registerDiscription.setFocusableInTouchMode(true);
+
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
 	}
@@ -77,17 +88,14 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		Uri uriPath = null;
 		
 		switch(v.getId()){
-		
-		// 登録ボタンが押された
-		case R.id.register_next_button:
+		case R.id.register_albam_button:
 			// 結果を呼び出しもとActivityに返す
 
 			
 			// Activityを終了
 			finish();
 			break;
-			
-		case R.id.register_image_button:
+		case R.id.register_photo_button:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 			String filename = "" + System.currentTimeMillis() + ".jpg";
@@ -100,7 +108,6 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// インテントを呼び出す
 			startActivityForResult(intent, IMAGE_CAPTUER);
 			break;
-		
 		case R.id.register_movie_button:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
@@ -115,6 +122,10 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// インテントを呼び出す
 			startActivityForResult(intent, MOVIE_CAPTUER);
 			break;
+		case R.id.register_name:
+			
+		case R.id.register_description:
+			
 		}
 	}
 
@@ -149,7 +160,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				Bitmap image = BitmapFactory.decodeFile(path, opt);
 				
 				imageList.add(image);
-				mAdapter.notifyDataSetChanged();
+				imageViewerAdapter.notifyDataSetChanged();
 				
 			}
 			break;

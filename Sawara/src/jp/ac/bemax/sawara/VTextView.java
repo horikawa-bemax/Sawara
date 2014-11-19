@@ -5,8 +5,17 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.hardware.input.InputManager;
+import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 
 /**
  * 縦書きのテキストView
@@ -21,10 +30,13 @@ public class VTextView extends View {
 
     private Typeface mFace;
     private Paint mPaint;
-    private String text = "";
+    private String mText = "";
     private int width;
     private int height;
-
+    private InputMethodManager mManager;
+    private TextInputConnection mInputConnection;
+    private StringBuffer mStringBuffer;
+    
     public VTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mFace = Typeface.createFromAsset(context.getAssets(),"HGRKK.TTC");
@@ -32,16 +44,23 @@ public class VTextView extends View {
         mPaint.setTextSize(FONT_SIZE);
         mPaint.setColor(Color.BLACK);
         mPaint.setTypeface(mFace);
+        
+        mManager = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        mInputConnection = new TextInputConnection(this, false);
+        mStringBuffer = new StringBuffer("");
+        
+        setFocusable(true);
+        setFocusableInTouchMode(false);
     }
 
     public void setText(String text) {
     	mPaint.setTextSize(FONT_SIZE);
-        this.text = text;
+        mText = text;
     }
     
     public void setText(String text, int size){
     	mPaint.setTextSize(size);
-    	this.text = text;
+    	mText = text;
     }
 
     @Override
@@ -58,10 +77,11 @@ public class VTextView extends View {
         float lineSpacing = fontSpacing * 1.5f;
         float x = width - lineSpacing;
         float y = TOP_SPACE + fontSpacing * 1.0f;
-        String[] s = text.split("");
+        
+        String[] s = mText.split("");
         boolean newLine = false;
 
-        for (int i = 1; i <= text.length(); i++) {
+        for (int i = 1; i <= mText.length(); i++) {
             newLine = false;
 
             CharSetting setting = CharSetting.getSetting(s[i]);
@@ -95,4 +115,58 @@ public class VTextView extends View {
             }
         }
     }
+
+	@Override
+	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+		EditText et = new EditText(this.getContext());
+		et.onCreateInputConnection(outAttrs);
+		return mInputConnection;
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		requestFocus();
+		mManager.showSoftInput(this, InputMethodManager.RESULT_SHOWN);
+		
+		return true;
+	}
+	
+	class TextInputConnection extends BaseInputConnection{
+		private SpannableStringBuilder mBuffer;
+
+		public TextInputConnection(View targetView, boolean fullEditor) {
+			super(targetView, fullEditor);
+			mBuffer = new SpannableStringBuilder("");
+		}
+
+		@Override
+		public Editable getEditable() {
+			return mBuffer;
+		}
+
+		@Override
+		public boolean setComposingText(CharSequence text, int newCursorPosition) {
+			boolean ret = super.setComposingText(text, newCursorPosition);
+			mBuffer = new SpannableStringBuilder(text);
+			invalidate();
+			return ret;
+		}
+
+		@Override
+		public boolean commitText(CharSequence text, int newCursorPosition) {
+			boolean ret = super.commitText(text, newCursorPosition);
+			mBuffer = new SpannableStringBuilder(text);
+			mText += mBuffer.toString();
+			invalidate();
+			return ret;
+		}
+
+		public SpannableStringBuilder getmBuffer() {
+			return mBuffer;
+		}
+
+		public void setmBuffer(SpannableStringBuilder mBuffer) {
+			this.mBuffer = mBuffer;
+		}
+	}
 }
