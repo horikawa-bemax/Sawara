@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -34,9 +33,9 @@ public class VTextView extends EditText{
     private int width;
     private int height;
     private InputMethodManager mManager;
-    private TextInputConnection mInputConnection;
+    //private TextInputConnection mInputConnection;
     private Editable mEditable;
-    private boolean editing;
+    //private boolean editing;
     
     public VTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -46,8 +45,9 @@ public class VTextView extends EditText{
         mPaint.setColor(Color.BLACK);
         mPaint.setTypeface(mFace);
         
-        mManager = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
-        mInputConnection = new TextInputConnection(this, false);
+        // 
+        //mManager = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //mInputConnection = new TextInputConnection(this, false);
 
         mEditable = super.getEditableText();
         //editing = false;
@@ -70,24 +70,37 @@ public class VTextView extends EditText{
     	mPaint.setTextSize(FONT_SIZE);
         mText = getText().toString();
     }
- */   
+	*/ 
+    
+    /**
+     * テキストサイズつき、setText
+     */
     public void setText(String text, int size){
     	mPaint.setTextSize(size);
     	setText(text);
     }
     
+    /**
+     * テキストサイズをセットする
+     * @param size
+     */
     public void setTextSize(int size){
     	mPaint.setTextSize(size);
     }
 
+    /**
+     * 
+     */
     @Override
     public void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-
         width = getWidth();
         height = getHeight();
     }
 
+    /**
+     * 描画
+     */
     @Override
     public void onDraw(Canvas canvas) {
         float fontSpacing = mPaint.getFontSpacing();
@@ -100,8 +113,10 @@ public class VTextView extends EditText{
         }else{
         	mText = getHint().toString();
         }
-                
+        
+        // 改行キーで切り分ける
         String[]ss = mText.split("\r\n|[\n\r\u2028\u2029\u0085]", 0);
+        
         for(int j=0; j<ss.length; j++){
         	boolean newLine = false;
         	String[] s = ss[j].split("");
@@ -142,6 +157,9 @@ public class VTextView extends EditText{
         }
     }
 
+    /**
+     * インプットコネクション（必要ないかも）
+     */
 	@Override
 	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
 		InputConnection ic = super.onCreateInputConnection(outAttrs);
