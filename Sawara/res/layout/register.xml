@@ -10,7 +10,9 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:background="@drawable/vtext_back"
-        android:layout_margin="5dp" />
+        android:layout_margin="5dp"
+        android:cursorVisible="false"
+        android:hint="なまえをいれてね"/>
 
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/register_description"
@@ -19,7 +21,9 @@
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@id/register_name"
         android:background="@drawable/vtext_back"
-        android:layout_margin="5dp" />
+        android:layout_margin="5dp"
+        android:cursorVisible="false"
+        android:hint="せつめいをいれてね"/>
 
     <Button
         android:id="@+id/register_albam_button"

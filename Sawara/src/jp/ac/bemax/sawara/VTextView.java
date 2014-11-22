@@ -5,14 +5,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.hardware.input.InputManager;
-import android.inputmethodservice.Keyboard.Key;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
@@ -25,7 +22,7 @@ import android.widget.EditText;
  * @author Masaaki Horikawa
  * 2014/09/30
  */
-public class VTextView extends View {
+public class VTextView extends EditText{
 
     private static final int TOP_SPACE = 20;
     private static final int BOTTOM_SPACE = 20;
@@ -38,7 +35,8 @@ public class VTextView extends View {
     private int height;
     private InputMethodManager mManager;
     private TextInputConnection mInputConnection;
-    private StringBuffer mStringBuffer;
+    private Editable mEditable;
+    private boolean editing;
     
     public VTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -50,21 +48,32 @@ public class VTextView extends View {
         
         mManager = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
         mInputConnection = new TextInputConnection(this, false);
-        mStringBuffer = new StringBuffer("");
+
+        mEditable = super.getEditableText();
+        //editing = false;
         
         setFocusable(false);
         setFocusableInTouchMode(false);
     }
+     
+    @Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    	width = w;
+    	height = h;
+    	Log.d("size",""+w+":"+h);
+		super.onSizeChanged(w, h, oldw, oldh);
+	}
 
+	/*
     public void setText(String text) {
+    	super.setText(text);
     	mPaint.setTextSize(FONT_SIZE);
-    	mStringBuffer = new StringBuffer(text);
-        mText = mStringBuffer.toString();
+        mText = getText().toString();
     }
-    
+ */   
     public void setText(String text, int size){
     	mPaint.setTextSize(size);
-    	mText = text;
+    	setText(text);
     }
     
     public void setTextSize(int size){
@@ -86,27 +95,29 @@ public class VTextView extends View {
         float x = width - lineSpacing;
         float y = TOP_SPACE + fontSpacing * 1.0f;
         
-        String[] ss = mText.split("¥n");
+        if(getText().length() > 0){
+        	mText = getText().toString();
+        }else{
+        	mText = getHint().toString();
+        }
+                
+        String[]ss = mText.split("\r\n|[\n\r\u2028\u2029\u0085]", 0);
         for(int j=0; j<ss.length; j++){
-        	if(ss[j].length() == 0){
-        		continue;
-        	}
-        	String[]s = ss[j].split("");
         	boolean newLine = false;
-	        for (int i = 1; i <= ss[j].length(); i++) {
-	            newLine = false;
+        	String[] s = ss[j].split("");
+        	for (int i = 1; i <= s.length-1; i++) {
+        		newLine = false;
 	
-	            CharSetting setting = CharSetting.getSetting(s[i]);
-	            if (setting == null) {
-	                // 文字設定がない場合、そのまま描画
-	                canvas.drawText(s[i], x, y, mPaint);
-	            } else {
-	                // 文字設定が見つかったので、設定に従い描画
-	                canvas.save();
-	                canvas.rotate(setting.angle, x, y);
-	                canvas.drawText(s[i], x + fontSpacing * setting.x, y + fontSpacing * setting.y,
-	                        mPaint);
-	                canvas.restore();
+        		CharSetting setting = CharSetting.getSetting(s[i]);
+        		if (setting == null) {
+        			// 文字設定がない場合、そのまま描画
+        			canvas.drawText(s[i], x, y, mPaint);
+        		} else {
+        			// 文字設定が見つかったので、設定に従い描画
+        			canvas.save();
+        			canvas.rotate(setting.angle, x, y);
+        			canvas.drawText(s[i], x + fontSpacing * setting.x, y + fontSpacing * setting.y, mPaint);
+        			canvas.restore();
 	            }
 	
 	            if (y + fontSpacing > height - BOTTOM_SPACE) {
@@ -127,51 +138,17 @@ public class VTextView extends View {
 	            }
 	        }
         	x -= lineSpacing;
-        	y = TOP_SPACE + fontSpacing;
+        	y = TOP_SPACE + fontSpacing * 1.0f;
         }
     }
 
 	@Override
-	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		
-		switch(keyCode){
-		case KeyEvent.KEYCODE_ENTER:
-			int last = mStringBuffer.length() - 1;
-			char c = 67;
-			if(last >= 0 && mStringBuffer.charAt(last) != c){
-				mStringBuffer.append("¥n");
-			}
-			break;
-		case KeyEvent.KEYCODE_DEL:
-			if(mStringBuffer.length() > 0){
-				mStringBuffer.deleteCharAt(mStringBuffer.length()-1);
-				mText = mStringBuffer.toString();
-				invalidate();
-			}
-			break;
-		case KeyEvent.KEYCODE_BACK:
-			setFocusable(false);
-			setFocusable(true);
-			break;
-		}
-		return true;
-	}
-
-	@Override
 	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-		EditText et = new EditText(this.getContext());
-		et.onCreateInputConnection(outAttrs);
-		return mInputConnection;
+		InputConnection ic = super.onCreateInputConnection(outAttrs);
+
+		return ic; //new TextInputConnection(this, false);
 	}
 
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		requestFocus();
-		mManager.showSoftInput(this, InputMethodManager.RESULT_SHOWN);
-		
-		return true;
-	}
-	
 	/**
 	 * インナークラス
 	 * キー入力を受け付けるコネクター
@@ -192,19 +169,21 @@ public class VTextView extends View {
 		@Override
 		public boolean setComposingText(CharSequence text, int newCursorPosition) {
 			boolean ret = super.setComposingText(text, newCursorPosition);
-			mText = mStringBuffer.toString() + text;
+			mText = mEditable.toString() + text;
+			//editing = true;
 			invalidate();
-			Log.d("編集中", mText.toString());
+			Log.d("編集中"+newCursorPosition, mEditable.toString());
 			return ret;
 		}
 
 		@Override
 		public boolean commitText(CharSequence text, int newCursorPosition) {
 			boolean ret = super.commitText(text, newCursorPosition);
-			mStringBuffer.append(text);
-			mText = mStringBuffer.toString();
+			mEditable.append(text);
+			//mText = mEditable.toString();
+			//editing = false;
 			invalidate();
-			Log.d("確定済み",mText.toString());
+			Log.d("確定済み"+newCursorPosition, mText.toString());
 			return ret;
 		}
 	}
