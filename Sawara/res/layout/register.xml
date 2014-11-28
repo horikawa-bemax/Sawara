@@ -31,7 +31,7 @@
         android:layout_height="100dp"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@id/register_description"
-        android:background="?attr/newButtonBack"
+        android:background="@drawable/album_image"
         android:layout_margin="5dp"
         android:text="" />
     
@@ -51,7 +51,7 @@
          android:layout_height="100dp"
          android:layout_alignParentBottom="true"
          android:layout_toLeftOf="@id/register_movie_button"
-         android:background="?attr/newButtonBack"
+         android:background="@drawable/camera_image"
          android:layout_margin="5dp"
          android:text="" />
 
