@@ -11,7 +11,11 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,6 +23,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
@@ -122,6 +127,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 			String filename = "" + System.currentTimeMillis() + ".jpg";
+			Log.d("picture-path", dir.getPath()+"/"+filename);
 			saveUri = Uri.fromFile(new File(dir, filename));
 			
 			// 写真撮影用の暗黙インテントを呼び出す準備
@@ -135,13 +141,15 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		case R.id.register_movie_button:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-			saveUri = Uri.fromFile(dir);
+			String moviefile = "" + System.currentTimeMillis() + ".mp4";
+			Log.d("movie-path",dir.getPath());
+			saveUri = Uri.fromFile(new File(dir, moviefile));
 			
 			// 動画撮影用の暗黙院展とを呼び出す準備
 			intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
 			intent.putExtra(MediaStore.EXTRA_OUTPUT, saveUri);
 			intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
-			intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 20);
+			intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 20);	//MAX２０秒間撮影可能
 			
 			// インテントを呼び出す
 			startActivityForResult(intent, MOVIE_CAPTUER);
@@ -185,21 +193,15 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				mHandler.sendEmptyMessage(0);
 				break;
 			case MOVIE_CAPTUER:
-				// これではできまへん。VideoViewをextendsして、なんとかなるか。
-				vview.requestFocus();
-				Uri uri = data.getData();
-				MediaController mc = new MediaController(this);
-				mc.setAnchorView(vview);
-				vview.setMediaController(new MediaController(this));
-				vview.setVideoURI(uri);
-				vview.start();
 				
-				Bitmap bmp = Bitmap.createBitmap(vview.getWidth(), vview.getHeight(), Config.ARGB_8888);
-				Canvas canvas = new Canvas(bmp);
-				vview.draw(canvas);
+				Uri uri = data.getData();
+				String uripath = uri.getPath();
+				Bitmap bmp = ThumbnailUtils.createVideoThumbnail(uri.getPath(), MediaStore.Images.Thumbnails.MINI_KIND);
 				
 				imageViewerAdapter.add(bmp);
 				imageViewerAdapter.notifyDataSetChanged();
+				
+				mHandler.sendEmptyMessage(0);
 				break;
 			}
 		}
