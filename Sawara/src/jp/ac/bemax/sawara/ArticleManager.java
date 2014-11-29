@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -13,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -34,7 +36,7 @@ public class ArticleManager {
 	 * ItemManager.javaコンストラクタ
 	 * @param context
 	 */
-	private ArticleManager(Context context){
+	public ArticleManager(Context context){
 		this.context = context;
 		// sawaraDBアダプタを登録
 		SawaraDBAdapter sdb = new SawaraDBAdapter(context);
@@ -51,12 +53,12 @@ public class ArticleManager {
 	 * @param context
 	 * @return ItemManager
 	 */
-	public static ArticleManager newItemManager(Context context){
+	/*public static ArticleManager newItemManager(Context context){
 		if(aManager == null){
 			aManager = new ArticleManager(context);
 		}
 		return aManager;
-	}
+	}*/
 	
 	public static Article getArticle(long id, Context context){
 		Article article = null;
@@ -98,6 +100,55 @@ public class ArticleManager {
 		db.close();
 		
 		return article;
+	}
+	
+	/**
+	 * article_tableにデータをインサートする
+	 * @param article インサートするArticle
+	 */
+	public void insert(Article article){
+		// データベースを設定
+		SQLiteDatabase db = mHelper.getWritableDatabase();
+		
+		// article_tableに登録する各値をセットする
+		ContentValues cv = new ContentValues();
+		cv.put("name", article.getName());
+		cv.put("description", article.getDescription());
+		cv.put("position", "0");
+		cv.put("modified", article.getModified());
+
+		// article_tableにインサートする
+		long aid = db.insert("article_table", null, cv);
+		Log.d("insert_article",article.getName());
+		
+		// image_tableに静止画を登録する
+		String[] imagePaths = article.getImagePaths();
+		for(int i=0; i<imagePaths.length; i++){
+			// image_tableに登録する値をセットする
+			cv = new ContentValues();
+			cv.put("image_path", imagePaths[i]);
+			cv.put("article_id", ""+aid);
+		
+			// image_tableにインサート
+			long iid = db.insert("image_table", null, cv);
+			Log.d("insert_image",imagePaths[i]);
+			
+		}
+		
+		// movie_tableに動画を登録する
+		String[] moviePaths = article.getMoviePaths();
+		for(int i=0; i<moviePaths.length; i++){
+			// movie_tableに登録する値をセットする
+			cv = new ContentValues();
+			cv.put("movie_path", moviePaths[i]);
+			cv.put("article_id", ""+aid);
+			
+			// movie_tableにインサート
+			long mid = db.insert("movie_table", null, cv);
+			Log.d("insert_movie",moviePaths[i]);
+		}
+
+		db.close();
 	}
 	
 	/**

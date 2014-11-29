@@ -45,18 +45,18 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private Button registerAlbamButton;
 	private Button registerMovieButton;
 	private Button registerPhotoButton;
+	private Button registerRegistButton;
 	private GridView registerImageViewer;
 	private GridView registerTagViewer;
-	private List<Bitmap> imageList;
-	private List<VTextView> tagList;
+	//private List<Bitmap> imageList;
+	//private List<VTextView> tagList;
 	private ImageAdapter imageViewerAdapter;
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	private Handler mHandler;
-	private Uri saveUri;
-	
-	private VideoView vview;
-	
 	private String fileName;
+	private ArticleManager mArticleManager;
+	private List<String> mImagePathList;
+	private List<String> mMoviePathList;
 	
 	private final int IMAGE_CAPTUER = 200;
 	private final int MOVIE_CAPTUER = 300;
@@ -74,15 +74,20 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		registerPhotoButton = (Button)findViewById(R.id.register_photo_button);
 		registerImageViewer = (GridView)findViewById(R.id.register_image_viewer);
 		registerTagViewer = (GridView)findViewById(R.id.register_tag_viewer);
-		
-		vview = (VideoView)findViewById(R.id.videoView);
+		registerRegistButton = (Button)findViewById(R.id.register_regist_button);
 		
 		// イメージビューアの設定
 		imageViewerAdapter = new ImageAdapter(this);
 		registerImageViewer.setAdapter(imageViewerAdapter);
 		
 		// タグビューアの設定
-		tagList = new ArrayList<VTextView>();
+		
+		// ArticleManager設定
+		mArticleManager = new ArticleManager(this); 
+		
+		// 画像および動画のリスト設定
+		mImagePathList = new ArrayList<String>();
+		mMoviePathList = new ArrayList<String>();
 		
 		// クリックリスナー登録
 		registerAlbamButton.setOnClickListener(this);
@@ -90,6 +95,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		registerPhotoButton.setOnClickListener(this);
 		registerName.setOnClickListener(this);
 		registerDiscription.setOnClickListener(this);
+		registerRegistButton.setOnClickListener(this);
 
 		// 縦書きテキストを編集可能にする＆テキストサイズ指定
 		registerName.setFocusableInTouchMode(true);
@@ -100,6 +106,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
 		
+		/*
 		mHandler = new Handler(){
 			@Override
 			public void handleMessage(Message msg) {
@@ -107,6 +114,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				Log.d("Handler起動","はんどらあー");
 			}
 		};
+		*/
 	}
 
 	@Override
@@ -116,6 +124,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		//Uri uriPath = null;
 		
 		switch(v.getId()){
+		
+		//*** アルバムからデータを読み込む ***
 		case R.id.register_albam_button:
 			// 結果を呼び出しもとActivityに返す
 
@@ -123,36 +133,68 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// Activityを終了
 			finish();
 			break;
+		
+		//*** カメラで写真を取り込む ***
 		case R.id.register_photo_button:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			String filename = "" + System.currentTimeMillis() + ".jpg";
-			Log.d("picture-path", dir.getPath()+"/"+filename);
-			saveUri = Uri.fromFile(new File(dir, filename));
+			fileName = "" + System.currentTimeMillis() + ".jpg";
+			Uri imageUri = Uri.fromFile(new File(dir, fileName));
 			
 			// 写真撮影用の暗黙インテントを呼び出す準備
 			intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
-			intent.putExtra(MediaStore.EXTRA_OUTPUT, saveUri);
+			intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 			intent.addCategory(Intent.CATEGORY_DEFAULT);
 			
 			// インテントを呼び出す
 			startActivityForResult(intent, IMAGE_CAPTUER);
 			break;
+			
+		//*** カメラで動画を取り込む ***
 		case R.id.register_movie_button:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-			String moviefile = "" + System.currentTimeMillis() + ".mp4";
-			Log.d("movie-path",dir.getPath());
-			saveUri = Uri.fromFile(new File(dir, moviefile));
+			fileName = "" + System.currentTimeMillis() + ".mp4";
+			Uri movieUri = Uri.fromFile(new File(dir, fileName));
 			
 			// 動画撮影用の暗黙院展とを呼び出す準備
 			intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
-			intent.putExtra(MediaStore.EXTRA_OUTPUT, saveUri);
+			intent.putExtra(MediaStore.EXTRA_OUTPUT, movieUri);
 			intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
 			intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 20);	//MAX２０秒間撮影可能
 			
 			// インテントを呼び出す
 			startActivityForResult(intent, MOVIE_CAPTUER);
+			break;
+			
+		//*** 入力データを登録する ***
+		case R.id.register_regist_button:
+			// articleインスタンスを作成
+			Article article = new Article(mArticleManager);
+			
+			// 基本値をセットする
+			article.setName(registerName.getText().toString());
+			article.setDescription(registerDiscription.getText().toString());
+			article.setModified(System.currentTimeMillis());
+			
+			// 画像ファイルのパスをセットする
+			String[] imagePaths = new String[mImagePathList.size()];
+			for(int i=0; i<imagePaths.length; i++){
+				imagePaths[i] = mImagePathList.get(i);
+			}
+			article.setImagePaths(imagePaths);
+			
+			// 動画ファイルのパスをセットする
+			String[] moviePaths = new String[mMoviePathList.size()];
+			for(int i=0; i<moviePaths.length; i++){
+				moviePaths[i] = mMoviePathList.get(i);
+			}
+			article.setMoviePaths(moviePaths);
+			
+			// ArticleデータをDBにインサートする
+			mArticleManager.insert(article);
+			
+			finish();
 			break;
 		}
 	}
@@ -163,13 +205,19 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		File dir = null;
+		String path = null;
 		
+		// インテントからの返信が成功した場合
 		if(resultCode == RESULT_OK){
 			
 			switch(requestCode){
+			
+			//*** 写真を撮影した場合 ***
 			case IMAGE_CAPTUER:
 				// 画像のサイズを読み込む
-				String path = saveUri.getPath();
+				dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+				path = new File(dir, fileName).getPath();
 				
 				// サイズを確定するための仮読み込み
 				BitmapFactory.Options opt = new BitmapFactory.Options();
@@ -187,29 +235,33 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				opt.inJustDecodeBounds = false;
 				Bitmap image = BitmapFactory.decodeFile(path, opt);
 				
+				// imagePathListに登録する
+				mImagePathList.add(fileName);
+				
+				// ビューアに反映する
 				imageViewerAdapter.add(image);
 				imageViewerAdapter.notifyDataSetChanged();
-			
-				mHandler.sendEmptyMessage(0);
+
 				break;
+				
+			//*** 動画を撮影した場合 ***	
 			case MOVIE_CAPTUER:
+				dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+				path = new File(dir, fileName).getPath();
 				
-				Uri uri = data.getData();
-				String uripath = uri.getPath();
-				Bitmap bmp = ThumbnailUtils.createVideoThumbnail(uri.getPath(), MediaStore.Images.Thumbnails.MINI_KIND);
+				// 動画のサムネイル画像を取得する
+				Bitmap bmp = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
 				
+				// moviePathListに登録する
+				mMoviePathList.add(fileName);
+				
+				// ビューアに反映する
 				imageViewerAdapter.add(bmp);
 				imageViewerAdapter.notifyDataSetChanged();
-				
-				mHandler.sendEmptyMessage(0);
+
 				break;
 			}
 		}
 	}
-	
-	@Override
-	protected void onStop() {
-		// TODO 自動生成されたメソッド・スタブ
-		super.onStop();
-	}
+
 }

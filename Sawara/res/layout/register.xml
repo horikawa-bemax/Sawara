@@ -16,7 +16,7 @@
 
     <jp.ac.bemax.sawara.VTextView
         android:id="@+id/register_description"
-        android:layout_width="300dp"
+        android:layout_width="250dp"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_toLeftOf="@id/register_name"
@@ -54,13 +54,17 @@
          android:background="@drawable/camera_image"
          android:layout_margin="5dp"
          android:text="" />
-	<VideoView 
-	    android:id="@+id/videoView"
-	    android:layout_width="300dp"
-	    android:layout_height="300dp"
-	    android:layout_alignParentBottom="true"
-        android:layout_toLeftOf="@id/register_photo_button"
-        android:background="@android:color/transparent"/>
+
+     <Button
+         android:id="@+id/register_regist_button"
+         android:layout_width="150dp"
+         android:layout_height="100dp"
+         android:layout_alignParentBottom="true"
+         android:layout_alignParentLeft="true"
+         android:background="@drawable/vtext_back"
+         android:text="けってい"
+         android:layout_margin="5dp"
+		/>
 	
      <GridView
          android:id="@+id/register_image_viewer"
@@ -73,7 +77,6 @@
          android:background="@color/white"
          android:numColumns="2"
          android:layout_margin="5dp" >
-
      </GridView>
 
      <GridView
@@ -82,6 +85,7 @@
          android:layout_height="match_parent"
          android:layout_alignParentLeft="true"
          android:layout_alignParentTop="true"
+         android:layout_above="@+id/register_regist_button"
          android:background="?attr/baseColor"
          android:numColumns="1"
          android:layout_margin="5dp" >

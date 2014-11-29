@@ -36,7 +36,7 @@ public class ArticleActivity extends Activity {
 		long rowId = intent.getExtras().getLong("item_id");
 		
 		// アイテムインスタンスを作成
-		ArticleManager iManager = ArticleManager.newItemManager(this);
+		ArticleManager iManager = new ArticleManager(this);
 		Article item = ArticleManager.getArticle(rowId, this);
 
 		// ディスプレイ情報を取得
