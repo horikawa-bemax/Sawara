@@ -41,7 +41,7 @@
         android:layout_height="100dp"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@id/register_albam_button"
-        android:background="?attr/newButtonBack"
+        android:background="@drawable/movie_image"
         android:layout_margin="5dp"
         android:text="" />
     
