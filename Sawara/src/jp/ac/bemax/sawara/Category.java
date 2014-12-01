@@ -15,7 +15,7 @@ public class Category implements ListItem{
 	private String name;
 	private int position;
 	private long modified;
-	private Bitmap image;
+	private Bitmap icon;
 
 	/**
 	 * Category.javaコンストラクタ
@@ -40,8 +40,8 @@ public class Category implements ListItem{
 	 * カテゴリのイメージをセットする
 	 * @param image
 	 */
-	public void setImage(Bitmap image) {
-		this.image = image;
+	public void setIcon(Bitmap image) {
+		this.icon = image;
 	}	
 
 	/**
@@ -130,8 +130,7 @@ public class Category implements ListItem{
 	}
 
 	@Override
-	public Bitmap getImage() {
-		Bitmap image = mManager.makeCategoryImage(this.rowid);
-		return image;
+	public Bitmap getIcon(Context context) {
+		return icon;
 	}
 }

@@ -75,7 +75,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		
 		// 表示アイテム
 		items = new ArrayList<Category>();
-		cManager = CategoryManager.newCategoryManager(this);
+		cManager = new CategoryManager(this);
 		aManager = new ArticleManager(this);
 
 		listItems = new ArrayList<ListItem>();

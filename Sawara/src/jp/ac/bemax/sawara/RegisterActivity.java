@@ -54,7 +54,10 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	private Handler mHandler;
 	private String fileName;
+	
 	private ArticleManager mArticleManager;
+	private CategoryManager mCategoryManager;
+	
 	private List<String> mImagePathList;
 	private List<String> mMoviePathList;
 	
@@ -84,6 +87,9 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		
 		// ArticleManager設定
 		mArticleManager = new ArticleManager(this); 
+		
+		// CategoryManager設定
+		mCategoryManager = new CategoryManager(this);
 		
 		// 画像および動画のリスト設定
 		mImagePathList = new ArrayList<String>();
@@ -170,7 +176,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		//*** 入力データを登録する ***
 		case R.id.register_regist_button:
 			// articleインスタンスを作成
-			Article article = new Article(mArticleManager);
+			Article article = new Article();
 			
 			// 基本値をセットする
 			article.setName(registerName.getText().toString());
@@ -191,8 +197,15 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			}
 			article.setMoviePaths(moviePaths);
 			
+			// カテゴリーidの設定
+			long[] ids = new long[]{2};
+			article.setCategoryIds(ids);
+			
 			// ArticleデータをDBにインサートする
 			mArticleManager.insert(article);
+			
+			// Category_articleテーブルに書き込む
+			mArticleManager.insertCategory(article);
 			
 			finish();
 			break;
@@ -236,7 +249,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				Bitmap image = BitmapFactory.decodeFile(path, opt);
 				
 				// imagePathListに登録する
-				mImagePathList.add(fileName);
+				mImagePathList.add(path);
 				
 				// ビューアに反映する
 				imageViewerAdapter.add(image);
@@ -253,7 +266,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				Bitmap bmp = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
 				
 				// moviePathListに登録する
-				mMoviePathList.add(fileName);
+				mMoviePathList.add(path);
 				
 				// ビューアに反映する
 				imageViewerAdapter.add(bmp);

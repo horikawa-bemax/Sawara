@@ -74,7 +74,7 @@ public class ArticleManager {
 			mCursor.moveToNext();
 			
 			// 基本データ取り込み
-			article = new Article(aManager);
+			article = new Article();
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
@@ -119,7 +119,7 @@ public class ArticleManager {
 
 		// article_tableにインサートする
 		long aid = db.insert("article_table", null, cv);
-		Log.d("insert_article",article.getName());
+		article.setId(aid);
 		
 		// image_tableに静止画を登録する
 		String[] imagePaths = article.getImagePaths();
@@ -127,12 +127,10 @@ public class ArticleManager {
 			// image_tableに登録する値をセットする
 			cv = new ContentValues();
 			cv.put("image_path", imagePaths[i]);
-			cv.put("article_id", ""+aid);
+			cv.put("article_id", aid);
 		
 			// image_tableにインサート
 			long iid = db.insert("image_table", null, cv);
-			Log.d("insert_image",imagePaths[i]);
-			
 		}
 		
 		// movie_tableに動画を登録する
@@ -141,11 +139,10 @@ public class ArticleManager {
 			// movie_tableに登録する値をセットする
 			cv = new ContentValues();
 			cv.put("movie_path", moviePaths[i]);
-			cv.put("article_id", ""+aid);
+			cv.put("article_id", aid);
 			
 			// movie_tableにインサート
 			long mid = db.insert("movie_table", null, cv);
-			Log.d("insert_movie",moviePaths[i]);
 		}
 
 		db.close();
@@ -163,7 +160,7 @@ public class ArticleManager {
 		mCursor = db.rawQuery("select ROWID, * from article_table", null);
 		while(mCursor.moveToNext()){
 			// 基本データ取り込み
-			Article article = new Article(this);
+			Article article = new Article();
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
@@ -212,7 +209,7 @@ public class ArticleManager {
 	/**
 	 * @param article
 	 * @return
-	 */
+	 
 	public Bitmap createArticleImage(Article article){
 		Bitmap image = null;
 		// 最初の画像イメージを返す
@@ -234,4 +231,24 @@ public class ArticleManager {
 		}
 		return image;
 	}
+	*/
+	
+	public void insertCategory(Article article){
+		// データベースを設定
+		SQLiteDatabase db = mHelper.getWritableDatabase();
+		ContentValues cv = null;
+		
+		long[] ids = article.getCategoryIds();
+		for(int i=0; i < ids.length; i++){
+			cv = new ContentValues();
+			cv.put("category_id", ids[i]);
+			cv.put("article_id", article.getId());
+			
+			db.insert("category_article_table", null, cv);
+		}
+		
+		db.close();
+	}
+	
+	
 }

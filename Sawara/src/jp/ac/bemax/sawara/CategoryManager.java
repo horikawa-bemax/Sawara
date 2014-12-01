@@ -24,18 +24,20 @@ public class CategoryManager {
 	private Context mContext;
 	private SQLiteOpenHelper mHelper;
 	
-	private CategoryManager(Context c){
+	public CategoryManager(Context c){
 		mContext = c;
 		SawaraDBAdapter sdb = new SawaraDBAdapter(c);
 		mHelper = sdb.getHelper();
 	}
 	
+	/*
 	public static CategoryManager newCategoryManager(Context c){
 		if(manager == null){
 			manager = new CategoryManager(c);
 		}
 		return manager;
 	}
+	*/
 	
 	public Category newCategory(){
 		Category category = new Category(this);
@@ -124,9 +126,11 @@ public class CategoryManager {
 			cat.setName(mCursor.getString(1));
 			cat.setPosition(mCursor.getInt(2));
 			cat.setId(mCursor.getLong(0));
+			
 			// カテゴリのイメージ作成＆セット
 			Bitmap catImage = makeCategoryImage(mCursor.getLong(0));
-			cat.setImage(catImage);
+			cat.setIcon(catImage);
+			
 			list.add(cat);
 		}
 		db.close();
