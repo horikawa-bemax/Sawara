@@ -75,6 +75,7 @@ public class SawaraDBAdapter{
 			// カテゴリテーブルを新規作成
 			String create_category_table_sql = "create table category_table " +
 					"(name text," +				// カテゴリ名
+					" icon text," +				// アイコン画像のパス
 					" position integer," +		// 表示位置
 					" modified integer)";		// 更新日時
 			db.execSQL(create_category_table_sql);
@@ -82,9 +83,10 @@ public class SawaraDBAdapter{
 			// アーティクルテーブルを新規作成
 			String create_article_table_sql = "create table article_table " +
 					"(name text unique not null, " +	// 名前 
-					" description," +					// 説明
+					" description text," +				// 説明
+					" icon text," +						// アイコン画像のパス
 					" position integer," +				// 表示位置
-					" modified integer)";					// 更新日時
+					" modified integer)";				// 更新日時
 			db.execSQL(create_article_table_sql);
 			
 			String create_category_article_table_sql = "create table category_article_table " +

@@ -55,9 +55,11 @@ public class ArticleActivity extends Activity {
 		itemDescription.setLayoutParams(descriptionParams);
 		
 		// アイテム画像
-		itemImage.setImageBitmap(item.getIcon(this));
-		LayoutParams imageParams = new LayoutParams((int)(dm.widthPixels/2), LayoutParams.MATCH_PARENT);
-		itemImage.setLayoutParams(imageParams);
+		//itemImage.setImageBitmap(item.getIcon());
+		//LayoutParams imageParams = new LayoutParams((int)(dm.widthPixels/2), LayoutParams.MATCH_PARENT);
+		//itemImage.setLayoutParams(imageParams);
 		
 	}
+	
+	
 }

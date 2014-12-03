@@ -1,5 +1,8 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +15,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.Bitmap.CompressFormat;
+import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -30,15 +35,6 @@ public class CategoryManager {
 		mHelper = sdb.getHelper();
 	}
 	
-	/*
-	public static CategoryManager newCategoryManager(Context c){
-		if(manager == null){
-			manager = new CategoryManager(c);
-		}
-		return manager;
-	}
-	*/
-	
 	public Category newCategory(){
 		Category category = new Category(this);
 		
@@ -50,37 +46,20 @@ public class CategoryManager {
 	 * @return カテゴリのイメージ
 	 */
 	public Bitmap makeCategoryImage(long id){
-		Bitmap categoryImage = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888);
-		Canvas offScreen = new Canvas(categoryImage);
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String[] args = {"" + id};
 		Cursor mCursor = db.rawQuery("select image_path from image_table where article_id in (select article_id from category_article_table where category_id = ?)", args);
 		int size = mCursor.getCount();
-		for(int i=0; i<6 && mCursor.moveToNext(); i++){
-			String imagePath = mCursor.getString(0);
-			Bitmap image = BitmapFactory.decodeFile(imagePath);
-			int imageWidth = image.getWidth();
-			int imageHeight = image.getHeight();
-			int top, left, right, buttom;
-			if(imageWidth * 3 > imageHeight * 4){
-				top = 0;
-				left = (imageWidth - imageHeight * 4 / 3) / 2;
-				right = imageWidth - (imageWidth - imageHeight * 4 / 3) / 2;
-				buttom = imageHeight;
-			}else{
-				top = (imageHeight - imageWidth * 3 / 4) / 2;
-				left = 0;
-				right = imageWidth;
-				buttom = imageHeight - (imageHeight - imageWidth * 3 / 4) / 2;
-			}
-			Rect srcRect = new Rect(left, top, right, buttom);
-			Rect dstRect = new Rect(i%2 * 200, i/2 * 150, (i%2+1) * 200, (i/2+1) * 150);
-			offScreen.drawBitmap(image, srcRect, dstRect, null);
+		String[] paths = new String[size<6 ? size : 6 ];
+		for(int i=0; i<paths.length; i++){
+			mCursor.moveToNext();
+			paths[i] = mCursor.getString(0);
 		}
-		Log.d("CursorSize",""+size);
 		db.close();
 		
-		return categoryImage;
+		Bitmap icon = IconFactory.createCategoryIcon(paths);
+		
+		return icon;
 	}
 	
 	public long insert(Category category){
@@ -123,13 +102,17 @@ public class CategoryManager {
 		while(mCursor.moveToNext()){
 			// カテゴリー作成
 			Category cat = new Category(this);
-			cat.setName(mCursor.getString(1));
-			cat.setPosition(mCursor.getInt(2));
+			cat.setName(mCursor.getString(mCursor.getColumnIndex("name")));
+			cat.setIconPath(mCursor.getString(mCursor.getColumnIndex("icon")));
+			cat.setPosition(mCursor.getInt(mCursor.getColumnIndex("position")));
+			cat.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
 			cat.setId(mCursor.getLong(0));
 			
 			// カテゴリのイメージ作成＆セット
-			Bitmap catImage = makeCategoryImage(mCursor.getLong(0));
-			cat.setIcon(catImage);
+			Bitmap icon = makeCategoryImage(mCursor.getLong(0));
+			StrageManager sManager = new StrageManager(mContext);
+			String iconPath = sManager.saveIcon(icon);
+			cat.setIconPath(iconPath);
 			
 			list.add(cat);
 		}

@@ -1,13 +1,17 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Currency;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -197,6 +201,26 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			}
 			article.setMoviePaths(moviePaths);
 			
+			// articleのアイコンを作成
+			Bitmap icon = null;
+			if(imagePaths.length > 0){
+				icon = BitmapFactory.decodeFile(imagePaths[0]);
+			}else if(moviePaths.length > 0){
+				icon = ThumbnailUtils.createVideoThumbnail(moviePaths[0], MediaStore.Images.Thumbnails.MINI_KIND);
+			}else{
+				icon = BitmapFactory.decodeResource(getResources(), R.drawable.dummy_image);
+			}
+			icon = IconFactory.createIconImage(icon);
+			
+			// iconをストレージに保存する
+			StrageManager sManager = new StrageManager(this);
+			String iconPath = sManager.saveIcon(icon);
+			
+			article.setIconPath(iconPath);
+			
+			// アイコンのサムネイルを保存
+			
+			
 			// カテゴリーidの設定
 			long[] ids = new long[]{2};
 			article.setCategoryIds(ids);
@@ -252,7 +276,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				mImagePathList.add(path);
 				
 				// ビューアに反映する
-				imageViewerAdapter.add(image);
+				imageViewerAdapter.add(IconFactory.createIconImage(image));
 				imageViewerAdapter.notifyDataSetChanged();
 
 				break;
@@ -269,12 +293,11 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				mMoviePathList.add(path);
 				
 				// ビューアに反映する
-				imageViewerAdapter.add(bmp);
+				imageViewerAdapter.add(IconFactory.createIconImage(bmp));
 				imageViewerAdapter.notifyDataSetChanged();
 
 				break;
 			}
 		}
 	}
-
 }

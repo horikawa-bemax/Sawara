@@ -12,8 +12,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -43,8 +45,8 @@ public class ArticleManager {
 		mHelper = sdb.getHelper();
 		
 		// ImageおよびMovieの保存先ディレクトリを登録
-		imageFileDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		movieFileDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+		//imageFileDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+		//movieFileDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 	}
 	
 	/**
@@ -145,6 +147,9 @@ public class ArticleManager {
 			long mid = db.insert("movie_table", null, cv);
 		}
 
+		// iconイメージを登録する
+		
+		
 		db.close();
 	}
 	
@@ -156,7 +161,8 @@ public class ArticleManager {
 		List<Article> items = new ArrayList<Article>();
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		Cursor mCursor, mCursor2;
-		String[] images, movies, selectionArgs = {""};
+		String[] images = null, movies = null, selectionArgs = {""};
+		
 		mCursor = db.rawQuery("select ROWID, * from article_table", null);
 		while(mCursor.moveToNext()){
 			// 基本データ取り込み
@@ -164,12 +170,14 @@ public class ArticleManager {
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
+			article.setIconPath(mCursor.getString(mCursor.getColumnIndex("icon")));
+			article.setPosition(mCursor.getInt(mCursor.getColumnIndex("position")));
 			article.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
 			
 			// 検索条件を設定
 			selectionArgs[0] = "" + article.getId();
 			
-			// 画像ファイルを取り込み
+			// 画像テーブルから画像パスを読み込み
 			mCursor2 = db.rawQuery("select image_path from image_table where article_id = ?", selectionArgs);
 			images = new String[mCursor2.getCount()];
 			for(int i=0; mCursor2.moveToNext(); i++){
@@ -177,14 +185,16 @@ public class ArticleManager {
 			}
 			article.setImagePaths(images);
 			
-			// 動画ファイルを取り込み
+			// 動画テーブルから動画パスを読み込み
 			mCursor2 = db.rawQuery("select movie_path from movie_table where article_id = ?", selectionArgs);
 			movies = new String[mCursor2.getCount()];
 			for(int i=0; mCursor2.moveToNext(); i++){
 				movies[i] = mCursor2.getString(mCursor2.getColumnIndex("movie_path"));
 			}
 			article.setMoviePaths(movies);
+
 		}
+		
 		db.close();
 		return items;
 	}
@@ -250,5 +260,26 @@ public class ArticleManager {
 		db.close();
 	}
 	
-	
+	/*
+	public Bitmap makeIcon(Article article){
+		String[] paths;
+		Bitmap icon = null;
+		
+		if(article.getImagePaths().length > 0){
+			String imagePath = article.getImagePaths()[0];
+			if(imagePath != null){
+				icon = BitmapFactory.decodeFile(imagePath);
+			}
+		}else if(article.getMoviePaths().length > 0){
+			String moviePath = article.getMoviePaths()[0];
+			if(moviePath != null){
+				icon = ThumbnailUtils.createVideoThumbnail(moviePath, MediaStore.Images.Thumbnails.MINI_KIND);;
+			}
+		}else{
+			icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.dummy_image);
+		}
+		
+		return icon;
+	}
+	*/
 }

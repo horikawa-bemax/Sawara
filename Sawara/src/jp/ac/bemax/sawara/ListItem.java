@@ -14,6 +14,6 @@ public interface ListItem {
 	public static final int NEW_BUTTON = 3;
 	public long getId();
 	public String getName();
-	public Bitmap getIcon(Context context);
+	public String getIconPath();
 	public void clicked(Context context);
 }

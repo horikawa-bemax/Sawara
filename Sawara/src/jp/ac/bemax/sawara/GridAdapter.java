@@ -65,7 +65,8 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		// imageViewにitemの画像をセットする
 		ImageView imgView = (ImageView)view.findViewById(R.id.list_item_image);
 		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		Bitmap bmp = listItem.getIcon(context);
+		String iconPath = listItem.getIconPath();
+		Bitmap bmp = StrageManager.loadIcon(iconPath);
 		imgView.setImageBitmap(bmp);
 		
 		// 縦書きのtextViewにアイテムの値をセットする
