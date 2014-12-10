@@ -81,7 +81,9 @@ public class CategoryManager {
 	
 	public Category newCategory(String name){
 		SQLiteDatabase db = mHelper.getWritableDatabase();
-		return newCategory(db, name);
+		Category category = newCategory(db, name);
+		db.close();
+		return category;
 	}
 	
 	public Category newCategory(SQLiteDatabase db, String name){
@@ -129,7 +131,9 @@ public class CategoryManager {
 	
 	public Category setCategoryIcon(Category category){
 		SQLiteDatabase db = mHelper.getWritableDatabase();
-		return setCategoryIcon(db, category);
+		Category result = setCategoryIcon(db, category);
+		db.close();
+		return result;
 	}
 	
 	public Category setCategoryIcon(SQLiteDatabase db, Category category){

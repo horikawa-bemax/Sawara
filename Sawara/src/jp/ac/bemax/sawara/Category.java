@@ -111,7 +111,7 @@ public class Category implements ListItem{
 	 */
 	@Override
 	public void clicked(Context context) {
-
+		
 	}
 
 	/**

@@ -16,6 +16,8 @@ import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.HorizontalScrollView;
@@ -26,15 +28,18 @@ import android.widget.RelativeLayout;
  * @author Masaaki Horikawa
  * 2014/07/02
  */
-public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener{
+public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener, OnItemClickListener{
 	static final int THEME_CHANGE = 0;
+	
 	static final int REGISTER = 100;
+	
+	static final int CATEGORY_VIEW = 1;
+	static final int ARTICLE_VIEW = 2;
 	
 	private Handler mHandler;
 	//private ActionBar mActionBar;
 	private GridView gView;
 	private GridAdapter gAdapter;
-	private ArrayList<Category> items;
 	private List<ListItem> listItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
@@ -42,6 +47,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private Button settingButton;
 	private Button newButton;
 	private HorizontalScrollView mHSView;
+	private int viewMode;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +58,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		Point p = new Point();
 		display.getSize(p);
 		
-		// アクションバー
-		//mActionBar = getActionBar();
+		// viewMode設定
+		viewMode = CATEGORY_VIEW;
+		
+		// マネージャの設定
+		cManager = new CategoryManager(this);
+		aManager = new ArticleManager(this);
+		
 
 		/***********
 		 * 設定ファイルの処理
@@ -70,24 +81,12 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		/***********
 		 * データベースアクセス
 		 ***********/
-		SawaraDBAdapter sdb = new SawaraDBAdapter(this);
-		sdb.dump();
-		
-		// 表示アイテム
-		items = new ArrayList<Category>();
-		cManager = new CategoryManager(this);
-		aManager = new ArticleManager(this);
+		//SawaraDBAdapter sdb = new SawaraDBAdapter(this);
+		//sdb.dump();
 
-		listItems = new ArrayList<ListItem>();
-		//listItems.add(new NewButton(thisObj));
-		// カテゴリー
-		for(Category item: cManager.getAllItems()){
-			listItems.add(item);
-		}
-		// カテゴリー登録されていないアーティクル
-		for(Article item: aManager.getAllItems()){
-			listItems.add(item);
-		}
+		// カテゴリーのリストを取得
+		listItems = getCategoryItems();
+
 		// グリッドビューにセット
 		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
 		
@@ -125,7 +124,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					gView.setAdapter(gAdapter);
 					
 					// 各アイテムをクリックした場合のリスナを登録
-					gView.setOnItemClickListener(gAdapter);
+					gView.setOnItemClickListener(thisObj);
 				}
 			}
 			
@@ -215,5 +214,38 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		}
 		mHandler.sendEmptyMessage(THEME_CHANGE);
 		return true;
+	}
+	
+	/**
+	 * カテゴリーのリストを返す。
+	 * @return カテゴリーのリスト
+	 */
+	public List<ListItem> getCategoryItems(){
+		List<ListItem> items = new ArrayList<ListItem>();
+		List<Category> categoryList = cManager.getAllItems();
+		for(Category category: categoryList){
+			items.add(category);
+		}
+		return items;
+	}
+	
+	/**
+	 * Articleのリストを返す
+	 * @param categoryId カテゴリのID
+	 * @return Articleのリスト
+	 */
+	public List<ListItem> getArticleItems(long categoryId){
+		List<ListItem> items = new ArrayList<ListItem>();
+		List<Article> articleList = aManager.getArticlesAtCategory(categoryId);
+		for(Article article: articleList){
+			items.add(article);
+		}
+		return items;
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		// TODO 自動生成されたメソッド・スタブ
+		
 	}
 }

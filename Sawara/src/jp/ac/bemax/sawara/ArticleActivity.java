@@ -36,7 +36,7 @@ public class ArticleActivity extends Activity {
 		
 		// アイテムインスタンスを作成
 		ArticleManager iManager = new ArticleManager(this);
-		Article item = iManager.getArticle(rowId);
+		Article item = iManager.loadArticle(rowId);
 
 		// ディスプレイ情報を取得
 		DisplayMetrics dm = getResources().getDisplayMetrics();
