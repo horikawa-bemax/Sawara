@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout.LayoutParams;
 
@@ -37,7 +36,7 @@ public class ArticleActivity extends Activity {
 		
 		// アイテムインスタンスを作成
 		ArticleManager iManager = new ArticleManager(this);
-		Article item = ArticleManager.getArticle(rowId, this);
+		Article item = iManager.getArticle(rowId);
 
 		// ディスプレイ情報を取得
 		DisplayMetrics dm = getResources().getDisplayMetrics();

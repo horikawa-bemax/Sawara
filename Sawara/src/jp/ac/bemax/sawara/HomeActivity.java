@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Point;
@@ -29,6 +28,7 @@ import android.widget.RelativeLayout;
  */
 public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener{
 	static final int THEME_CHANGE = 0;
+	static final int REGISTER = 100;
 	
 	private Handler mHandler;
 	//private ActionBar mActionBar;
@@ -158,10 +158,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		Intent intent = null;
 		switch(v.getId()){
 		case R.id.new_button:
+			
 			intent = new Intent(this, RegisterActivity.class);
-			startActivity(intent);
+			startActivityForResult(intent, REGISTER);
+			
 			break;
 		case R.id.setting_button:
+			
 			if(mHSView.getVisibility() == View.INVISIBLE){
 				mHSView.setVisibility(View.VISIBLE);
 			}else{
@@ -169,6 +172,29 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			}
 			break;
 		}
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+			super.onActivityResult(requestCode, resultCode, data);
+			
+			switch(requestCode){
+			case REGISTER:
+				for(int i=0; i<listItems.size(); i++){
+					ListItem item = listItems.get(i);
+					if(item instanceof Category){
+						Category cat = (Category)item;
+						if(cat.getId() == 2){
+							CategoryManager manager = new CategoryManager(this);
+							manager.setCategoryIcon(cat);
+						}
+					}
+				}
+				gView.invalidate();
+				mHandler.sendEmptyMessage(THEME_CHANGE);
+				
+				break;
+			}
 	}
 
 	@Override
@@ -190,101 +216,4 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		mHandler.sendEmptyMessage(THEME_CHANGE);
 		return true;
 	}
-	
-	/*
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		//
-		menu.add(0, 1, 0, "さくせい");
-		return true;
-	}
-	*/
-	
-	/*
-	@Override
-	public boolean onMenuItemSelected(int featureId, MenuItem item) {
-		// 写真を撮る
-		if(item.getItemId()==1){
-			// 保存先のパスとファイル名を指定
-			File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			String filename = System.currentTimeMillis() + ".jpg";
-	        capturedFile = new File( dir, filename );
-			Uri fileUri = Uri.fromFile(capturedFile);
-			
-			// カメラアプリを呼び出すインテントを作成
-			Intent picIntent = new Intent();
-			picIntent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
-			picIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-			picIntent.addCategory(Intent.CATEGORY_DEFAULT);
-			
-			// カメラアプリを起動
-			startActivityForResult(picIntent, CAPTUER_IMAGE);
-		}
-		return true;
-	}
-	*/
-	
-	/*
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch(requestCode){
-		case CAPTUER_IMAGE:
-			// カメラアプリからの結果を処理
-			if(requestCode == CAPTUER_IMAGE){
-				
-				if(resultCode == RESULT_OK){
-					
-					// 画像保存先のパスを取得
-					if(data != null){
-						String path = data.getData().getPath();
-						if(!path.equals(capturedFile)){
-							// captureFileに保存し直し
-							FileOutputStream fos = null;
-							try {
-								fos = new FileOutputStream(capturedFile);
-								Bitmap bmp = BitmapFactory.decodeFile(path);
-								bmp.compress(CompressFormat.JPEG, 100, fos);
-							} catch (FileNotFoundException e) {
-								e.printStackTrace();
-							}finally{
-								try {
-									fos.close();
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-						}
-					}
-					
-					// RegisterIntentを呼び出す
-					Intent intent = new Intent(this, jp.ac.bemax.sawara.RegisterActivity.class);
-					intent.putExtra("image_uri", capturedFile.getPath());
-					startActivityForResult(intent, NEW_ITEM);
-				}else{
-					Log.d("result", "canceled");
-				}
-			}
-			break;
-		
-		case NEW_ITEM:
-			// 新規アイテム登録
-			ContentValues article_cv = new ContentValues();
-			article_cv.put("article_name", data.getStringExtra("article_name"));
-			article_cv.put("article_description", data.getStringExtra("article_description"));
-			//cv.put("article_image", data.getStringExtra("item_image"));
-			article_cv.put("article_reg_date", data.getLongExtra("article_reg_date", 0));
-			Article item = iManager.newItem(article_cv);
-			
-			ContentValues image_cv = new ContentValues();
-			image_cv.put("image_url", data.getStringExtra("article_image"));
-			image_cv.put("article_id", item.getId());
-			
-			
-			gAdapter.add(item);
-			gAdapter.notifyDataSetChanged();
-			
-			break;
-		}
-	}
-	*/
 }

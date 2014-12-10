@@ -107,6 +107,11 @@ public class SawaraDBAdapter{
 					" article_id integer not null)";		// アーティクルID
 			db.execSQL(create_movie_table_sql);
 			
+			String create_category_icon_view_sql = "create view category_icon_view as " +
+					"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
+					"order by A.category_id";
+			db.execSQL(create_category_icon_view_sql);
+			
 			String create_category_image_view_sql = "create view category_image_view as " +
 					"select category_id, image_path " +
 					"from (category_article_table A inner join article_table B on A.article_id = B.ROWID) " +
@@ -138,59 +143,66 @@ public class SawaraDBAdapter{
 			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			
 			// CategoryTable
-			String[] catData = {"くるま","ひこうき"};
-			for(String cat: catData){
-				cv = new ContentValues();
-				cv.put("name", cat);
-				cv.put("position", 0);
-				cv.put("modified", System.currentTimeMillis());
-				long cId = db.insert("category_table", null, cv);
+			String[] catNames = {"くるま","ひこうき"};
+			
+			CategoryManager cManager = new CategoryManager(context);
+			Category[] categorys = new Category[catNames.length];
+			for(int i=0; i<categorys.length; i++){
+				categorys[i] = cManager.newCategory(db, catNames[i]);
+				
+				String logStr = "|" +
+						categorys[i].getId() + "|" +
+						categorys[i].getName() + "|" +
+						categorys[i].getIconPath() + "|" +
+						categorys[i].getPosition() + "|" +
+						categorys[i].getModified() + "|";
+				Log.d("category", logStr);
 			}
 			
 			// ArticleTable
-			String[][] artData = {
-					{"レガシィ","普通乗用車","legacy.jpg,legacy2.jpg","buss.mp4"},
-					{"アールワン","軽自動車","r1.jpg",""}};
-			for(String[] data : artData){
-				cv = new ContentValues();
-				cv.put("name", data[0]);
-				cv.put("description", data[1]);
-				cv.put("modified", System.currentTimeMillis());
-				long aId = db.insert("article_table", null, cv);
-				String[] images = data[2].split(",");
-				for(String img : images){
-					if(img.length()>0 && copyFromAssets(imageDir, img)){
-						File f = new File(imageDir, img);
-						cv2 = new ContentValues();
-						cv2.put("image_path", f.getPath());
-						cv2.put("article_id", aId);
-						db.insert("image_table", null, cv2);
-					}
-				}
-				String[] movies = data[3].split(",");
-				for(String mov : movies){
-					if(mov.length()>0 && copyFromAssets(movieDir, mov)){
-						File f = new File(movieDir, mov);
-						cv2 = new ContentValues();
-						cv2.put("movie_path", f.getPath());
-						cv2.put("article_id", aId);
-						db.insert("movie_table", null, cv2);
-					}
-				}
+			String[] artName = {"レガシィ","アールワン","イギリスのバス"};
+			String[] artDesc = {"乗用車","軽自動車","二階建てのバス"};
+			String[][] imagePathsS = {
+					{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
+					{copyFromAssets(imageDir, "r1.jpg")},
+					null
+				};
+			String[][] moviePathsS = {
+					null,null,{copyFromAssets(movieDir, "buss.mp4")}
+				};
+			long[] caegoryIds = {1};
+			
+			ArticleManager articleManager = new ArticleManager(context);		
+			Article[] articles = new Article[artName.length];
+			for(int i=0; i<artName.length; i++){				
+				articles[i] = articleManager.newArticle(db, artName[i], artDesc[i], imagePathsS[i], moviePathsS[i], caegoryIds);
+		
+				String logStr = "|" +
+						articles[i].getId() + "|" +
+						articles[i].getName() + "|" +
+						articles[i].getDescription() + "|" +
+						articles[i].getIconPath() + "|" +
+						articles[i].getPosition() + "|" +
+						articles[i].getModified() + "|";
+				
+				Log.d("article", logStr);
 			}
 			
-			// Category_Article_table
-			int[][] ca = {{1,1},{1,2}};
-			for(int[] d: ca){
-				cv = new ContentValues();
-				cv.put("category_id", d[0]);
-				cv.put("article_id", d[1]);
-				db.insert("category_article_table", null, cv);
+			for(Category cat: categorys){
+				cManager.setCategoryIcon(db, cat);
+				
+				String logStr = "|" +
+						cat.getId() + "|" +
+						cat.getName() + "|" +
+						cat.getIconPath() + "|" +
+						cat.getPosition() + "|" +
+						cat.getModified() + "|";
+				Log.d("category", logStr);
 			}
 		}
 	
-		public boolean copyFromAssets(File dir ,String filename){
-			boolean copied = false;
+		public String copyFromAssets(File dir ,String filename){
+			String filePath = null;
 			byte[] buffer = new byte[1024*4];
 			File outFile = new File(dir, filename);
 			InputStream is = null;
@@ -202,7 +214,7 @@ public class SawaraDBAdapter{
 				while(-1 != (num = is.read(buffer))){
 					fos.write(buffer, 0, buffer.length);
 				}
-				copied = true;
+				filePath = outFile.getPath();
 			}catch(IOException e){
 				e.printStackTrace();
 			}finally{
@@ -213,7 +225,7 @@ public class SawaraDBAdapter{
 					e.printStackTrace();
 				}
 			}
-			return copied;
+			return filePath;
 		}
 		
 		/* (非 Javadoc)
@@ -232,53 +244,55 @@ public class SawaraDBAdapter{
 	public void dump(){
 		SQLiteDatabase db = helper.getReadableDatabase();
 		Cursor cursor = db.rawQuery("select ROWID, * from article_table",null);
+		
 		while(cursor.moveToNext()){
-			String str = "";
+			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + ",";
+				str += cursor.getString(i) + "|";
 			}
 			Log.d("article", str);
 		}
+		
 		cursor = db.rawQuery("select ROWID, * from category_table", null);
 		while(cursor.moveToNext()){
-			String str = "";
+			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + ",";
+				str += cursor.getString(i) + "|";
 			}
 			Log.d("category", str);
 		}
 		cursor = db.rawQuery("select ROWID, * from category_article_table", null);
 		while(cursor.moveToNext()){
-			String str = "";
+			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + ",";
+				str += cursor.getString(i) + "|";
 			}
 			Log.d("category_article", str);
 		}
 		
 		cursor = db.rawQuery("select ROWID, * from image_table", null);
 		while(cursor.moveToNext()){
-			String str = "";
+			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + ",";
+				str += cursor.getString(i) + "|";
 			}
 			Log.d("image_table", str);
 		}
 		
 		cursor = db.rawQuery("select ROWID, * from movie_table", null);
 		while(cursor.moveToNext()){
-			String str = "";
+			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + ",";
+				str += cursor.getString(i) + "|";
 			}
 			Log.d("movie_table", str);
 		}
 		
 		cursor = db.rawQuery("select * from category_image_view", null);
 		while(cursor.moveToNext()){
-			String str = "";
+			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + ",";
+				str += cursor.getString(i) + "|";
 			}
 			Log.d("category_image_view", str);
 		}

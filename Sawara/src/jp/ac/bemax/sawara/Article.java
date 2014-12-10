@@ -2,7 +2,6 @@ package jp.ac.bemax.sawara;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 
 /**
  * 言葉事典で取り扱う、１情報単位を表すクラス
@@ -13,7 +12,7 @@ public class Article implements ListItem{
 	private long rowid;
 	private String name;
 	private String description;
-	private int position;
+	private long position;
 	private long modified;
 	private String[] imagePaths;
 	private String[] moviePaths;
@@ -162,11 +161,11 @@ public class Article implements ListItem{
 		this.iconPath = iconPath;
 	}
 
-	public int getPosition() {
+	public long getPosition() {
 		return position;
 	}
 
-	public void setPosition(int position) {
+	public void setPosition(long position) {
 		this.position = position;
 	}
 

@@ -7,8 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import android.util.Log;
-
 public class Configuration {
 	static File confFile = null;
 	
@@ -44,8 +42,7 @@ public class Configuration {
 				e.printStackTrace();
 			}
 		}
-		
-		Log.d("configVal", result);
+
 		return result;
 	}
 	

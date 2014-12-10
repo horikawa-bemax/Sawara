@@ -1,7 +1,6 @@
 package jp.ac.bemax.sawara;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 
 /**
  * GridViewに表示するアイテムに実装するインターフェイス

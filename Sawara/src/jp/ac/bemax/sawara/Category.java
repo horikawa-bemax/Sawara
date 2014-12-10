@@ -2,7 +2,6 @@ package jp.ac.bemax.sawara;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.graphics.Bitmap;
 
 /**
  * Articleが属するカテゴリを表すクラス
@@ -10,10 +9,9 @@ import android.graphics.Bitmap;
  * 2014/09/30
  */
 public class Category implements ListItem{
-	private CategoryManager mManager;
 	private long rowid;
 	private String name;
-	private int position;
+	private long position;
 	private long modified;
 	private String iconPath;
 
@@ -32,8 +30,8 @@ public class Category implements ListItem{
 	/**
 	 * Category.javaコンストラクタ
 	 */
-	public Category(CategoryManager manager){
-		mManager = manager;
+	public Category(){
+		
 	}
 	
 	/**
@@ -48,16 +46,16 @@ public class Category implements ListItem{
 	 * カテゴリの表示順をゲットする
 	 * @return 表示順
 	 */
-	public int getPosition() {
+	public long getPosition() {
 		return position;
 	}
 
 	/**
 	 * カテゴリの表示順をセットする
-	 * @param position 表示順
+	 * @param cId 表示順
 	 */
-	public void setPosition(int position) {
-		this.position = position;
+	public void setPosition(long cId) {
+		this.position = cId;
 	}
 
 	/**

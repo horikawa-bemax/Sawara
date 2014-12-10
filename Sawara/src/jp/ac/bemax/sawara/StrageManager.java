@@ -42,24 +42,29 @@ public class StrageManager {
 	}
 	
 	/**
-	 * アイコン画像をストレージから呼び出す。
-	 * @param path アイコンの保存先のパス
-	 * @return アイコン
+	 * 動画のサムネイル画像を返す
+	 * @param path
+	 * @return
 	 */
-	public static Bitmap loadIcon(String path){
-		Bitmap icon = BitmapFactory.decodeFile(path);
-		return icon;
-	}
-	
 	public static Bitmap loadMovieThumbnail(String path){
 		Bitmap thumbnail = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
 		return thumbnail;
 	}
 	
 	/**
-	 * icon画像をストレージに保存する。
-	 * @param icon
+	 * 
+	 * @param path
 	 * @return
+	 */
+	public static Bitmap loadIcon(String path){
+		Bitmap icon = BitmapFactory.decodeFile(path);
+		return icon;
+	}
+	
+	/**
+	 * icon画像をストレージに保存する。
+	 * @param icon アイコン画像
+	 * @return 保存先のパス
 	 */
 	public String saveIcon(Bitmap icon){
 		// 透明色を使うので、PNG形式で保存する

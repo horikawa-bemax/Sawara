@@ -1,16 +1,12 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
-import java.io.FileDescriptor;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,7 +60,6 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		
 		// imageViewにitemの画像をセットする
 		ImageView imgView = (ImageView)view.findViewById(R.id.list_item_image);
-		File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 		String iconPath = listItem.getIconPath();
 		Bitmap bmp = StrageManager.loadIcon(iconPath);
 		imgView.setImageBitmap(bmp);

@@ -1,42 +1,26 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.List;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Message;
 import android.provider.MediaStore;
-import android.util.Log;
-import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.MediaController;
-import android.widget.TextView;
-import android.widget.VideoView;
 
 /**
  * 登録画面
@@ -179,57 +163,32 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			
 		//*** 入力データを登録する ***
 		case R.id.register_regist_button:
-			// articleインスタンスを作成
-			Article article = new Article();
-			
 			// 基本値をセットする
-			article.setName(registerName.getText().toString());
-			article.setDescription(registerDiscription.getText().toString());
-			article.setModified(System.currentTimeMillis());
+			String name = registerName.getText().toString();
+			String description = registerDiscription.getText().toString();
 			
 			// 画像ファイルのパスをセットする
 			String[] imagePaths = new String[mImagePathList.size()];
 			for(int i=0; i<imagePaths.length; i++){
 				imagePaths[i] = mImagePathList.get(i);
 			}
-			article.setImagePaths(imagePaths);
 			
 			// 動画ファイルのパスをセットする
 			String[] moviePaths = new String[mMoviePathList.size()];
 			for(int i=0; i<moviePaths.length; i++){
 				moviePaths[i] = mMoviePathList.get(i);
 			}
-			article.setMoviePaths(moviePaths);
-			
-			// articleのアイコンを作成
-			Bitmap icon = null;
-			if(imagePaths.length > 0){
-				icon = BitmapFactory.decodeFile(imagePaths[0]);
-			}else if(moviePaths.length > 0){
-				icon = ThumbnailUtils.createVideoThumbnail(moviePaths[0], MediaStore.Images.Thumbnails.MINI_KIND);
-			}else{
-				icon = BitmapFactory.decodeResource(getResources(), R.drawable.dummy_image);
-			}
-			icon = IconFactory.createIconImage(icon);
-			
-			// iconをストレージに保存する
-			StrageManager sManager = new StrageManager(this);
-			String iconPath = sManager.saveIcon(icon);
-			
-			article.setIconPath(iconPath);
-			
-			// アイコンのサムネイルを保存
-			
 			
 			// カテゴリーidの設定
-			long[] ids = new long[]{2};
-			article.setCategoryIds(ids);
+			long[] categoryIds = new long[]{2};
 			
-			// ArticleデータをDBにインサートする
-			mArticleManager.insert(article);
+			// 新しいArticleを作成する
+			Article article = mArticleManager.newArticle(name, description, imagePaths, moviePaths, categoryIds);	
 			
-			// Category_articleテーブルに書き込む
-			mArticleManager.insertCategory(article);
+			// カテゴリーアイコンの更新
+			CategoryManager cManager = new CategoryManager(this);
+			Category category = cManager.loadCategory(2);
+			cManager.setCategoryIcon(category);
 			
 			finish();
 			break;

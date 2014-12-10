@@ -10,15 +10,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaPlayer;
-import android.media.ThumbnailUtils;
-import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 
 /**
  * ArticleとDBとの間に立ち、両者を中継するクラス
@@ -26,7 +17,7 @@ import android.view.SurfaceView;
  * 2014/09/05
  */
 public class ArticleManager {
-	private Context context;
+	private Context mContext;
 	private SQLiteOpenHelper mHelper;
 	private File imageFileDir;
 	private File movieFileDir;
@@ -39,34 +30,22 @@ public class ArticleManager {
 	 * @param context
 	 */
 	public ArticleManager(Context context){
-		this.context = context;
+		mContext = context;
 		// sawaraDBアダプタを登録
 		SawaraDBAdapter sdb = new SawaraDBAdapter(context);
 		mHelper = sdb.getHelper();
-		
-		// ImageおよびMovieの保存先ディレクトリを登録
-		//imageFileDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-		//movieFileDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 	}
 	
 	/**
-	 * 新規のItemManagerを作成する
-	 * もしも、すでにItemManagerがあった場合には、それを利用する
-	 * @param context
-	 * @return ItemManager
+	 * IDを指定して、DBからArticleを取得する
+	 * @param id
+	 * @return 取得したArticle
 	 */
-	/*public static ArticleManager newItemManager(Context context){
-		if(aManager == null){
-			aManager = new ArticleManager(context);
-		}
-		return aManager;
-	}*/
-	
-	public static Article getArticle(long id, Context context){
+	public Article getArticle(long id){
 		Article article = null;
-		SawaraDBAdapter sdb = new SawaraDBAdapter(context);
-		SQLiteOpenHelper helper = sdb.getHelper();
-		SQLiteDatabase db = helper.getReadableDatabase();
+		
+		// 読み込みモードでDBを開く
+		SQLiteDatabase db = mHelper.getReadableDatabase();
 		
 		String[] images, movies, selectionArgs = {"" + id};
 		Cursor mCursor, mCursor2;
@@ -80,6 +59,7 @@ public class ArticleManager {
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
+			article.setPosition(mCursor.getInt(mCursor.getColumnIndex("position")));
 			article.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
 			
 			// 画像ファイルを取り込み
@@ -214,72 +194,89 @@ public class ArticleManager {
 	public File getMovieFileDir(){
 		return movieFileDir;
 	}
-
 	
 	/**
-	 * @param article
-	 * @return
-	 
-	public Bitmap createArticleImage(Article article){
-		Bitmap image = null;
-		// 最初の画像イメージを返す
-		String[] imagePaths = article.getImagePaths();
-		String[] moviePaths = article.getMoviePaths();
-		if(imagePaths.length > 0){
-			String imagePath = imagePaths[0];
-			if(imagePath != null){
-				image = BitmapFactory.decodeFile(imagePath);
-			}
-		}else if(moviePaths.length > 0){
-			// TODO このままでは、NULL
-			String moviePath = moviePaths[0];
-			Uri uri = Uri.fromFile(new File(moviePath));
-			SurfaceView sv = new SurfaceView(context);
-			SurfaceHolder sh = sv.getHolder();
-			MediaPlayer mp = MediaPlayer.create(context, uri, sh);
-			image = sv.getDrawingCache();
-		}
-		return image;
-	}
-	*/
-	
-	public void insertCategory(Article article){
-		// データベースを設定
+	 * データを元に、新しいarticleを作成し、DBに保存する。
+	 * @param name 名前
+	 * @param description 説明
+	 * @param modified 更新日
+	 * @param imagePaths 画像パスの配列
+	 * @param moviePaths 動画パスの配列
+	 * @param categoryIds カテゴリIDの配列
+	 * @return Articleオブジェクトを返す。失敗したらnullを返す。
+	 */
+	public Article newArticle(String name, String description, String[] imagePaths, String[] moviePaths, long[] categoryIds){
 		SQLiteDatabase db = mHelper.getWritableDatabase();
-		ContentValues cv = null;
-		
-		long[] ids = article.getCategoryIds();
-		for(int i=0; i < ids.length; i++){
-			cv = new ContentValues();
-			cv.put("category_id", ids[i]);
-			cv.put("article_id", article.getId());
-			
-			db.insert("category_article_table", null, cv);
-		}
-		
-		db.close();
+		return newArticle(db, name, description, imagePaths, moviePaths, categoryIds);
 	}
 	
-	/*
-	public Bitmap makeIcon(Article article){
-		String[] paths;
-		Bitmap icon = null;
+	public Article newArticle(SQLiteDatabase db, String name, String description, String[] imagePaths, String[] moviePaths, long[] categoryIds){	
+		Article article = new Article();
 		
-		if(article.getImagePaths().length > 0){
-			String imagePath = article.getImagePaths()[0];
-			if(imagePath != null){
-				icon = BitmapFactory.decodeFile(imagePath);
+		// Articleオブジェクトに値をセットする
+		article.setName(name);
+		article.setDescription(description);
+		article.setModified(System.currentTimeMillis());
+		article.setImagePaths(imagePaths);
+		article.setMoviePaths(moviePaths);
+		article.setCategoryIds(categoryIds);
+		
+		try{
+			// DBに基本値をセットする
+			ContentValues values = new ContentValues();
+			values.put("name", article.getName());
+			values.put("description", article.getDescription());
+			values.put("modified", article.getModified());
+			long aid = db.insert("article_table", null, values);
+
+			if(aid == -1) throw new Exception();
+
+			article.setId(aid);
+			
+			// 画像を元にアイコンを作成する
+			Bitmap icon = IconFactory.createArticleIcon(article);
+			StrageManager manager = new StrageManager(mContext);
+			String iconPath = manager.saveIcon(icon);
+			article.setIconPath(iconPath);
+			article.setPosition(aid);
+			
+			// 位置情報とアイコン情報をDBに追加する。
+			values.put("position", aid);
+			values.put("icon", iconPath);
+			
+			db.update("article_table", values, "ROWID = " + aid, null);
+	
+			// image_tableへ登録
+			if(imagePaths != null){
+				values = new ContentValues();
+				values.put("article_id", aid);
+				for(String path: imagePaths){
+					values.put("image_path", path);
+					db.insert("image_table", null, values);
+				}
 			}
-		}else if(article.getMoviePaths().length > 0){
-			String moviePath = article.getMoviePaths()[0];
-			if(moviePath != null){
-				icon = ThumbnailUtils.createVideoThumbnail(moviePath, MediaStore.Images.Thumbnails.MINI_KIND);;
+			
+			// movie_tableへ登録
+			if(moviePaths != null){
+				values = new ContentValues();
+				values.put("article_id", aid);
+				for(String path: moviePaths){
+					values.put("movie_path", path);
+					db.insert("movie_table", null, values);
+				}
 			}
-		}else{
-			icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.dummy_image);
+			
+			values = new ContentValues();
+			values.put("article_id", aid);
+			for(long id: categoryIds){
+				values.put("category_id", id);
+				db.insert("category_article_table", null, values);
+			}
+		}catch(Exception e){
+			article = null;
+			e.printStackTrace();
 		}
 		
-		return icon;
+		return article;
 	}
-	*/
 }

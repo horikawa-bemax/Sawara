@@ -7,6 +7,12 @@ import android.graphics.Rect;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 
+/**
+ * 画像からアイコンを作成するクラス
+ *
+ * @author Masaaki Horikawa
+ * 2014/12/03
+ */
 public class IconFactory {
 	static final int ICON_WIDTH = 320;
 	static final int ICON_HEIGHT = 240;
@@ -99,4 +105,5 @@ public class IconFactory {
 			
 		return icon;
 	}
+
 }

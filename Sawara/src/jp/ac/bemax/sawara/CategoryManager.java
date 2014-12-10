@@ -1,8 +1,5 @@
 package jp.ac.bemax.sawara;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,11 +9,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.graphics.Bitmap.CompressFormat;
-import android.os.Environment;
 import android.util.Log;
 
 /**
@@ -34,17 +26,12 @@ public class CategoryManager {
 		SawaraDBAdapter sdb = new SawaraDBAdapter(c);
 		mHelper = sdb.getHelper();
 	}
-	
-	public Category newCategory(){
-		Category category = new Category(this);
-		
-		return category;
-	}
+
 	/**
 	 * カテゴリのイメージを作成して返す
 	 * @param id カテゴリのID
 	 * @return カテゴリのイメージ
-	 */
+	 *
 	public Bitmap makeCategoryImage(long id){
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String[] args = {"" + id};
@@ -60,7 +47,7 @@ public class CategoryManager {
 		Bitmap icon = IconFactory.createCategoryIcon(paths);
 		
 		return icon;
-	}
+	}*/
 	
 	public long insert(Category category){
 		SQLiteDatabase db = mHelper.getWritableDatabase();
@@ -92,6 +79,83 @@ public class CategoryManager {
 		return result;
 	}
 	
+	public Category newCategory(String name){
+		SQLiteDatabase db = mHelper.getWritableDatabase();
+		return newCategory(db, name);
+	}
+	
+	public Category newCategory(SQLiteDatabase db, String name){
+		Category category = new Category();
+		
+		category.setName(name);
+		category.setModified(System.currentTimeMillis());
+		
+		try{
+			ContentValues values = new ContentValues();
+			values.put("name", category.getName());
+			values.put("modified", category.getModified());
+			long cId = db.insert("category_table", null, values);
+			
+			if(cId == -1) throw new Exception();
+			
+			values.put("position", cId);
+			db.update("category_table", values, "ROWID = " + cId, null);
+			
+			category.setId(cId);
+			category.setPosition(cId);
+			
+		}catch(Exception e){
+			category = null;
+		}
+		
+		return category;
+	}
+	
+	public Category loadCategory(long id){
+		Category category = new Category();
+		SQLiteDatabase db = mHelper.getReadableDatabase();
+		String sql = "select ROWID, * from category_table where ROWID = ?";
+		String[] selectionArgs = {"" + id};
+		Cursor mCursor = db.rawQuery(sql, selectionArgs);
+		mCursor.moveToNext();
+		category.setId(id);
+		category.setName(mCursor.getString(mCursor.getColumnIndex("name")));
+		category.setIconPath(mCursor.getString(mCursor.getColumnIndex("icon")));
+		category.setPosition(mCursor.getLong(mCursor.getColumnIndex("position")));
+		category.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
+		
+		return category;
+	}
+	
+	public Category setCategoryIcon(Category category){
+		SQLiteDatabase db = mHelper.getWritableDatabase();
+		return setCategoryIcon(db, category);
+	}
+	
+	public Category setCategoryIcon(SQLiteDatabase db, Category category){
+		String sql = "select icon from category_icon_view where category_id = ?";
+		String[] selectionArgs = {"" + category.getId()};
+		Cursor mCursor = db.rawQuery(sql, selectionArgs);
+		
+		String[] iconPaths = new String[mCursor.getCount()];
+		for(int i=0; i<iconPaths.length; i++){
+			mCursor.moveToNext();
+			iconPaths[i] = mCursor.getString(mCursor.getColumnIndex("icon"));
+		}
+		
+		Bitmap icon = IconFactory.createCategoryIcon(iconPaths);
+		StrageManager sManager = new StrageManager(mContext);
+		String iconPath = sManager.saveIcon(icon);
+		
+		ContentValues values = new ContentValues();
+		values.put("icon", iconPath);
+		db.update("category_table", values, "ROWID = " + category.getId(), null);
+		
+		category.setIconPath(iconPath);
+		
+		return category;
+	}
+	
 	public List<Category> getAllItems(){
 		List<Category> list = new ArrayList<Category>();
 		
@@ -101,18 +165,14 @@ public class CategoryManager {
 		Cursor mCursor = db.rawQuery(sql, selectionArgs);
 		while(mCursor.moveToNext()){
 			// カテゴリー作成
-			Category cat = new Category(this);
+			Category cat = new Category();
 			cat.setName(mCursor.getString(mCursor.getColumnIndex("name")));
-			cat.setIconPath(mCursor.getString(mCursor.getColumnIndex("icon")));
+			String log = mCursor.getString(mCursor.getColumnIndex("icon"));
+			cat.setIconPath(log);
+			Log.d("icon", log);
 			cat.setPosition(mCursor.getInt(mCursor.getColumnIndex("position")));
 			cat.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
 			cat.setId(mCursor.getLong(0));
-			
-			// カテゴリのイメージ作成＆セット
-			Bitmap icon = makeCategoryImage(mCursor.getLong(0));
-			StrageManager sManager = new StrageManager(mContext);
-			String iconPath = sManager.saveIcon(icon);
-			cat.setIconPath(iconPath);
 			
 			list.add(cat);
 		}
