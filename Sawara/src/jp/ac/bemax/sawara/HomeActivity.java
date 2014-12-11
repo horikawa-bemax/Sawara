@@ -185,6 +185,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(v.getId()){
 		case R.id.new_button:
 			intent = new Intent(this, RegisterActivity.class);
+			intent.putExtra("mode", RegisterActivity.NEW_MODE);
 			
 			switch(viewMode){
 			case CATEGORY_VIEW:
@@ -288,8 +289,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			mHandler.sendEmptyMessage(LIST_CHANGE);
 			break;
 		case ARTICLE_VIEW:
-			Intent intent = new Intent();
+			Intent intent = new Intent(this, RegisterActivity.class);
+			Article article = (Article)articleItems.get(position);
+			intent.putExtra("article", article);
+			intent.putExtra("mode", RegisterActivity.READ_MODE);
 			
+			startActivity(intent);
+			break;
 		}
 	}
 }

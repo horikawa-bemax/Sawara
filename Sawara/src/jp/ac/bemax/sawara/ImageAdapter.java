@@ -75,4 +75,8 @@ public class ImageAdapter extends BaseAdapter {
 		
 		return imageView;
 	}
+	
+	public void clear(){
+		mList = new ArrayList<Bitmap>();
+	}
 }

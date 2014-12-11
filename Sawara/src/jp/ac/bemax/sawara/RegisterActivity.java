@@ -13,7 +13,6 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -27,6 +26,10 @@ import android.widget.GridView;
  * 2014/07/23
  */
 public class RegisterActivity extends Activity implements OnClickListener{
+	public static final int NEW_MODE = 1;
+	public static final int UPDATE_MODE = 2;
+	public static final int READ_MODE = 3;
+	
 	private VTextView registerName;
 	private VTextView registerDiscription;
 	private Button registerAlbamButton;
@@ -39,12 +42,12 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	//private List<VTextView> tagList;
 	private ImageAdapter imageViewerAdapter;
 	private ArrayAdapter<VTextView> tagViewerAdapter;
-	private Handler mHandler;
+	//private Handler mHandler;
 	private String fileName;
 	private long categoryId;
 	
 	private ArticleManager mArticleManager;
-	private CategoryManager mCategoryManager;
+	//private CategoryManager mCategoryManager;
 	
 	private List<String> mImagePathList;
 	private List<String> mMoviePathList;
@@ -56,6 +59,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.register);
+		
+		Intent intent = getIntent();
 		
 		// レイアウトの紐付け
 		registerName = (VTextView)findViewById(R.id.register_name);
@@ -71,35 +76,45 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		imageViewerAdapter = new ImageAdapter(this);
 		registerImageViewer.setAdapter(imageViewerAdapter);
 		
-		// タグビューアの設定
-		
 		// ArticleManager設定
 		mArticleManager = new ArticleManager(this); 
 		
-		// CategoryManager設定
-		mCategoryManager = new CategoryManager(this);
+		int mode = intent.getIntExtra("mode", 0);
 		
-		// 画像および動画のリスト設定
-		mImagePathList = new ArrayList<String>();
-		mMoviePathList = new ArrayList<String>();
+		switch(mode){
+		case NEW_MODE:
+			// 画像および動画のリスト設定
+			mImagePathList = new ArrayList<String>();
+			mMoviePathList = new ArrayList<String>();
+			
+			// クリックリスナー登録
+			registerAlbamButton.setOnClickListener(this);
+			registerMovieButton.setOnClickListener(this);
+			registerPhotoButton.setOnClickListener(this);
+			registerName.setOnClickListener(this);
+			registerDiscription.setOnClickListener(this);
+			registerRegistButton.setOnClickListener(this);
+	
+			// 縦書きテキストを編集可能にする＆テキストサイズ指定
+			registerName.setFocusableInTouchMode(true);
+			registerName.setTextSize(100);
+			registerDiscription.setFocusableInTouchMode(true);
+			registerDiscription.setTextSize(80);
+			
+			// categoryId
+			categoryId = intent.getLongExtra("categoryId", -1);
 		
-		// クリックリスナー登録
-		registerAlbamButton.setOnClickListener(this);
-		registerMovieButton.setOnClickListener(this);
-		registerPhotoButton.setOnClickListener(this);
-		registerName.setOnClickListener(this);
-		registerDiscription.setOnClickListener(this);
-		registerRegistButton.setOnClickListener(this);
-
-		// 縦書きテキストを編集可能にする＆テキストサイズ指定
-		registerName.setFocusableInTouchMode(true);
-		registerName.setTextSize(100);
-		registerDiscription.setFocusableInTouchMode(true);
-		registerDiscription.setTextSize(80);
-		
-		// categoryId
-		Intent intent = getIntent();
-		categoryId = intent.getLongExtra("categoryId", -1);
+			break;
+		case UPDATE_MODE:
+			
+			break;
+		case READ_MODE:
+			Article article = (Article)intent.getSerializableExtra("article");
+			registerName.setText(article.getName());
+			registerDiscription.setText(article.getDescription());
+			
+			break;
+		}
 		
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
