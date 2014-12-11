@@ -4,7 +4,6 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.view.LayoutInflater;
@@ -76,8 +75,11 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
-		Intent intent = new Intent();
 		ListItem listItem = list.get(position);
-		listItem.clicked(context);
+		if (listItem instanceof Category) {
+			Category category = (Category)listItem;
+			category.getId();
+			
+		} 
 	}
 }

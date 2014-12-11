@@ -37,17 +37,28 @@ public class ArticleManager {
 	}
 	
 	/**
-	 * IDを指定して、DBからArticleを取得する
+	 * 
 	 * @param id
-	 * @return 取得したArticle
+	 * @return
 	 */
-	public Article getArticle(long id){
-		Article article = null;
-		
+	public Article loadArticle(long id){
 		// 読み込みモードでDBを開く
 		SQLiteDatabase db = mHelper.getReadableDatabase();
+		Article article = loadArticle(db, id);
+		db.close();
+		return article;
+	}
+	
+	/**
+	 * IDを指定して、DBからArticleを取得する
+	 * @param db データベース
+	 * @param id ArticleID
+	 * @return 取得したArticle
+	 */
+	public Article loadArticle(SQLiteDatabase db, long articleId){
+		Article article = null;
 		
-		String[] images, movies, selectionArgs = {"" + id};
+		String[] images, movies, selectionArgs = {"" + articleId};
 		Cursor mCursor, mCursor2;
 		// Articleの基本データを取り込み		
 		mCursor = db.rawQuery("select ROWID, * from article_table where ROWID = ?", selectionArgs);
@@ -59,8 +70,10 @@ public class ArticleManager {
 			article.setId(mCursor.getLong(0));
 			article.setName(mCursor.getString(mCursor.getColumnIndex("name")));
 			article.setDescription(mCursor.getString(mCursor.getColumnIndex("description")));
+			article.setIconPath(mCursor.getString(mCursor.getColumnIndex("icon")));
 			article.setPosition(mCursor.getInt(mCursor.getColumnIndex("position")));
 			article.setModified(mCursor.getLong(mCursor.getColumnIndex("modified")));
+			
 			
 			// 画像ファイルを取り込み
 			mCursor2 = db.rawQuery("select image_path from image_table where article_id = ?", selectionArgs);
@@ -77,9 +90,8 @@ public class ArticleManager {
 				movies[i] = mCursor2.getString(mCursor2.getColumnIndex("movie_path"));
 			}
 			article.setMoviePaths(movies);
+			
 		}	
-		
-		db.close();
 		
 		return article;
 	}
@@ -207,9 +219,22 @@ public class ArticleManager {
 	 */
 	public Article newArticle(String name, String description, String[] imagePaths, String[] moviePaths, long[] categoryIds){
 		SQLiteDatabase db = mHelper.getWritableDatabase();
-		return newArticle(db, name, description, imagePaths, moviePaths, categoryIds);
+		Article article = newArticle(db, name, description, imagePaths, moviePaths, categoryIds);
+		db.close();
+		return article;
 	}
 	
+	/**
+	 * データを元に、新しいarticleを作成し、DBに保存する。
+	 * @param db データベース
+	 * @param name 名前
+	 * @param description 説明
+	 * @param modified 更新日
+	 * @param imagePaths 画像パスの配列
+	 * @param moviePaths 動画パスの配列
+	 * @param categoryIds カテゴリIDの配列
+	 * @return Articleオブジェクトを返す。失敗したらnullを返す。
+	 */
 	public Article newArticle(SQLiteDatabase db, String name, String description, String[] imagePaths, String[] moviePaths, long[] categoryIds){	
 		Article article = new Article();
 		
@@ -278,5 +303,30 @@ public class ArticleManager {
 		}
 		
 		return article;
+	}
+	
+	/**
+	 * カテゴリーIDを元に、Articleのリストを返す
+	 * @param categoryId カテゴリーID
+	 * @return Articleのリスト
+	 */
+	public List<ListItem> getArticlesAtCategory(long categoryId){
+		List<ListItem> articleList = new ArrayList<ListItem>();
+		
+		SQLiteDatabase db = mHelper.getReadableDatabase();
+		String[] selectionArgs = {"" + categoryId};
+		Cursor mCursor = db.rawQuery(
+			"select ROWID from article_table where ROWID in (select article_id from category_article_table where category_id = ?)"
+			, selectionArgs);
+
+		while(mCursor.moveToNext()){
+			long articleId = mCursor.getLong(0);
+			Article article = loadArticle(db, articleId);
+			articleList.add(article);
+		}
+		
+		db.close();
+		
+		return articleList;
 	}
 }

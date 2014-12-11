@@ -16,6 +16,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="new_button">しんき</string>
     <string name="update_button">こうしん</string>
+    <string name="return_button">もどる</string>
     <string name="setting_button">せってい</string>
     <string name="title_activity_setting">SettingActivity</string>
 

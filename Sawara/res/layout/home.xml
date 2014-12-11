@@ -15,14 +15,14 @@
         android:background="?attr/newButtonBack" />
 
     <Button
-        android:id="@+id/update_button"
+        android:id="@+id/return_button"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_alignBottom="@+id/new_button"
         android:layout_toRightOf="@+id/new_button"
-        android:background="?attr/newButtonBack"
-        android:text="@string/update_button"
-        android:textColor="?attr/baseColor" />
+        android:background="@drawable/dummy_image"
+        android:text="@string/return_button"
+        android:textColor="?attr/mainColor" />
 
     <Button
         android:id="@+id/setting_button"
