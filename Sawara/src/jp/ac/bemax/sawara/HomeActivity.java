@@ -21,7 +21,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.HorizontalScrollView;
-import android.widget.RelativeLayout;
 
 /**
  * ホーム画面のアクティビティ
@@ -43,15 +42,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private GridAdapter gAdapter;
 	private List<ListItem> categoryItems;
 	private List<ListItem> articleItems;
-	private List<ListItem> adapterItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
-	private RelativeLayout layout;
 	private Button settingButton;
 	private Button newButton;
 	private Button returnButton;
 	private HorizontalScrollView mHSView;
 	private int viewMode;
+	private long categoryId;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -111,8 +109,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					 ***********/
 					setContentView(R.layout.home);
 					
-					layout = (RelativeLayout)findViewById(R.id.RelativeLayout1);
-					
 					settingButton = (Button)findViewById(R.id.setting_button);
 					settingButton.setOnClickListener(thisObj);
 					
@@ -144,6 +140,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					
 					break;
 				case LIST_CHANGE:
+					
 					switch(viewMode){
 					case CATEGORY_VIEW:
 						returnButton.setVisibility(View.INVISIBLE);
@@ -152,6 +149,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 						returnButton.setVisibility(View.VISIBLE);
 						break;
 					}
+					
 					break;
 				}
 			}
@@ -186,8 +184,15 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		Intent intent = null;
 		switch(v.getId()){
 		case R.id.new_button:
-			
 			intent = new Intent(this, RegisterActivity.class);
+			
+			switch(viewMode){
+			case CATEGORY_VIEW:
+				break;
+			case ARTICLE_VIEW:
+				intent.putExtra("categoryId", categoryId);
+				break;
+			}
 			startActivityForResult(intent, REGISTER);
 			
 			break;
@@ -272,7 +277,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(viewMode){
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
-			long categoryId = categoryItems.get(position).getId();
+			categoryId = categoryItems.get(position).getId();
 			articleItems = aManager.getArticlesAtCategory(categoryId);
 			gAdapter.clear();
 			gAdapter.addAll(articleItems);
@@ -283,6 +288,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			mHandler.sendEmptyMessage(LIST_CHANGE);
 			break;
 		case ARTICLE_VIEW:
+			Intent intent = new Intent();
 			
 		}
 	}

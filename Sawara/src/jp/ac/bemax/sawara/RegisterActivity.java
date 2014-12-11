@@ -41,6 +41,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	private Handler mHandler;
 	private String fileName;
+	private long categoryId;
 	
 	private ArticleManager mArticleManager;
 	private CategoryManager mCategoryManager;
@@ -95,6 +96,10 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		registerName.setTextSize(100);
 		registerDiscription.setFocusableInTouchMode(true);
 		registerDiscription.setTextSize(80);
+		
+		// categoryId
+		Intent intent = getIntent();
+		categoryId = intent.getLongExtra("categoryId", -1);
 		
 		// テキストのフォントを指定 
 		Typeface tf = Typeface.createFromAsset(getAssets(),"HGRKK.TTC");
@@ -179,15 +184,22 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			}
 			
 			// カテゴリーidの設定
-			long[] categoryIds = new long[]{2};
+			long[] categoryIds;
+			if(categoryId != -1){
+				categoryIds = new long[]{categoryId};
+			}else{
+				categoryIds = new long[]{2};
+			}
 			
 			// 新しいArticleを作成する
 			Article article = mArticleManager.newArticle(name, description, imagePaths, moviePaths, categoryIds);	
 			
 			// カテゴリーアイコンの更新
 			CategoryManager cManager = new CategoryManager(this);
-			Category category = cManager.loadCategory(2);
-			cManager.setCategoryIcon(category);
+			for(long cId: categoryIds){
+				Category category = cManager.loadCategory(cId);
+				cManager.setCategoryIcon(category);
+			}
 			
 			// 成功
 			intent.putExtra("article", article);
