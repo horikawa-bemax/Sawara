@@ -30,6 +30,7 @@ import android.widget.RelativeLayout;
  */
 public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener, OnItemClickListener{
 	static final int THEME_CHANGE = 0;
+	static final int LIST_CHANGE = 1;
 	
 	static final int REGISTER = 100;
 	
@@ -40,12 +41,15 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	//private ActionBar mActionBar;
 	private GridView gView;
 	private GridAdapter gAdapter;
-	private List<ListItem> listItems;
+	private List<ListItem> categoryItems;
+	private List<ListItem> articleItems;
+	private List<ListItem> adapterItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
 	private RelativeLayout layout;
 	private Button settingButton;
 	private Button newButton;
+	private Button returnButton;
 	private HorizontalScrollView mHSView;
 	private int viewMode;
 	
@@ -57,9 +61,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		Display display = getWindowManager().getDefaultDisplay();
 		Point p = new Point();
 		display.getSize(p);
-		
-		// viewMode設定
-		viewMode = CATEGORY_VIEW;
 		
 		// マネージャの設定
 		cManager = new CategoryManager(this);
@@ -83,12 +84,15 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		 ***********/
 		//SawaraDBAdapter sdb = new SawaraDBAdapter(this);
 		//sdb.dump();
-
+		
+		// viewMode設定
+		viewMode = CATEGORY_VIEW;
+		
 		// カテゴリーのリストを取得
-		listItems = getCategoryItems();
-
-		// グリッドビューにセット
-		gAdapter = new GridAdapter(this, R.layout.list_item, listItems);
+		categoryItems = cManager.getAllItems();
+		
+		gAdapter = new GridAdapter(this, R.layout.list_item, new ArrayList<ListItem>());
+		gAdapter.addAll(categoryItems);
 		
 		/**************
 		 *  ハンドラーの設定
@@ -115,22 +119,47 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					newButton = (Button)findViewById(R.id.new_button);
 					newButton.setOnClickListener(thisObj);
 					
+					returnButton = (Button)findViewById(R.id.return_button);
+					returnButton.setOnClickListener(thisObj);
+					/**
+					switch(viewMode){
+					case CATEGORY_VIEW:
+						returnButton.setVisibility(View.INVISIBLE);
+						break;
+					case ARTICLE_VIEW:
+						returnButton.setVisibility(View.VISIBLE);
+						break;
+					}
+					*/
+					
 					mHSView = (HorizontalScrollView)findViewById(R.id.horizontalScrollView);
 					mHSView.setVisibility(View.INVISIBLE);
 					
 					// ウィジェットを登録 
 					gView = (GridView)findViewById(R.id.gridView);
-					
 					gView.setAdapter(gAdapter);
 					
 					// 各アイテムをクリックした場合のリスナを登録
 					gView.setOnItemClickListener(thisObj);
+					
+					break;
+				case LIST_CHANGE:
+					switch(viewMode){
+					case CATEGORY_VIEW:
+						returnButton.setVisibility(View.INVISIBLE);
+						break;
+					case ARTICLE_VIEW:
+						returnButton.setVisibility(View.VISIBLE);
+						break;
+					}
+					break;
 				}
 			}
 			
 		};
 		
 		mHandler.sendEmptyMessage(THEME_CHANGE);
+		mHandler.sendEmptyMessage(LIST_CHANGE); 
 	}
 	
 	@Override
@@ -162,6 +191,17 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			startActivityForResult(intent, REGISTER);
 			
 			break;
+		case R.id.return_button:
+			switch(viewMode){
+			case ARTICLE_VIEW:
+				viewMode = CATEGORY_VIEW;
+				categoryItems = cManager.getAllItems();
+				gAdapter.clear();
+				gAdapter.addAll(categoryItems);
+				gAdapter.notifyDataSetChanged();
+			}
+			mHandler.sendEmptyMessage(LIST_CHANGE);
+			break;
 		case R.id.setting_button:
 			
 			if(mHSView.getVisibility() == View.INVISIBLE){
@@ -179,18 +219,24 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			
 			switch(requestCode){
 			case REGISTER:
-				for(int i=0; i<listItems.size(); i++){
-					ListItem item = listItems.get(i);
-					if(item instanceof Category){
-						Category cat = (Category)item;
-						if(cat.getId() == 2){
-							CategoryManager manager = new CategoryManager(this);
-							manager.setCategoryIcon(cat);
-						}
+				
+				if(resultCode == RESULT_OK){
+					switch(viewMode){
+					case CATEGORY_VIEW:
+						categoryItems = cManager.getAllItems();
+						gAdapter.clear();
+						gAdapter.addAll(categoryItems);
+						gAdapter.notifyDataSetChanged();
+						break;
+					case ARTICLE_VIEW:
+						Article article = (Article)data.getSerializableExtra("article");
+						gAdapter.add(article);
+						gAdapter.notifyDataSetChanged();
+						break;
 					}
+					
+					mHandler.sendEmptyMessage(LIST_CHANGE);
 				}
-				gView.invalidate();
-				mHandler.sendEmptyMessage(THEME_CHANGE);
 				
 				break;
 			}
@@ -215,37 +261,29 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		mHandler.sendEmptyMessage(THEME_CHANGE);
 		return true;
 	}
-	
-	/**
-	 * カテゴリーのリストを返す。
-	 * @return カテゴリーのリスト
-	 */
-	public List<ListItem> getCategoryItems(){
-		List<ListItem> items = new ArrayList<ListItem>();
-		List<Category> categoryList = cManager.getAllItems();
-		for(Category category: categoryList){
-			items.add(category);
-		}
-		return items;
-	}
-	
-	/**
-	 * Articleのリストを返す
-	 * @param categoryId カテゴリのID
-	 * @return Articleのリスト
-	 */
-	public List<ListItem> getArticleItems(long categoryId){
-		List<ListItem> items = new ArrayList<ListItem>();
-		List<Article> articleList = aManager.getArticlesAtCategory(categoryId);
-		for(Article article: articleList){
-			items.add(article);
-		}
-		return items;
-	}
 
+	/* 
+	 * GridView上のアイテムをクリックしたときに呼び出されるメソッド
+	 * (非 Javadoc)
+	 * @see android.widget.AdapterView.OnItemClickListener#onItemClick(android.widget.AdapterView, android.view.View, int, long)
+	 */
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		// TODO 自動生成されたメソッド・スタブ
-		
+		switch(viewMode){
+		case CATEGORY_VIEW:
+			viewMode = ARTICLE_VIEW;
+			long categoryId = categoryItems.get(position).getId();
+			articleItems = aManager.getArticlesAtCategory(categoryId);
+			gAdapter.clear();
+			gAdapter.addAll(articleItems);
+			gAdapter.notifyDataSetChanged();
+			
+			returnButton.setVisibility(View.VISIBLE);
+			
+			mHandler.sendEmptyMessage(LIST_CHANGE);
+			break;
+		case ARTICLE_VIEW:
+			
+		}
 	}
 }

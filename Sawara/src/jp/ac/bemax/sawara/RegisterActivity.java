@@ -6,7 +6,6 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
@@ -190,7 +189,12 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			Category category = cManager.loadCategory(2);
 			cManager.setCategoryIcon(category);
 			
+			// 成功
+			intent.putExtra("article", article);
+			setResult(RESULT_OK, intent);
+			
 			finish();
+	
 			break;
 		}
 	}

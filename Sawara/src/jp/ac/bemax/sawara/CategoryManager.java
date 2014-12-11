@@ -160,8 +160,8 @@ public class CategoryManager {
 		return category;
 	}
 	
-	public List<Category> getAllItems(){
-		List<Category> list = new ArrayList<Category>();
+	public List<ListItem> getAllItems(){
+		List<ListItem> list = new ArrayList<ListItem>();
 		
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String sql = "select ROWID, * from category_table";

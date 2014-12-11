@@ -310,8 +310,8 @@ public class ArticleManager {
 	 * @param categoryId カテゴリーID
 	 * @return Articleのリスト
 	 */
-	public List<Article> getArticlesAtCategory(long categoryId){
-		List<Article> articleList = new ArrayList<Article>();
+	public List<ListItem> getArticlesAtCategory(long categoryId){
+		List<ListItem> articleList = new ArrayList<ListItem>();
 		
 		SQLiteDatabase db = mHelper.getReadableDatabase();
 		String[] selectionArgs = {"" + categoryId};
