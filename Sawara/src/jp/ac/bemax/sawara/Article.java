@@ -1,7 +1,5 @@
 package jp.ac.bemax.sawara;
 
-import android.content.Context;
-import android.content.Intent;
 
 /**
  * 言葉事典で取り扱う、１情報単位を表すクラス
@@ -131,18 +129,6 @@ public class Article implements ListItem{
 		long[] cIds = null;
 		
 		return cIds;
-	}
-	
-	/**
-	 * Articleのアイコンをクリックしたときの処理
-	 */
-	@Override
-	public void clicked(Context context) {
-		// 
-		Intent intent = new Intent();
-		intent.setClass(context, ArticleActivity.class);
-		intent.putExtra("article_id", rowid);
-		context.startActivity(intent);
 	}
 
 	public long[] getCategoryIds() {

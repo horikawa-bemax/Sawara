@@ -31,6 +31,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	public static final int UPDATE_MODE = 2;
 	public static final int READ_MODE = 3;
 	
+	public static final int RETURN_BUTTON_ID = 1;
+	
 	private RelativeLayout registerLayout;
 	private VTextView registerName;
 	private VTextView registerDiscription;
@@ -126,12 +128,29 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			registerName.setText(article.getName());
 			registerDiscription.setText(article.getDescription());
 			
-			// 戻るボタンの設置
-			Button button = new Button(this);
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
+			String[] imagePaths = article.getImagePaths();
+			for(String path: imagePaths){
+				Bitmap image = IconFactory.createIconImage(BitmapFactory.decodeFile(path));
+				imageViewerAdapter.add(image);
+			}
 			
+			String[] moviePaths = article.getMoviePaths();
+			for(String path: moviePaths){
+				Bitmap image = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+				imageViewerAdapter.add(image);
+			}
+			
+			// 戻るボタンの設置
+			Button returnButton = new Button(this);
+			returnButton.setBackgroundResource(R.drawable.new_button_image);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(300, 300);
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			registerLayout.addView(button, params);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			returnButton.setId(RETURN_BUTTON_ID);
+			returnButton.setOnClickListener(this);
+			registerLayout.addView(returnButton, params);
+			
+			Button updateButton = new Button(this);
 			
 			break;
 		}
@@ -246,6 +265,9 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			
 			finish();
 	
+			break;
+		case RETURN_BUTTON_ID:
+			finish();
 			break;
 		}
 	}

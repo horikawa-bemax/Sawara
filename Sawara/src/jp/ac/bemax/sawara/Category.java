@@ -1,7 +1,6 @@
 package jp.ac.bemax.sawara;
 
 import android.content.ContentValues;
-import android.content.Context;
 
 /**
  * Articleが属するカテゴリを表すクラス
@@ -104,14 +103,6 @@ public class Category implements ListItem{
 	@Override
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * カテゴリのアイコンをクリックした時の処理
-	 */
-	@Override
-	public void clicked(Context context) {
-		
 	}
 
 	/**
