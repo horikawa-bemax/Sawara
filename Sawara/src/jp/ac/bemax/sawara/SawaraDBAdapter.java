@@ -74,16 +74,16 @@ public class SawaraDBAdapter{
 		public void onCreate(SQLiteDatabase db) {
 			// カテゴリテーブルを新規作成
 			String create_category_table_sql = "create table category_table " +
-					"(name text," +				// カテゴリ名
-					" icon text," +				// アイコン画像のパス
-					" position integer," +		// 表示位置
-					" modified integer)";		// 更新日時
+					"(name text unique not null, " +				// カテゴリ名
+					" icon text unique," +				// アイコン画像のパス
+					" position integer unique," +		// 表示位置
+					" modified integer unique)";		// 更新日時
 			db.execSQL(create_category_table_sql);
 			
 			// アーティクルテーブルを新規作成
 			String create_article_table_sql = "create table article_table " +
 					"(name text unique not null, " +	// 名前 
-					" description text," +				// 説明
+					" description text not null," +				// 説明
 					" icon text," +						// アイコン画像のパス
 					" position integer," +				// 表示位置
 					" modified integer)";				// 更新日時
