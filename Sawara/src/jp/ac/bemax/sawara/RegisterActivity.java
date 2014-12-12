@@ -44,7 +44,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	//private Handler mHandler;
 	private String fileName;
-	private long categoryId;
+	private Category thisCategory;
 	
 	private ArticleManager mArticleManager;
 	//private CategoryManager mCategoryManager;
@@ -101,8 +101,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			registerDiscription.setFocusableInTouchMode(true);
 			registerDiscription.setTextSize(80);
 			
-			// categoryId
-			categoryId = intent.getLongExtra("categoryId", -1);
+			// 
+			thisCategory = (Category)intent.getSerializableExtra("category");
 		
 			break;
 		case UPDATE_MODE:
@@ -200,8 +200,8 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			
 			// カテゴリーidの設定
 			long[] categoryIds;
-			if(categoryId != -1){
-				categoryIds = new long[]{categoryId};
+			if(thisCategory != null){
+				categoryIds = new long[]{thisCategory.getId()};
 			}else{
 				categoryIds = new long[]{2};
 			}
@@ -209,16 +209,20 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// 新しいArticleを作成する
 			Article article = mArticleManager.newArticle(name, description, imagePaths, moviePaths, categoryIds);	
 			
-			// カテゴリーアイコンの更新
-			CategoryManager cManager = new CategoryManager(this);
-			for(long cId: categoryIds){
-				Category category = cManager.loadCategory(cId);
-				cManager.setCategoryIcon(category);
-			}
-			
 			// 成功
-			intent.putExtra("article", article);
-			setResult(RESULT_OK, intent);
+			if(article != null){
+				// カテゴリーアイコンの更新
+				CategoryManager cManager = new CategoryManager(this);
+				for(long cId: categoryIds){
+					Category category = cManager.loadCategory(cId);
+					cManager.setCategoryIcon(category);
+				}
+			
+				intent.putExtra("article", article);
+				setResult(RESULT_OK, intent);
+			}else{
+				setResult(RESULT_CANCELED, intent);
+			}
 			
 			finish();
 	

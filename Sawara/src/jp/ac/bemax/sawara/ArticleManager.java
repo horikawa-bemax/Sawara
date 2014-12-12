@@ -310,11 +310,11 @@ public class ArticleManager {
 	 * @param categoryId カテゴリーID
 	 * @return Articleのリスト
 	 */
-	public List<ListItem> getArticlesAtCategory(long categoryId){
+	public List<ListItem> getArticlesAtCategory(Category category){
 		List<ListItem> articleList = new ArrayList<ListItem>();
 		
 		SQLiteDatabase db = mHelper.getReadableDatabase();
-		String[] selectionArgs = {"" + categoryId};
+		String[] selectionArgs = {"" + category.getId()};
 		Cursor mCursor = db.rawQuery(
 			"select ROWID from article_table where ROWID in (select article_id from category_article_table where category_id = ?)"
 			, selectionArgs);

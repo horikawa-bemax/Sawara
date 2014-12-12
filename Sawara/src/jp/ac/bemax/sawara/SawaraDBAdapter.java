@@ -84,9 +84,9 @@ public class SawaraDBAdapter{
 			String create_article_table_sql = "create table article_table " +
 					"(name text unique not null, " +	// 名前 
 					" description text not null," +				// 説明
-					" icon text," +						// アイコン画像のパス
-					" position integer," +				// 表示位置
-					" modified integer)";				// 更新日時
+					" icon text unique," +						// アイコン画像のパス
+					" position integer unique," +				// 表示位置
+					" modified integer unique)";				// 更新日時
 			db.execSQL(create_article_table_sql);
 			
 			String create_category_article_table_sql = "create table category_article_table " +

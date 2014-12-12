@@ -44,12 +44,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private List<ListItem> articleItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
+	
+	private VTextView categoryTextView;
 	private Button settingButton;
 	private Button newButton;
 	private Button returnButton;
-	private HorizontalScrollView mHSView;
 	private int viewMode;
-	private long categoryId;
+	private Category thisCategory;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +110,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					 ***********/
 					setContentView(R.layout.home);
 					
+					categoryTextView = (VTextView)findViewById(R.id.category_text_view);
+					categoryTextView.setTextSize(80);
+					
 					settingButton = (Button)findViewById(R.id.setting_button);
 					settingButton.setOnClickListener(thisObj);
 					
@@ -117,19 +121,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					
 					returnButton = (Button)findViewById(R.id.return_button);
 					returnButton.setOnClickListener(thisObj);
-					/**
-					switch(viewMode){
-					case CATEGORY_VIEW:
-						returnButton.setVisibility(View.INVISIBLE);
-						break;
-					case ARTICLE_VIEW:
-						returnButton.setVisibility(View.VISIBLE);
-						break;
-					}
-					*/
-					
-					mHSView = (HorizontalScrollView)findViewById(R.id.horizontalScrollView);
-					mHSView.setVisibility(View.INVISIBLE);
 					
 					// ウィジェットを登録 
 					gView = (GridView)findViewById(R.id.gridView);
@@ -143,9 +134,12 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					
 					switch(viewMode){
 					case CATEGORY_VIEW:
+						categoryTextView.setVisibility(View.INVISIBLE);
 						returnButton.setVisibility(View.INVISIBLE);
 						break;
 					case ARTICLE_VIEW:
+						categoryTextView.setVisibility(View.VISIBLE);
+						categoryTextView.setText(thisCategory.getName());
 						returnButton.setVisibility(View.VISIBLE);
 						break;
 					}
@@ -191,7 +185,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			case CATEGORY_VIEW:
 				break;
 			case ARTICLE_VIEW:
-				intent.putExtra("categoryId", categoryId);
+				intent.putExtra("category", thisCategory);
 				break;
 			}
 			startActivityForResult(intent, REGISTER);
@@ -210,11 +204,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			break;
 		case R.id.setting_button:
 			
-			if(mHSView.getVisibility() == View.INVISIBLE){
-				mHSView.setVisibility(View.VISIBLE);
-			}else{
-				mHSView.setVisibility(View.INVISIBLE);
-			}
 			break;
 		}
 	}
@@ -278,8 +267,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(viewMode){
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
-			categoryId = categoryItems.get(position).getId();
-			articleItems = aManager.getArticlesAtCategory(categoryId);
+			thisCategory = (Category)categoryItems.get(position);
+			articleItems = aManager.getArticlesAtCategory(thisCategory);
 			gAdapter.clear();
 			gAdapter.addAll(articleItems);
 			gAdapter.notifyDataSetChanged();
