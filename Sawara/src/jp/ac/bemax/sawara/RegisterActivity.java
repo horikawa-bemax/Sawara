@@ -19,6 +19,7 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 
 /**
  * 登録画面
@@ -30,6 +31,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	public static final int UPDATE_MODE = 2;
 	public static final int READ_MODE = 3;
 	
+	private RelativeLayout registerLayout;
 	private VTextView registerName;
 	private VTextView registerDiscription;
 	private Button registerAlbamButton;
@@ -63,6 +65,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		Intent intent = getIntent();
 		
 		// レイアウトの紐付け
+		registerLayout = (RelativeLayout)findViewById(R.id.register_layout);
 		registerName = (VTextView)findViewById(R.id.register_name);
 		registerDiscription = (VTextView)findViewById(R.id.register_description);
 		registerAlbamButton = (Button)findViewById(R.id.register_albam_button);
@@ -87,6 +90,11 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			mImagePathList = new ArrayList<String>();
 			mMoviePathList = new ArrayList<String>();
 			
+			// ボタンの可視化
+			registerAlbamButton.setVisibility(View.VISIBLE);
+			registerMovieButton.setVisibility(View.VISIBLE);
+			registerPhotoButton.setVisibility(View.VISIBLE);
+			
 			// クリックリスナー登録
 			registerAlbamButton.setOnClickListener(this);
 			registerMovieButton.setOnClickListener(this);
@@ -110,8 +118,20 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			break;
 		case READ_MODE:
 			Article article = (Article)intent.getSerializableExtra("article");
+			
+			registerAlbamButton.setVisibility(View.INVISIBLE);
+			registerMovieButton.setVisibility(View.INVISIBLE);
+			registerPhotoButton.setVisibility(View.INVISIBLE);
+			
 			registerName.setText(article.getName());
 			registerDiscription.setText(article.getDescription());
+			
+			// 戻るボタンの設置
+			Button button = new Button(this);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100, 100);
+			
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			registerLayout.addView(button, params);
 			
 			break;
 		}
