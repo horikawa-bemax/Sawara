@@ -6,9 +6,12 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
@@ -151,6 +154,14 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			registerLayout.addView(returnButton, params);
 			
 			Button updateButton = new Button(this);
+			
+			Resources res = getResources();
+			Drawable d1 = res.getDrawable(R.drawable.dummy_image);
+			Drawable d2 = res.getDrawable(R.drawable.new_button_image);
+			Drawable[] layers = {d1, d2};
+			Drawable background = new LayerDrawable(layers);
+			updateButton.setBackground(background);
+			//registerLayout.addView(updateButton, params);
 			
 			break;
 		}
