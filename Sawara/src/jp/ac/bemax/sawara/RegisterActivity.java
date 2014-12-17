@@ -11,7 +11,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
@@ -73,6 +72,10 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.register);
+		
+		String themeVal = Configuration.getConfig("theme");
+		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
+		setTheme(resid);
 		
 		Intent intent = getIntent();
 		
@@ -170,10 +173,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			// 更新ボタンの設置
 			Button updateButton = new Button(this);
 			Resources res = getResources();
-			Drawable d1 = res.getDrawable(R.drawable.dummy_image);
-			Drawable d2 = res.getDrawable(R.drawable.new_button_image);
-			Drawable[] layers = {d1, d2};
-			Drawable background = new LayerDrawable(layers);
+			Drawable background = ButtonFactory.createNewButtonDrawable(this);
 			params = new RelativeLayout.LayoutParams(200, 200);
 			params.addRule(RelativeLayout.RIGHT_OF, RETURN_BUTTON_ID);
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
