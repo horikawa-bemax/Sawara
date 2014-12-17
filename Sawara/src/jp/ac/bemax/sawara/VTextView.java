@@ -111,7 +111,8 @@ public class VTextView extends EditText{
         if(getText().length() > 0){
         	mText = getText().toString();
         }else{
-        	mText = getHint().toString();
+        	if(getHint() != null)
+        		mText = getHint().toString();
         }
         
         // 改行キーで切り分ける
