@@ -8,7 +8,6 @@ import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.TypedValue;
 
-
 /**
  * ボタンの画像を生成するクラス
  * @author horikawa
@@ -21,35 +20,86 @@ public class ButtonFactory {
 	static int accentColor;
 
 	/**
-	 * 新規登録ボタンを生成する
+	 * 新規登録ボタンのDrawableを返す
 	 * @param context
 	 * @return 新規登録ボタンのDrawable
 	 */
 	public static Drawable createNewButtonDrawable(Context context){
-		
+		// contextから色コードを取得。static変数に設定する
 		setThemaColors(context);
 		
 		// ボタンイラストを読み込む
 		Drawable image = context.getResources().getDrawable(R.drawable.new_button_image);
 		
+		// 背景Drawableと画像を合体
 		Drawable[] layers = {createBackFrame(), image};
-		LayerDrawable lDrawable = new LayerDrawable(layers);
+		Drawable layerDrawable = new LayerDrawable(layers);
 		
-		return lDrawable;
+		return layerDrawable;
 	}
 	
-	public static Drawable createUpdateButtonDrawable(){
+	/**
+	 * 更新ボタンのDrawableを返す
+	 * @param context
+	 * @return 更新ボタンのDrawable
+	 */
+	public static Drawable createUpdateButtonDrawable(Context context){
+		// contextから色コードを取得。static変数に設定する
+		setThemaColors(context);
 		
-		return null;
+		// ボタンイラストを読み込む
+		Drawable image = context.getResources().getDrawable(R.drawable.album_image);
+		
+		// 背景Drawableと画像を合体
+		Drawable[] layers = {createBackFrame(), image};
+		Drawable layerDrawable = new LayerDrawable(layers);
+		
+		return layerDrawable;
 	}
 	
-	public static Drawable createSettingButtonDrawable(){
+	/**
+	 * 設定ボタンのDrawableを返す
+	 * @param context
+	 * @return 設定ボタンのDrawable
+	 */
+	public static Drawable createSettingButtonDrawable(Context context){
+		// contextから色コードを取得。static変数に設定する
+		setThemaColors(context);
 		
-		return null;
+		// ボタンイラストを読み込む
+		Drawable image = context.getResources().getDrawable(R.drawable.setting_button_image);
+		
+		// 背景Drawableと画像を合体
+		Drawable[] layers = {createBackFrame(), image};
+		Drawable layerDrawable = new LayerDrawable(layers);
+		
+		return layerDrawable;
 	}
 	
+	/**
+	 * 設定ボタンのDrawableを返す
+	 * @param context
+	 * @return 設定ボタンのDrawable
+	 */
+	public static Drawable createReturnButtonDrawable(Context context){
+		// contextから色コードを取得。static変数に設定する
+		setThemaColors(context);
+		
+		// ボタンイラストを読み込む
+		Drawable image = context.getResources().getDrawable(R.drawable.setting_button_image);
+		
+		// 背景Drawableと画像を合体
+		Drawable[] layers = {createBackFrame(), image};
+		Drawable layerDrawable = new LayerDrawable(layers);
+		
+		return layerDrawable;
+	}
+	
+	/**
+	 * ボタンの枠画像を作成する
+	 * @return 枠画像のDrawable
+	 */
 	public static Drawable createBackFrame(){
-
 		// 通常時の枠線を作成
 		GradientDrawable back = new GradientDrawable();
 		back.setStroke(10, mainColor);
@@ -62,16 +112,23 @@ public class ButtonFactory {
 		touchBack.setCornerRadius(10);
 		touchBack.setColor(accentColor);
 		
-		StateListDrawable sDrawable = new StateListDrawable();
-		sDrawable.addState(new int[]{android.R.attr.state_pressed}, touchBack);
-		sDrawable.addState(new int[0], back);
+		// 状態Drawable作成
+		StateListDrawable stateListDrawable = new StateListDrawable();
+		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, touchBack);
+		stateListDrawable.addState(new int[0], back);
 		
-		return sDrawable;
+		return stateListDrawable;
 	}
 	
+	/**
+	 * contextのテーマに沿って、３つの色変数に値を設定する
+	 * @param context
+	 */
 	public static void setThemaColors(Context context){
+		// コンテキストからテーマを取得
 		Resources.Theme thema = context.getTheme();
 		
+		// テーマデータの受け皿
 		TypedValue baseColorValue = new TypedValue();
 		TypedValue mainColorValue = new TypedValue();
 		TypedValue accentColorValue = new TypedValue();
@@ -81,6 +138,7 @@ public class ButtonFactory {
 		thema.resolveAttribute(R.attr.mainColor, mainColorValue, true);
 		thema.resolveAttribute(R.attr.accentColor, accentColorValue, true);
 		
+		// テーマの値から、色コードを取得
 		baseColor = context.getResources().getColor(baseColorValue.resourceId);
 		mainColor = context.getResources().getColor(mainColorValue.resourceId);
 		accentColor = context.getResources().getColor(accentColorValue.resourceId);

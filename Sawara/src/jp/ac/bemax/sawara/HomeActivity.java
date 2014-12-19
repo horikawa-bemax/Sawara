@@ -20,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 
 /**
  * ホーム画面のアクティビティ
@@ -27,23 +28,28 @@ import android.widget.GridView;
  * 2014/07/02
  */
 public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener, OnItemClickListener{
+	//
 	static final int THEME_CHANGE = 0;
 	static final int LIST_CHANGE = 1;
-	
+	// インテント呼び出し用ID 
 	static final int REGISTER = 100;
-	
+	// 画面用のID
 	static final int CATEGORY_VIEW = 1;
 	static final int ARTICLE_VIEW = 2;
+	// 各VIEW用のID
+	static final int SETTING_BUTTON = 1;
+	static final int NEW_BUTTON = 2;
+	static final int RETURN_BUTTON = 3;
+	static final int GRIDVIEW = 4;
+	static final int CATEGORY_TEXTVIEW = 5;
 	
 	private Handler mHandler;
-	//private ActionBar mActionBar;
-	private GridView gView;
-	private GridAdapter gAdapter;
+	private GridView gridView;
+	private GridAdapter gridAdapter;
 	private List<ListItem> categoryItems;
 	private List<ListItem> articleItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
-	
 	private VTextView categoryTextView;
 	private Button settingButton;
 	private Button newButton;
@@ -89,8 +95,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		// カテゴリーのリストを取得
 		categoryItems = cManager.getAllItems();
 		
-		gAdapter = new GridAdapter(this, R.layout.list_item, new ArrayList<ListItem>());
-		gAdapter.addAll(categoryItems);
+		gridAdapter = new GridAdapter(this, R.layout.list_item, new ArrayList<ListItem>());
+		gridAdapter.addAll(categoryItems);
 		
 		/**************
 		 *  ハンドラーの設定
@@ -112,29 +118,23 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					categoryTextView = (VTextView)findViewById(R.id.category_text_view);
 					categoryTextView.setTextSize(80);
 					
-					settingButton = (Button)findViewById(R.id.setting_button);
-					settingButton.setOnClickListener(thisObj);
-					
-					newButton = (Button)findViewById(R.id.new_button);
-					newButton.setOnClickListener(thisObj);
-					
-					returnButton = (Button)findViewById(R.id.return_button);
-					returnButton.setOnClickListener(thisObj);
+					// 各VIEWを初期化＆配置する
+					RelativeLayout homeLayout = (RelativeLayout)findViewById(R.id.home_base_layout);
+					createCategoryModeDisplay(homeLayout);
 					
 					// ウィジェットを登録 
-					gView = (GridView)findViewById(R.id.gridView);
-					gView.setAdapter(gAdapter);
+					gridView.setAdapter(gridAdapter);
 					
 					// 各アイテムをクリックした場合のリスナを登録
-					gView.setOnItemClickListener(thisObj);
+					gridView.setOnItemClickListener(thisObj);
 					
 					break;
 				case LIST_CHANGE:
 					
 					switch(viewMode){
 					case CATEGORY_VIEW:
-						categoryTextView.setVisibility(View.INVISIBLE);
-						returnButton.setVisibility(View.INVISIBLE);
+
+	
 						break;
 					case ARTICLE_VIEW:
 						categoryTextView.setVisibility(View.VISIBLE);
@@ -176,7 +176,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	public void onClick(View v) {
 		Intent intent = null;
 		switch(v.getId()){
-		case R.id.new_button:
+		case NEW_BUTTON:
 			intent = new Intent(this, RegisterActivity.class);
 			intent.putExtra("mode", RegisterActivity.NEW_MODE);
 			
@@ -190,18 +190,18 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			startActivityForResult(intent, REGISTER);
 			
 			break;
-		case R.id.return_button:
+		case RETURN_BUTTON:
 			switch(viewMode){
 			case ARTICLE_VIEW:
 				viewMode = CATEGORY_VIEW;
 				categoryItems = cManager.getAllItems();
-				gAdapter.clear();
-				gAdapter.addAll(categoryItems);
-				gAdapter.notifyDataSetChanged();
+				gridAdapter.clear();
+				gridAdapter.addAll(categoryItems);
+				gridAdapter.notifyDataSetChanged();
 			}
 			mHandler.sendEmptyMessage(LIST_CHANGE);
 			break;
-		case R.id.setting_button:
+		case SETTING_BUTTON:
 			
 			break;
 		}
@@ -218,14 +218,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					switch(viewMode){
 					case CATEGORY_VIEW:
 						categoryItems = cManager.getAllItems();
-						gAdapter.clear();
-						gAdapter.addAll(categoryItems);
-						gAdapter.notifyDataSetChanged();
+						gridAdapter.clear();
+						gridAdapter.addAll(categoryItems);
+						gridAdapter.notifyDataSetChanged();
 						break;
 					case ARTICLE_VIEW:
 						Article article = (Article)data.getSerializableExtra("article");
-						gAdapter.add(article);
-						gAdapter.notifyDataSetChanged();
+						gridAdapter.add(article);
+						gridAdapter.notifyDataSetChanged();
 						break;
 					}
 					
@@ -268,9 +268,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			viewMode = ARTICLE_VIEW;
 			thisCategory = (Category)categoryItems.get(position);
 			articleItems = aManager.getArticlesAtCategory(thisCategory);
-			gAdapter.clear();
-			gAdapter.addAll(articleItems);
-			gAdapter.notifyDataSetChanged();
+			gridAdapter.clear();
+			gridAdapter.addAll(articleItems);
+			gridAdapter.notifyDataSetChanged();
 			
 			returnButton.setVisibility(View.VISIBLE);
 			
@@ -285,5 +285,49 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			startActivity(intent);
 			break;
 		}
+	}
+	
+	void createCategoryModeDisplay(RelativeLayout layout){
+		// LayoutParamsを用意
+		RelativeLayout.LayoutParams params;
+		
+		// 設定ボタンを設置する
+		settingButton = new Button(this);
+		settingButton.setId(SETTING_BUTTON);
+		// 設定ボタンのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(200, 200);
+		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		settingButton.setLayoutParams(params);
+		// ボタンの画像を設定する
+		settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(this));
+		// layoutにボタンを登録する
+		layout.addView(settingButton);
+		
+		// 新規作成ボタンを設定する
+		newButton = new Button(this);
+		newButton.setId(NEW_BUTTON);
+		// 新規作成ボタンのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(100, 100);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		newButton.setLayoutParams(params);
+		
+		
+		// GridViewを設定する
+		gridView = new GridView(this);
+		gridView.setId(GRIDVIEW);
+		// GridViewのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		params.addRule(RelativeLayout.ABOVE, NEW_BUTTON);
+		params.addRule(RelativeLayout.LEFT_OF, SETTING_BUTTON);
+		gridView.setLayoutParams(params);
+		
+	}
+	
+	void articleModeButtons(){
+		
 	}
 }
