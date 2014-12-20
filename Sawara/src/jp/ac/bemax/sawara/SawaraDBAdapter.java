@@ -143,7 +143,7 @@ public class SawaraDBAdapter{
 			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			
 			// CategoryTable
-			String[] catNames = {"くるま","ひこうき"};
+			String[] catNames = {"くるま","その他"};
 			
 			CategoryManager cManager = new CategoryManager(context);
 			Category[] categorys = new Category[catNames.length];

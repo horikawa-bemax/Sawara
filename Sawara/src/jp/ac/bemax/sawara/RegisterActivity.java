@@ -6,11 +6,9 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 
 /**
  * 登録画面
@@ -36,7 +35,12 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	public static final int UPDATE_MODE = 2;
 	public static final int READ_MODE = 3;
 	
-	public static final int RETURN_BUTTON_ID = 1;
+	public static final int RETURN_BUTTON = 1;
+	public static final int ALBAM_BUTTON = 2;
+	public static final int MOVIE_BUTTON = 3;
+	public static final int PHOTO_BUTTON = 4;
+	public static final int REGIST_BUTTON = 5;
+	public static final int UPDATE_BUTTON = 6;
 	
 	public static final int PICTURE = 1;
 	public static final int MOVIE = 2;
@@ -48,6 +52,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	private Button registerMovieButton;
 	private Button registerPhotoButton;
 	private Button registerRegistButton;
+	private Button registerReturnButton;
+	private Button registerUpdateButton;
 	private GridView registerImageViewer;
 	private GridView registerTagViewer;
 	//private List<VTextView> tagList;
@@ -81,14 +87,43 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		
 		// レイアウトの紐付け
 		registerLayout = (RelativeLayout)findViewById(R.id.register_layout);
+		
 		registerName = (VTextView)findViewById(R.id.register_name);
 		registerDiscription = (VTextView)findViewById(R.id.register_description);
-		registerAlbamButton = (Button)findViewById(R.id.register_albam_button);
-		registerMovieButton = (Button)findViewById(R.id.register_movie_button);
-		registerPhotoButton = (Button)findViewById(R.id.register_photo_button);
+		
+		registerAlbamButton = new Button(this);
+		registerAlbamButton.setBackground(ButtonFactory.createAlbamButtonDrawable(this));
+		registerAlbamButton.setId(ALBAM_BUTTON);
+		registerAlbamButton.setOnClickListener(this);
+		
+		registerMovieButton = new Button(this);
+		registerMovieButton.setBackground(ButtonFactory.createMovieButtonDrawable(this));
+		registerMovieButton.setId(MOVIE_BUTTON);
+		registerMovieButton.setOnClickListener(this);
+		
+		registerPhotoButton = new Button(this);
+		registerPhotoButton.setBackground(ButtonFactory.createPhotoButtonDrawable(this));
+		registerPhotoButton.setId(PHOTO_BUTTON);
+		registerPhotoButton.setOnClickListener(this);
+		
+		registerRegistButton = new Button(this);	
+		registerRegistButton.setBackground(ButtonFactory.createRegistButtonDrawable(this));
+		registerRegistButton.setId(REGIST_BUTTON);
+		registerRegistButton.setOnClickListener(this);
+		
+		registerReturnButton = new Button(this);
+		registerReturnButton.setBackground(ButtonFactory.createReturnButtonDrawable(this));
+		registerReturnButton.setId(RETURN_BUTTON);
+		registerReturnButton.setOnClickListener(this);
+		
+		registerUpdateButton = new Button(this);
+		registerUpdateButton.setBackground(ButtonFactory.createUpdateButtonDrawable(this));
+		registerUpdateButton.setId(UPDATE_BUTTON);
+		registerUpdateButton.setOnClickListener(this);
+		
 		registerImageViewer = (GridView)findViewById(R.id.register_image_viewer);
 		registerTagViewer = (GridView)findViewById(R.id.register_tag_viewer);
-		registerRegistButton = (Button)findViewById(R.id.register_regist_button);
+
 		
 		// イメージビューアの設定
 		imageViewerAdapter = new ImageAdapter(this);
@@ -100,24 +135,60 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		
 		int mode = intent.getIntExtra("mode", 0);
 		
+		RelativeLayout.LayoutParams params;
+		
 		switch(mode){
 		case NEW_MODE:
+			// ボタン配置
+			params = new RelativeLayout.LayoutParams(200, 200);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
+			params.setMargins(5, 5, 5, 5);
+			registerAlbamButton.setLayoutParams(params);
+			registerLayout.addView(	registerAlbamButton);
+			
+			params = new RelativeLayout.LayoutParams(200, 200);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			params.addRule(RelativeLayout.LEFT_OF, ALBAM_BUTTON);
+			params.setMargins(5, 5, 5, 5);
+			registerMovieButton.setLayoutParams(params);
+			registerLayout.addView(registerMovieButton);
+			
+			params = new RelativeLayout.LayoutParams(200, 200);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			params.addRule(RelativeLayout.LEFT_OF, MOVIE_BUTTON);
+			params.setMargins(5, 5, 5, 5);
+			registerPhotoButton.setLayoutParams(params);
+			registerLayout.addView(registerPhotoButton);
+			
+			params = new RelativeLayout.LayoutParams(200, 200);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+			params.setMargins(5, 5, 5, 5);
+			registerRegistButton.setLayoutParams(params);
+			registerLayout.addView(registerRegistButton);
+			
+			params = new RelativeLayout.LayoutParams(300, LayoutParams.MATCH_PARENT);
+			params.addRule(RelativeLayout.ABOVE, REGIST_BUTTON);
+			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+			params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+			params.setMargins(5, 5, 5, 5);
+			registerTagViewer.setLayoutParams(params);
+			
+			params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+			params.addRule(RelativeLayout.ABOVE, ALBAM_BUTTON);
+			params.addRule(RelativeLayout.ALIGN_RIGHT, ALBAM_BUTTON);
+			params.addRule(RelativeLayout.RIGHT_OF, R.id.register_tag_viewer);
+			params.setMargins(5, 5, 5, 5);
+			registerImageViewer.setLayoutParams(params);
+			
 			// 画像および動画のリスト設定
 			mImagePathList = new ArrayList<String>();
 			mMoviePathList = new ArrayList<String>();
 			
-			// ボタンの可視化
-			registerAlbamButton.setVisibility(View.VISIBLE);
-			registerMovieButton.setVisibility(View.VISIBLE);
-			registerPhotoButton.setVisibility(View.VISIBLE);
-			
 			// クリックリスナー登録
-			registerAlbamButton.setOnClickListener(this);
-			registerMovieButton.setOnClickListener(this);
-			registerPhotoButton.setOnClickListener(this);
 			registerName.setOnClickListener(this);
 			registerDiscription.setOnClickListener(this);
-			registerRegistButton.setOnClickListener(this);
 	
 			// 縦書きテキストを編集可能にする＆テキストサイズ指定
 			registerName.setFocusableInTouchMode(true);
@@ -134,10 +205,6 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			break;
 		case READ_MODE:
 			Article article = (Article)intent.getSerializableExtra("article");
-			
-			registerAlbamButton.setVisibility(View.INVISIBLE);
-			registerMovieButton.setVisibility(View.INVISIBLE);
-			registerPhotoButton.setVisibility(View.INVISIBLE);
 			
 			registerName.setText(article.getName());
 			registerDiscription.setText(article.getDescription());
@@ -161,24 +228,32 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			}
 			
 			// 戻るボタンの設置
-			Button returnButton = new Button(this);
-			returnButton.setBackgroundResource(R.drawable.new_button_image);
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(300, 300);
+			params = new RelativeLayout.LayoutParams(200, 200);
 			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			returnButton.setId(RETURN_BUTTON_ID);
-			returnButton.setOnClickListener(this);
-			registerLayout.addView(returnButton, params);
+			params.setMargins(5, 5, 5, 5);
+			registerLayout.addView(registerReturnButton, params);
 			
 			// 更新ボタンの設置
-			Button updateButton = new Button(this);
-			Resources res = getResources();
-			Drawable background = ButtonFactory.createNewButtonDrawable(this);
 			params = new RelativeLayout.LayoutParams(200, 200);
-			params.addRule(RelativeLayout.RIGHT_OF, RETURN_BUTTON_ID);
+			params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			updateButton.setBackground(background);
-			registerLayout.addView(updateButton, params);
+			params.setMargins(5, 5, 5, 5);
+			registerLayout.addView(registerUpdateButton, params);
+			
+			params = new RelativeLayout.LayoutParams(300, LayoutParams.MATCH_PARENT);
+			params.addRule(RelativeLayout.ABOVE, RETURN_BUTTON);
+			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+			params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+			params.setMargins(5, 5, 5, 5);
+			registerTagViewer.setLayoutParams(params);
+			
+			params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+			params.addRule(RelativeLayout.ABOVE, UPDATE_BUTTON);
+			params.addRule(RelativeLayout.ALIGN_RIGHT, UPDATE_BUTTON);
+			params.addRule(RelativeLayout.RIGHT_OF, R.id.register_tag_viewer);
+			params.setMargins(5, 5, 5, 5);
+			registerImageViewer.setLayoutParams(params);
 			
 			// viewerのitemにタッチされた時の設定
 			
@@ -209,7 +284,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		switch(v.getId()){
 		
 		//*** アルバムからデータを読み込む ***
-		case R.id.register_albam_button:
+		case ALBAM_BUTTON:
 			// 結果を呼び出しもとActivityに返す
 
 			
@@ -218,7 +293,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			break;
 		
 		//*** カメラで写真を取り込む ***
-		case R.id.register_photo_button:
+		case PHOTO_BUTTON:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 			fileName = "" + System.currentTimeMillis() + ".jpg";
@@ -234,7 +309,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			break;
 			
 		//*** カメラで動画を取り込む ***
-		case R.id.register_movie_button:
+		case MOVIE_BUTTON:
 			// 保存先を作成
 			dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			fileName = "" + System.currentTimeMillis() + ".mp4";
@@ -251,7 +326,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			break;
 			
 		//*** 入力データを登録する ***
-		case R.id.register_regist_button:
+		case REGIST_BUTTON:
 			// 基本値をセットする
 			String name = registerName.getText().toString();
 			String description = registerDiscription.getText().toString();
@@ -297,7 +372,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			finish();
 	
 			break;
-		case RETURN_BUTTON_ID:
+		case RETURN_BUTTON:
 			finish();
 			break;
 		}
@@ -396,6 +471,13 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			Log.d("tagview", "");
 			break;
 		}
+		
+	}
+	
+	void putNewModeButtons(){
+		RelativeLayout.LayoutParams params;
+		
+		params = new RelativeLayout.LayoutParams(200,200);
 		
 	}
 }
