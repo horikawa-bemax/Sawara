@@ -121,6 +121,32 @@ public class ButtonFactory {
 	}
 	
 	/**
+	 * @param context
+	 * @return
+	 */
+	public static Drawable getThemaBackground(Context context){
+		// コンテキストからテーマを取得
+		Resources.Theme thema = context.getTheme();
+		
+		TypedValue backgroundDrawableValue = new TypedValue();
+		thema.resolveAttribute(R.attr.mainBack, backgroundDrawableValue, true);
+		Drawable backgroundDrawable = context.getResources().getDrawable(backgroundDrawableValue.resourceId);
+		
+		return backgroundDrawable;
+	}
+	
+	public static Drawable getThemaFrame(Context context){
+		// コンテキストからテーマを取得
+		Resources.Theme thema = context.getTheme();
+		
+		TypedValue frameDrawableValue = new TypedValue();
+		thema.resolveAttribute(R.attr.frameBack, frameDrawableValue, true);
+		Drawable frameDrawable = context.getResources().getDrawable(frameDrawableValue.resourceId);
+		
+		return frameDrawable;
+	}
+	
+	/**
 	 * contextのテーマに沿って、３つの色変数に値を設定する
 	 * @param context
 	 */
@@ -137,10 +163,11 @@ public class ButtonFactory {
 		thema.resolveAttribute(R.attr.baseColor, baseColorValue, true);
 		thema.resolveAttribute(R.attr.mainColor, mainColorValue, true);
 		thema.resolveAttribute(R.attr.accentColor, accentColorValue, true);
-		
+
 		// テーマの値から、色コードを取得
 		baseColor = context.getResources().getColor(baseColorValue.resourceId);
 		mainColor = context.getResources().getColor(mainColorValue.resourceId);
 		accentColor = context.getResources().getColor(accentColorValue.resourceId);
+
 	}
 }

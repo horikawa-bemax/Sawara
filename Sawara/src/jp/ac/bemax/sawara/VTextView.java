@@ -33,9 +33,21 @@ public class VTextView extends EditText{
     private int width;
     private int height;
     private InputMethodManager mManager;
-    //private TextInputConnection mInputConnection;
     private Editable mEditable;
-    //private boolean editing;
+    
+    public VTextView(Context context){
+    	super(context);
+        mFace = Typeface.createFromAsset(context.getAssets(),"HGRKK.TTC");
+        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setTextSize(FONT_SIZE);
+        mPaint.setColor(Color.BLACK);
+        mPaint.setTypeface(mFace);
+
+        mEditable = super.getEditableText();
+        
+        setFocusable(false);
+        setFocusableInTouchMode(false);
+    }
     
     public VTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -44,13 +56,8 @@ public class VTextView extends EditText{
         mPaint.setTextSize(FONT_SIZE);
         mPaint.setColor(Color.BLACK);
         mPaint.setTypeface(mFace);
-        
-        // 
-        //mManager = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
-        //mInputConnection = new TextInputConnection(this, false);
 
         mEditable = super.getEditableText();
-        //editing = false;
         
         setFocusable(false);
         setFocusableInTouchMode(false);
@@ -63,14 +70,6 @@ public class VTextView extends EditText{
     	Log.d("size",""+w+":"+h);
 		super.onSizeChanged(w, h, oldw, oldh);
 	}
-
-	/*
-    public void setText(String text) {
-    	super.setText(text);
-    	mPaint.setTextSize(FONT_SIZE);
-        mText = getText().toString();
-    }
-	*/ 
     
     /**
      * テキストサイズつき、setText

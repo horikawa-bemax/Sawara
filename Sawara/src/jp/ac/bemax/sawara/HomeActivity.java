@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,9 +29,9 @@ import android.widget.RelativeLayout;
  * 2014/07/02
  */
 public class HomeActivity extends Activity implements OnClickListener, OnMenuItemClickListener, OnItemClickListener{
-	//
-	static final int THEME_CHANGE = 0;
-	static final int LIST_CHANGE = 1;
+	// 画面更新用のID
+	static final int DISPLAY_CHANGE = 0;
+	static final int THEMA_CHANGE = 1;
 	// インテント呼び出し用ID 
 	static final int REGISTER = 100;
 	// 画面用のID
@@ -42,8 +43,10 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	static final int RETURN_BUTTON = 3;
 	static final int GRIDVIEW = 4;
 	static final int CATEGORY_TEXTVIEW = 5;
+	static final int HOMELAYOUT = 6;
 	
 	private Handler mHandler;
+	private RelativeLayout homeLayout;
 	private GridView gridView;
 	private GridAdapter gridAdapter;
 	private List<ListItem> categoryItems;
@@ -70,12 +73,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		cManager = new CategoryManager(this);
 		aManager = new ArticleManager(this);
 		
-
-		/***********
-		 * 設定ファイルの処理
-		 ***********/
+		// 設定ファイルを読み込む
 		Configuration.confFile = new File(getFilesDir(), "sawara.conf");
-		
 		if(!Configuration.confFile.exists()){
 			Configuration.makeConfFile();
 		}
@@ -83,24 +82,43 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
 		setTheme(resid);
 		
-		/***********
-		 * データベースアクセス
-		 ***********/
-		//SawaraDBAdapter sdb = new SawaraDBAdapter(this);
-		//sdb.dump();
-		
 		// viewMode設定
 		viewMode = CATEGORY_VIEW;
-		
 		// カテゴリーのリストを取得
 		categoryItems = cManager.getAllItems();
-		
+		// アダプタにカテゴリのリストを設定する
 		gridAdapter = new GridAdapter(this, R.layout.list_item, new ArrayList<ListItem>());
 		gridAdapter.addAll(categoryItems);
+		// homeLayoutを作成
+		homeLayout = new RelativeLayout(this);
+		homeLayout.setId(HOMELAYOUT);
+		// gridViewを作成
+		gridView = new GridView(this);
+		gridView.setId(GRIDVIEW);
+		gridView.setNumColumns(4);
+		gridView.setOnItemClickListener(this);
+		// categoryTextViewを作成
+		categoryTextView = new VTextView(this);
+		categoryTextView.setId(CATEGORY_TEXTVIEW);
+		// settingButtonを作成
+		settingButton = new Button(this);
+		settingButton.setId(SETTING_BUTTON);
+		settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(this));
+		settingButton.setOnClickListener(this);
+		// newButtonを作成
+		newButton = new Button(this);
+		newButton.setId(NEW_BUTTON);
+		newButton.setBackground(ButtonFactory.createNewButtonDrawable(this));
+		newButton.setOnClickListener(this);
+		// returnButtonを作成
+		returnButton = new Button(this);
+		returnButton.setId(RETURN_BUTTON);
+		returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(this));
+		returnButton.setOnClickListener(this);
 		
-		/**************
-		 *  ハンドラーの設定
-		 **************/
+		setContentView(homeLayout);
+		
+		// 画面更新用のハンドラを設定する
 		final HomeActivity thisObj = this;
 		mHandler = new Handler(){
 
@@ -109,48 +127,46 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				super.handleMessage(msg);
 				
 				switch(msg.what){
-				case THEME_CHANGE:
-					/***********
-					 * 画面コンテンツの初期化
-					 ***********/
-					setContentView(R.layout.home);
-					
-					categoryTextView = (VTextView)findViewById(R.id.category_text_view);
-					categoryTextView.setTextSize(80);
+				case DISPLAY_CHANGE:
 					
 					// 各VIEWを初期化＆配置する
-					RelativeLayout homeLayout = (RelativeLayout)findViewById(R.id.home_base_layout);
-					createCategoryModeDisplay(homeLayout);
+					switch(viewMode){
+					case CATEGORY_VIEW:
+						createCategoryModeDisplay(homeLayout);
+						break;
+					case ARTICLE_VIEW:
+						createArticleModeDisplay(homeLayout);
+						categoryTextView.setText(thisCategory.getName());
+						break;
+					}
 					
 					// ウィジェットを登録 
 					gridView.setAdapter(gridAdapter);
-					
 					// 各アイテムをクリックした場合のリスナを登録
 					gridView.setOnItemClickListener(thisObj);
 					
 					break;
-				case LIST_CHANGE:
-					
-					switch(viewMode){
-					case CATEGORY_VIEW:
+				case THEMA_CHANGE:
+					TypedValue outValue = new TypedValue();
+					getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
+					homeLayout.setBackgroundResource(outValue.resourceId);
 
-	
-						break;
-					case ARTICLE_VIEW:
-						categoryTextView.setVisibility(View.VISIBLE);
-						categoryTextView.setText(thisCategory.getName());
-						returnButton.setVisibility(View.VISIBLE);
-						break;
-					}
+					settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(thisObj));
+					newButton.setBackground(ButtonFactory.createNewButtonDrawable(thisObj));
+					returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(thisObj));
 					
+					int count = gridView.getChildCount();
+					for(int i=0; i<count; i++){
+						View targetView = gridView.getChildAt(i);
+						gridView.getAdapter().getView(i, targetView, gridView);
+					}
 					break;
 				}
 			}
-			
 		};
 		
-		mHandler.sendEmptyMessage(THEME_CHANGE);
-		mHandler.sendEmptyMessage(LIST_CHANGE); 
+		mHandler.sendEmptyMessage(DISPLAY_CHANGE);
+		mHandler.sendEmptyMessage(THEMA_CHANGE);
 	}
 	
 	@Override
@@ -199,7 +215,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				gridAdapter.addAll(categoryItems);
 				gridAdapter.notifyDataSetChanged();
 			}
-			mHandler.sendEmptyMessage(LIST_CHANGE);
+			mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			break;
 		case SETTING_BUTTON:
 			
@@ -229,7 +245,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 						break;
 					}
 					
-					mHandler.sendEmptyMessage(LIST_CHANGE);
+					mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 				}
 				
 				break;
@@ -252,7 +268,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			Configuration.setConfig("theme", "StarTheme");
 			break;
 		}
-		mHandler.sendEmptyMessage(THEME_CHANGE);
+		mHandler.sendEmptyMessage(THEMA_CHANGE);
 		return true;
 	}
 
@@ -271,10 +287,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			gridAdapter.clear();
 			gridAdapter.addAll(articleItems);
 			gridAdapter.notifyDataSetChanged();
-			
-			returnButton.setVisibility(View.VISIBLE);
-			
-			mHandler.sendEmptyMessage(LIST_CHANGE);
+			mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			break;
 		case ARTICLE_VIEW:
 			Intent intent = new Intent(this, RegisterActivity.class);
@@ -287,47 +300,91 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		}
 	}
 	
+	/**
+	 * カテゴリーモードの画面を作成する
+	 * @param layout
+	 */
 	void createCategoryModeDisplay(RelativeLayout layout){
+		layout.removeAllViews();
 		// LayoutParamsを用意
 		RelativeLayout.LayoutParams params;
 		
-		// 設定ボタンを設置する
-		settingButton = new Button(this);
-		settingButton.setId(SETTING_BUTTON);
 		// 設定ボタンのLayoutParamsを設定する
 		params = new RelativeLayout.LayoutParams(200, 200);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		settingButton.setLayoutParams(params);
-		// ボタンの画像を設定する
-		settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(this));
-		// layoutにボタンを登録する
 		layout.addView(settingButton);
 		
-		// 新規作成ボタンを設定する
-		newButton = new Button(this);
-		newButton.setId(NEW_BUTTON);
 		// 新規作成ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(100, 100);
+		params = new RelativeLayout.LayoutParams(200, 200);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		newButton.setLayoutParams(params);
+		layout.addView(newButton);
 		
-		
-		// GridViewを設定する
-		gridView = new GridView(this);
-		gridView.setId(GRIDVIEW);
 		// GridViewのLayoutParamsを設定する
 		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
-		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
 		params.addRule(RelativeLayout.ABOVE, NEW_BUTTON);
 		params.addRule(RelativeLayout.LEFT_OF, SETTING_BUTTON);
 		gridView.setLayoutParams(params);
+		layout.addView(gridView);
 		
 	}
 	
-	void articleModeButtons(){
+	/**
+	 * アーティクルモードの画面を作成する
+	 * @param layout 
+	 */
+	void createArticleModeDisplay(RelativeLayout layout){
+		layout.setVisibility(View.INVISIBLE);
+		// layoutのViewをリセットする
+		layout.removeAllViews();
+		// LayoutParamsを用意
+		RelativeLayout.LayoutParams params;
+
+		// 設定ボタンのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(200, 200);
+		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		settingButton.setLayoutParams(params);
+		layout.addView(settingButton);
 		
+		// 戻るボタンのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(200, 200);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		returnButton.setLayoutParams(params);
+		layout.addView(returnButton);
+		
+		// 新規作成ボタンのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(200, 200);
+		params.addRule(RelativeLayout.RIGHT_OF, RETURN_BUTTON);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		newButton.setLayoutParams(params);
+		layout.addView(newButton);
+		
+		// GridViewのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		params.addRule(RelativeLayout.ABOVE, NEW_BUTTON);
+		params.addRule(RelativeLayout.LEFT_OF, SETTING_BUTTON);
+		gridView.setLayoutParams(params);
+		layout.addView(gridView);
+		
+		// categoryTextViewのLayoutParamsを設定する
+		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+		params.addRule(RelativeLayout.ALIGN_LEFT, SETTING_BUTTON);
+		params.addRule(RelativeLayout.ABOVE, SETTING_BUTTON);
+		categoryTextView.setLayoutParams(params);
+		categoryTextView.setTextSize(100);
+		layout.addView(categoryTextView);
+		
+		layout.setVisibility(View.VISIBLE);
 	}
 }
