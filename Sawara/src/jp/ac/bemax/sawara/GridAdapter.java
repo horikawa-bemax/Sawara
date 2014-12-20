@@ -14,7 +14,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 
 
@@ -47,30 +46,39 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	 */
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		ViewHolder holder;
+		
 		if(convertView == null){
 			// アイテム用のレイアウトXMLを読み込む
 			LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(resourceId, null);
+            
+            holder = new ViewHolder();
+            holder.imageView = (ImageView)convertView.findViewById(R.id.list_item_image);
+            holder.vTextView = (VTextView)convertView.findViewById(R.id.list_vTextView);
+            
+            convertView.setTag(holder);
+		}else{
+			holder = (ViewHolder)convertView.getTag();
 		}
 		// 表示するアイテムを取り出す
 		ListItem listItem = getItem(position);
 		
-		LinearLayout view = (LinearLayout)convertView;
+		//LinearLayout view = (LinearLayout)convertView;
 		
 		// imageViewにitemの画像をセットする
-		ImageView imgView = (ImageView)view.findViewById(R.id.list_item_image);
 		String iconPath = listItem.getIconPath();
 		Bitmap bmp = StrageManager.loadIcon(iconPath);
-		imgView.setImageBitmap(bmp);
+		holder.imageView.setImageBitmap(bmp);
+		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
 		
 		// 縦書きのtextViewにアイテムの値をセットする
-		VTextView vtView = (VTextView)view.findViewById(R.id.list_vTextView);
 		float den = context.getResources().getDisplayMetrics().density;
 		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.x/5) );
-		vtView.setLayoutParams(params);
-		vtView.setText(listItem.getName());
+		holder.vTextView.setLayoutParams(params);
+		holder.vTextView.setText(listItem.getName());
 
-		return view;
+		return convertView;
 	}
 
 	@Override
@@ -82,4 +90,9 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 			
 		} 
 	}
+}
+
+class ViewHolder{
+	ImageView imageView;
+	VTextView vTextView;
 }

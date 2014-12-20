@@ -6,30 +6,42 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 
 /**
  * 登録画面
  * @author Masaaki Horikawa
  * 2014/07/23
  */
-public class RegisterActivity extends Activity implements OnClickListener{
+public class RegisterActivity extends Activity implements OnClickListener, OnItemClickListener{
 	public static final int NEW_MODE = 1;
 	public static final int UPDATE_MODE = 2;
 	public static final int READ_MODE = 3;
 	
+	public static final int RETURN_BUTTON_ID = 1;
+	
+	public static final int PICTURE = 1;
+	public static final int MOVIE = 2;
+	
+	private RelativeLayout registerLayout;
 	private VTextView registerName;
 	private VTextView registerDiscription;
 	private Button registerAlbamButton;
@@ -38,8 +50,9 @@ public class RegisterActivity extends Activity implements OnClickListener{
 	private Button registerRegistButton;
 	private GridView registerImageViewer;
 	private GridView registerTagViewer;
-	//private List<Bitmap> imageList;
 	//private List<VTextView> tagList;
+	private int[] itemType;
+	private String[] itemPaths;
 	private ImageAdapter imageViewerAdapter;
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	//private Handler mHandler;
@@ -60,9 +73,14 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.register);
 		
+		String themeVal = Configuration.getConfig("theme");
+		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
+		setTheme(resid);
+		
 		Intent intent = getIntent();
 		
 		// レイアウトの紐付け
+		registerLayout = (RelativeLayout)findViewById(R.id.register_layout);
 		registerName = (VTextView)findViewById(R.id.register_name);
 		registerDiscription = (VTextView)findViewById(R.id.register_description);
 		registerAlbamButton = (Button)findViewById(R.id.register_albam_button);
@@ -75,6 +93,7 @@ public class RegisterActivity extends Activity implements OnClickListener{
 		// イメージビューアの設定
 		imageViewerAdapter = new ImageAdapter(this);
 		registerImageViewer.setAdapter(imageViewerAdapter);
+		registerImageViewer.setOnItemClickListener(this);
 		
 		// ArticleManager設定
 		mArticleManager = new ArticleManager(this); 
@@ -86,6 +105,11 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			// 画像および動画のリスト設定
 			mImagePathList = new ArrayList<String>();
 			mMoviePathList = new ArrayList<String>();
+			
+			// ボタンの可視化
+			registerAlbamButton.setVisibility(View.VISIBLE);
+			registerMovieButton.setVisibility(View.VISIBLE);
+			registerPhotoButton.setVisibility(View.VISIBLE);
 			
 			// クリックリスナー登録
 			registerAlbamButton.setOnClickListener(this);
@@ -110,8 +134,54 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			break;
 		case READ_MODE:
 			Article article = (Article)intent.getSerializableExtra("article");
+			
+			registerAlbamButton.setVisibility(View.INVISIBLE);
+			registerMovieButton.setVisibility(View.INVISIBLE);
+			registerPhotoButton.setVisibility(View.INVISIBLE);
+			
 			registerName.setText(article.getName());
 			registerDiscription.setText(article.getDescription());
+			
+			String[] imagePaths = article.getImagePaths();
+			String[] moviePaths = article.getMoviePaths();
+			itemType = new int[imagePaths.length + moviePaths.length];
+			itemPaths = new String[imagePaths.length + moviePaths.length];
+			int j = 0;
+			for(String path: imagePaths){
+				Bitmap image = IconFactory.createIconImage(BitmapFactory.decodeFile(path));
+				imageViewerAdapter.add(image);
+				itemPaths[j] = path;
+				itemType[j++] = PICTURE;
+			}
+			for(String path: moviePaths){
+				Bitmap image = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+				imageViewerAdapter.add(image);
+				itemPaths [j] = path;
+				itemType[j++] = MOVIE;
+			}
+			
+			// 戻るボタンの設置
+			Button returnButton = new Button(this);
+			returnButton.setBackgroundResource(R.drawable.new_button_image);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(300, 300);
+			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			returnButton.setId(RETURN_BUTTON_ID);
+			returnButton.setOnClickListener(this);
+			registerLayout.addView(returnButton, params);
+			
+			// 更新ボタンの設置
+			Button updateButton = new Button(this);
+			Resources res = getResources();
+			Drawable background = ButtonFactory.createNewButtonDrawable(this);
+			params = new RelativeLayout.LayoutParams(200, 200);
+			params.addRule(RelativeLayout.RIGHT_OF, RETURN_BUTTON_ID);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			updateButton.setBackground(background);
+			registerLayout.addView(updateButton, params);
+			
+			// viewerのitemにタッチされた時の設定
+			
 			
 			break;
 		}
@@ -227,10 +297,14 @@ public class RegisterActivity extends Activity implements OnClickListener{
 			finish();
 	
 			break;
+		case RETURN_BUTTON_ID:
+			finish();
+			break;
 		}
 	}
 
 	/* 
+	 *
 	 * (非 Javadoc)
 	 * @see android.app.Activity#onActivityResult(int, int, android.content.Intent)
 	 */
@@ -293,5 +367,35 @@ public class RegisterActivity extends Activity implements OnClickListener{
 				break;
 			}
 		}
+	}
+
+	
+	/*
+	 *  viewerアイテムがクリックされたときに呼び出される
+	 *  (非 Javadoc)
+	 * @see android.widget.AdapterView.OnItemClickListener#onItemClick(android.widget.AdapterView, android.view.View, int, long)
+	 */
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		
+		switch(parent.getId()){
+		case R.id.register_image_viewer:
+			Log.d("imageView","position-"+position);
+			Uri uri =Uri.fromFile(new File(itemPaths[position]));
+			Intent intent = new Intent();
+			intent.setAction(Intent.ACTION_VIEW);
+			if(itemType[position] == PICTURE){
+				intent.setDataAndType(uri, "image/*");
+			}else{
+				intent.setDataAndType(uri, "video/*");
+			}
+			startActivity(intent);
+			
+			break;
+		case R.id.register_tag_viewer:
+			Log.d("tagview", "");
+			break;
+		}
+		
 	}
 }
