@@ -10,13 +10,14 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -59,15 +60,29 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private Button returnButton;
 	private int viewMode;
 	private Category thisCategory;
+	// ディスプレイ関連のstaticな変数
+	static float displayDensity;
+	static int buttonSize;
+	static int gridViewColmn;
+	static float displayWidth;
+	static float displayHeight;
+	static int frameSize;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		// ディスプレイサイズを取得する
-		Display display = getWindowManager().getDefaultDisplay();
-		Point p = new Point();
-		display.getSize(p);
+		WindowManager windowManager = getWindowManager();
+		Point displaySize = new Point();
+		windowManager.getDefaultDisplay().getSize(displaySize);
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		windowManager.getDefaultDisplay().getMetrics(outMetrics);
+		displayDensity = outMetrics.density;
+		displayWidth = displaySize.x;
+		displayHeight = displaySize.y;
+		buttonSize = (int)(displayHeight / 5);
+		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
 		
 		// マネージャの設定
 		cManager = new CategoryManager(this);
@@ -95,7 +110,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		// gridViewを作成
 		gridView = new GridView(this);
 		gridView.setId(GRIDVIEW);
-		gridView.setNumColumns(4);
+		gridView.setNumColumns(gridViewColmn);
 		gridView.setOnItemClickListener(this);
 		// categoryTextViewを作成
 		categoryTextView = new VTextView(this);
@@ -310,14 +325,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		RelativeLayout.LayoutParams params;
 		
 		// 設定ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		settingButton.setLayoutParams(params);
 		layout.addView(settingButton);
 		
 		// 新規作成ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		newButton.setLayoutParams(params);
@@ -346,21 +361,21 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		RelativeLayout.LayoutParams params;
 
 		// 設定ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		settingButton.setLayoutParams(params);
 		layout.addView(settingButton);
 		
 		// 戻るボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		returnButton.setLayoutParams(params);
 		layout.addView(returnButton);
 		
 		// 新規作成ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.RIGHT_OF, RETURN_BUTTON);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		newButton.setLayoutParams(params);

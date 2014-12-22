@@ -67,7 +67,6 @@ public class VTextView extends EditText{
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     	width = w;
     	height = h;
-    	Log.d("size",""+w+":"+h);
 		super.onSizeChanged(w, h, oldw, oldh);
 	}
     
