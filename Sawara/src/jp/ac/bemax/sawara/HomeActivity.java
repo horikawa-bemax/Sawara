@@ -6,7 +6,11 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -51,7 +55,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private GridView gridView;
 	private GridAdapter gridAdapter;
 	private List<ListItem> categoryItems;
-	private List<ListItem> articleItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
 	private VTextView categoryTextView;
@@ -164,7 +167,10 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				case THEMA_CHANGE:
 					TypedValue outValue = new TypedValue();
 					getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
-					homeLayout.setBackgroundResource(outValue.resourceId);
+					Bitmap backBitmap = BitmapFactory.decodeResource(getResources(), outValue.resourceId);
+					BitmapDrawable backDrawable = new BitmapDrawable(getResources(), backBitmap);
+					backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+					homeLayout.setBackground(backDrawable);
 
 					settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(thisObj));
 					newButton.setBackground(ButtonFactory.createNewButtonDrawable(thisObj));
@@ -187,18 +193,17 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem gorstItem = menu.add(Menu.NONE, 0,Menu.NONE, "おばけ");
-		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "はーと");
+		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "ハート");
 		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "ほし");
+		MenuItem summerItem = menu.add(Menu.NONE, 3, Menu.NONE, "夏");
 		
-		gorstItem.setIcon(R.drawable.theme_gorst_back_image);
-		//gorstItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 		gorstItem.setOnMenuItemClickListener(this);
 		
-		heartItem.setIcon(R.drawable.theme_heart_back_image);
 		heartItem.setOnMenuItemClickListener(this);
 		
-		starItem.setIcon(R.drawable.theme_star_back_image);
 		starItem.setOnMenuItemClickListener(this);
+		
+		summerItem.setOnMenuItemClickListener(this);
 		
 		return true;
 	}
@@ -272,7 +277,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(item.getItemId()){
 		case 0:
 			this.setTheme(R.style.GorstTheme);
-			Configuration.setConfig("theme", "GorstTheme");
+			Configuration.setConfig("theme", "‘GorstTheme");
 			break;
 		case 1:
 			this.setTheme(R.style.HeartTheme);
@@ -281,6 +286,10 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case 2:
 			this.setTheme(R.style.StarTheme);
 			Configuration.setConfig("theme", "StarTheme");
+			break;
+		case 3:
+			this.setTheme(R.style.SummerTheme);
+			Configuration.setConfig("theme", "SummerTheme");
 			break;
 		}
 		mHandler.sendEmptyMessage(THEMA_CHANGE);
@@ -298,7 +307,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
 			thisCategory = (Category)categoryItems.get(position);
-			articleItems = aManager.getArticlesAtCategory(thisCategory);
+			List<ListItem> articleItems = aManager.getArticlesAtCategory(thisCategory);
 			gridAdapter.clear();
 			gridAdapter.addAll(articleItems);
 			gridAdapter.notifyDataSetChanged();
@@ -306,7 +315,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			break;
 		case ARTICLE_VIEW:
 			Intent intent = new Intent(this, RegisterActivity.class);
-			Article article = (Article)articleItems.get(position);
+			Article article = (Article)gridView.getAdapter().getItem(position);
 			intent.putExtra("article", article);
 			intent.putExtra("mode", RegisterActivity.READ_MODE);
 			

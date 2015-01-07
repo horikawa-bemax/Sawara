@@ -45,8 +45,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		wManager.getDefaultDisplay().getMetrics(outMetrics);
 		float displayDensity = outMetrics.density;
 		int buttonSize = (int)(dispSize.y / 5);
-		int frameNum = (int)((dispSize.x - buttonSize) / buttonSize);
-		frameSize = (int)(dispSize.y * 2 / 5);
+		frameSize = buttonSize * 2;
 	}
 
 	/* (非 Javadoc)
@@ -90,7 +89,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
 		params.setMargins(10, 10, 0, 10);
 		holder.vTextView.setLayoutParams(params);
-		holder.vTextView.setPadding(20, 20, 20, 20);		
+		holder.vTextView.setPadding(20, 20, 20, 20);
 		holder.vTextView.setText(listItem.getName());
 		
 		return convertView;

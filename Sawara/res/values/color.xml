@@ -3,6 +3,9 @@
     <color name="default_main">#f6ca</color>
     <color name="default_base">#fffc</color>
     <color name="default_accent">#ffa3</color>
+    <color name="summer_main">#f36f</color>
+    <color name="summer_base">#fcff</color>
+    <color name="summer_accent">#fef8</color>
     <color name="gorst_main">#f428</color>
     <color name="gorst_base">#fcae</color>
     <color name="gorst_accent">#ffc8</color>  

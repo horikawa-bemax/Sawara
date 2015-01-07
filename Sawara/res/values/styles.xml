@@ -12,19 +12,15 @@
         <item name="mainColor">@color/gorst_main</item> 
         <item name="baseColor">@color/gorst_base</item>
         <item name="accentColor">@color/gorst_accent</item>
-        <item name="newButtonBack">@drawable/theme_gorst_button_new</item>
-        <item name="settingButtonBack">@drawable/theme_gorst_button_setting</item>
-        <item name="mainBack">@drawable/theme_gorst_back_drawable</item>
-        <item name="frameBack">@drawable/theme_gorst_frame</item>
+        <item name="mainBack">@drawable/theme_gorst_back_image</item>
+        <item name="frameBack">@drawable/theme_koumori_frame</item>
     </style>
     
     <style name="HeartTheme">
         <item name="mainColor">@color/heart_main</item> 
         <item name="baseColor">@color/heart_base</item>
         <item name="accentColor">@color/heart_accent</item>
-        <item name="newButtonBack">@drawable/theme_heart_button_new</item>
-        <item name="settingButtonBack">@drawable/theme_heart_button_setting</item>
-        <item name="mainBack">@drawable/theme_heart_back_drawable</item>   
+        <item name="mainBack">@drawable/theme_heart_back_image</item>   
         <item name="frameBack">@drawable/theme_heart_frame</item>
     </style>
     
@@ -32,9 +28,7 @@
         <item name="mainColor">@color/star_main</item> 
         <item name="baseColor">@color/star_base</item>
         <item name="accentColor">@color/star_accent</item>
-        <item name="newButtonBack">@drawable/theme_star_button_new</item>
-        <item name="settingButtonBack">@drawable/theme_star_button_setting</item>
-        <item name="mainBack">@drawable/theme_star_back_drawable</item>
+        <item name="mainBack">@drawable/theme_star_back_image</item>
         <item name="frameBack">@drawable/theme_default_frame</item>
     </style>
     
@@ -42,18 +36,22 @@
         <item name="mainColor">@color/default_main</item> 
         <item name="baseColor">@color/default_base</item>
         <item name="accentColor">@color/default_accent</item>
-        <item name="newButtonBack">@drawable/theme_default_button_new</item>
-        <item name="settingButtonBack">@drawable/theme_default_button_setting</item>
         <item name="mainBack">@color/default_base</item>
         <item name="frameBack">@drawable/theme_default_frame</item>
     </style>
     
+   <style name="SummerTheme">
+        <item name="mainColor">@color/summer_main</item> 
+        <item name="baseColor">@color/summer_base</item>
+        <item name="accentColor">@color/summer_accent</item>
+        <item name="mainBack">@drawable/theme_summer_back</item>
+        <item name="frameBack">@drawable/theme_yotto_frame</item>
+    </style>
+    
     <style name="sawaraButton">
-        <item name="android:background">@drawable/theme_default_button_new</item>
+        <item name="android:background">@drawable/new_button_image</item>
         <item name="android:textColor">@color/button_text</item>
         <item name="android:padding">5dp</item>
         <item name="android:layout_margin">5dp</item>
     </style>
-
-
 </resources>
