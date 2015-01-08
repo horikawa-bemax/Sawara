@@ -97,7 +97,9 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	static float displayWidth;
 	static float displayHeight;
 	static int frameSize;
-
+	// 初期設定用のオブジェクト
+	static Configuration conf;
+	
 	/* (非 Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
@@ -120,7 +122,14 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		setContentView(R.layout.register);
 		
 		// ** アクティビティにテーマを設定する **
-		String themeVal = Configuration.getConfig("theme");
+		File confFile = new File(getFilesDir(), "sawara.conf");
+		conf = Configuration.loadConfig(confFile);
+		if(conf == null){
+			conf = new Configuration();
+			conf.setTheme("DefaultTheme");
+			Configuration.storeConfig(confFile, conf);
+		}
+		String themeVal = conf.getTheme();
 		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
 		setTheme(resid);
 		

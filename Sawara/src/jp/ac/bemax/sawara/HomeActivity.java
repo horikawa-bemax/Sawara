@@ -70,6 +70,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	static float displayWidth;
 	static float displayHeight;
 	static int frameSize;
+	// 初期設定用のオブジェクト
+	static Configuration conf;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -92,11 +94,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		aManager = new ArticleManager(this);
 		
 		// 設定ファイルを読み込む
-		Configuration.confFile = new File(getFilesDir(), "sawara.conf");
-		if(!Configuration.confFile.exists()){
-			Configuration.makeConfFile();
+		File confFile = new File(getFilesDir(), "sawara.conf");
+		conf = Configuration.loadConfig(confFile);
+		if(conf == null){
+			conf = new Configuration();
+			conf.setTheme("DefaultTheme");
+			Configuration.storeConfig(confFile, conf);
 		}
-		String themeVal = Configuration.getConfig("theme");
+		String themeVal = conf.getTheme();
 		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
 		setTheme(resid);
 		
@@ -277,21 +282,23 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(item.getItemId()){
 		case 0:
 			this.setTheme(R.style.GorstTheme);
-			Configuration.setConfig("theme", "‘GorstTheme");
+			conf.setTheme("GorstTheme");
 			break;
 		case 1:
 			this.setTheme(R.style.HeartTheme);
-			Configuration.setConfig("theme", "HeartTheme");
+			conf.setTheme("HeartTheme");
 			break;
 		case 2:
 			this.setTheme(R.style.StarTheme);
-			Configuration.setConfig("theme", "StarTheme");
+			conf.setTheme("StarTheme");
 			break;
 		case 3:
 			this.setTheme(R.style.SummerTheme);
-			Configuration.setConfig("theme", "SummerTheme");
+			conf.setTheme("SummerTheme");
 			break;
 		}
+		File confFile = new File(getFilesDir(), "sawara.conf");
+		Configuration.storeConfig(confFile, conf);
 		mHandler.sendEmptyMessage(THEMA_CHANGE);
 		return true;
 	}

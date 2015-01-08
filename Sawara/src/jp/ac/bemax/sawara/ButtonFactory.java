@@ -31,14 +31,14 @@ public class ButtonFactory {
 	public static Drawable createNewButtonDrawable(Context context){
 		// contextから色コードを取得。static変数に設定する
 		setThemaColors(context);
-		
+
 		// ボタンイラストを読み込む
 		Drawable image = context.getResources().getDrawable(R.drawable.new_button_image);
-		
+
 		// 背景Drawableと画像を合体
 		Drawable[] layers = {createBackFrame(), image};
 		Drawable layerDrawable = new LayerDrawable(layers);
-		
+
 		return layerDrawable;
 	}
 	
