@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -18,6 +19,7 @@ import android.widget.ImageView;
 public class ImageAdapter extends BaseAdapter {
 	private Context mContext;
 	private List<Bitmap> mList;
+	private int backDrawable;
 	
 	/**
 	 * ImageAdapter.javaコンストラクタ
@@ -25,6 +27,9 @@ public class ImageAdapter extends BaseAdapter {
 	 */
 	public ImageAdapter(Context context){
 		mContext = context;
+		TypedValue outValue = new TypedValue();
+		context.getTheme().resolveAttribute(R.attr.frameBack, outValue, true);
+		backDrawable = outValue.resourceId;
 		mList = new ArrayList<Bitmap>();
 	}
 	
@@ -72,6 +77,7 @@ public class ImageAdapter extends BaseAdapter {
 		
 		ImageView imageView = (ImageView)convertView;
 		imageView.setImageBitmap(mList.get(position));
+		imageView.setBackgroundResource(backDrawable);
 		
 		return imageView;
 	}

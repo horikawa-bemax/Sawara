@@ -287,7 +287,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			break;
 		case 1:
 			this.setTheme(R.style.SummerTheme);
-			conf.setTheme("summerTheme");
+			conf.setTheme("SummerTheme");
 			break;
 		case 2:
 			this.setTheme(R.style.AutumnTheme);

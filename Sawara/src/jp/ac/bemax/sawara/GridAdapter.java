@@ -83,7 +83,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		holder.imageView.setImageBitmap(bmp);
 		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
 		holder.imageView.setLayoutParams(params);
-		holder.imageView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
+		//holder.imageView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
 		
 		// 縦書きのtextViewにアイテムの値をセットする
 		float den = context.getResources().getDisplayMetrics().density;
