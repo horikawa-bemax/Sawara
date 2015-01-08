@@ -30,6 +30,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
 	private Point dispSize; 		// 画面のサイズ
 	static int frameSize;
+	static float density;
 	
 	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
@@ -43,7 +44,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		wManager.getDefaultDisplay().getSize(dispSize);
 		DisplayMetrics outMetrics = new DisplayMetrics();
 		wManager.getDefaultDisplay().getMetrics(outMetrics);
-		float displayDensity = outMetrics.density;
+		density = outMetrics.density;
 		int buttonSize = (int)(dispSize.y / 5);
 		frameSize = buttonSize * 2;
 	}
@@ -76,20 +77,20 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		
 		// imageViewにitemの画像をセットする
 		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-		params.setMargins(0, 10, 10, 10);
+		params.setMargins((int)density, (int)(density*10), (int)(density*5), (int)(density*10));
 		String iconPath = listItem.getIconPath();
 		Bitmap bmp = StrageManager.loadIcon(iconPath);
 		holder.imageView.setImageBitmap(bmp);
 		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
 		holder.imageView.setLayoutParams(params);
-		holder.imageView.setPadding(20, 20, 20, 20);
+		holder.imageView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
 		
 		// 縦書きのtextViewにアイテムの値をセットする
 		float den = context.getResources().getDisplayMetrics().density;
 		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
-		params.setMargins(10, 10, 0, 10);
+		params.setMargins((int)(density*5), (int)(density*5), 0, (int)(density*5));
 		holder.vTextView.setLayoutParams(params);
-		holder.vTextView.setPadding(20, 20, 20, 20);
+		holder.vTextView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
 		holder.vTextView.setText(listItem.getName());
 		
 		return convertView;

@@ -160,8 +160,8 @@ public class SawaraDBAdapter{
 			}
 			
 			// ArticleTable
-			String[] artName = {"レガシィ","アールワン","イギリスのバス"};
-			String[] artDesc = {"乗用車","軽自動車","二階建てのバス"};
+			String[] artName = {"ふつうしゃ","けい","イギリスのバス"};
+			String[] artDesc = {"ふつうのおおきさのくるま","ちいさいくるま","にかいだてのバス"};
 			String[][] imagePathsS = {
 					{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
 					{copyFromAssets(imageDir, "r1.jpg")},

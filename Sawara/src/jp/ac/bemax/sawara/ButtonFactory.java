@@ -2,14 +2,15 @@ package jp.ac.bemax.sawara;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Rect;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.StateListDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
-import android.graphics.drawable.shapes.Shape;
 import android.util.TypedValue;
 
 /**
@@ -22,155 +23,24 @@ public class ButtonFactory {
 	static int  baseColor;
 	static int mainColor;
 	static int accentColor;
-
-	/**
-	 * 新規登録ボタンのDrawableを返す
-	 * @param context
-	 * @return 新規登録ボタンのDrawable
-	 */
-	public static Drawable createNewButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.new_button_image);
-
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-
-		return layerDrawable;
-	}
+	static int buttonSize = 200;
 	
 	/**
-	 * 更新ボタンのDrawableを返す
+	 * ボタンのDrawableを返す
 	 * @param context
-	 * @return 更新ボタンのDrawable
+	 * @return ボタンのDrawable
 	 */
-	public static Drawable createUpdateButtonDrawable(Context context){
+	public static Drawable getButtonDrawable(Context context, int resource){
 		// contextから色コードを取得。static変数に設定する
 		setThemaColors(context);
 		
 		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.album_image);
+		Drawable image = context.getResources().getDrawable(resource);
 		
 		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-		
-		return layerDrawable;
-	}
-	
-	/**
-	 * 設定ボタンのDrawableを返す
-	 * @param context
-	 * @return 設定ボタンのDrawable
-	 */
-	public static Drawable createSettingButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-		
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.setting_button_image);
-		
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-		
-		return layerDrawable;
-	}
-	
-	/**
-	 * 戻るボタンのDrawableを返す
-	 * @param context
-	 * @return 戻るボタンのDrawable
-	 */
-	public static Drawable createReturnButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-		
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.return_button_image);
-		
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-		
-		return layerDrawable;
-	}
-	
-	/**
-	 * 決定ボタンのDrawableを返す
-	 * @param context
-	 * @return 決定ボタンのDrawable
-	 */
-	public static Drawable createRegistButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-		
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.regist_button_image);
-		
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-		
-		return layerDrawable;
-	}
-	
-	/**
-	 * アルバムボタンのDrawableを返す
-	 * @param context
-	 * @return アルバムボタンのDrawable
-	 */
-	public static Drawable createAlbamButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-		
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.album_image);
-		
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-		
-		return layerDrawable;
-	}
-	
-	/**
-	 * ムービーボタンのDrawableを返す
-	 * @param context
-	 * @return ムービーボタンのDrawable
-	 */
-	public static Drawable createMovieButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-		
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.movie_image);
-		
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
-		
-		return layerDrawable;
-	}
-	
-	/**
-	 * 写真ボタンのDrawableを返す
-	 * @param context
-	 * @return 写真ボタンのDrawable
-	 */
-	public static Drawable createPhotoButtonDrawable(Context context){
-		// contextから色コードを取得。static変数に設定する
-		setThemaColors(context);
-		
-		// ボタンイラストを読み込む
-		Drawable image = context.getResources().getDrawable(R.drawable.camera_image);
-		
-		// 背景Drawableと画像を合体
-		Drawable[] layers = {createBackFrame(), image};
-		Drawable layerDrawable = new LayerDrawable(layers);
+		Drawable[] layers = {createBackFrame(context), image};
+		LayerDrawable layerDrawable = new LayerDrawable(layers);
+		layerDrawable.setLayerInset(1, 10, 0, 0, 10);
 		
 		return layerDrawable;
 	}
@@ -179,38 +49,36 @@ public class ButtonFactory {
 	 * ボタンの枠画像を作成する
 	 * @return 枠画像のDrawable
 	 */
-	public static Drawable createBackFrame(){
-		float[] outerRadii = new float[]{10,10,10,10,10,10,10,10};
-		RectF insetF = new RectF(10,10,10,10);
-		Rect inset = new Rect(10,10,10,10);
-		float[] innerRadii = new float[]{10,10,10,10,10,10,10,10}; 
+	public static Drawable createBackFrame(Context context){
+
+		Paint main = new Paint();
+		main.setColor(mainColor);
+		Paint base = new Paint();
+		base.setColor(baseColor);
+		Paint accent = new Paint();
+		accent.setColor(accentColor);
+		RectF rectOut = new RectF(0,buttonSize/3f, buttonSize*4/5f, buttonSize);
+		RectF rectIn = new RectF(10, buttonSize/3f+10, (buttonSize*4/5f)-10, buttonSize-10);
 		
-		// 枠線
-		Shape lineShape = new RoundRectShape(outerRadii, insetF, innerRadii);
-		ShapeDrawable line = new ShapeDrawable(lineShape);
-		line.setPadding(inset);
-		line.getPaint().setColor(mainColor);
-		//
-		Shape backShape = new RoundRectShape(outerRadii, null, null);
-		ShapeDrawable back = new ShapeDrawable(backShape);
-		back.getPaint().setColor(baseColor);
-		//
-		Drawable[] backLayers = {line, back};
-		LayerDrawable backLayer = new LayerDrawable(backLayers);
+		Bitmap bitmap = Bitmap.createBitmap(buttonSize, buttonSize, Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap);
+		canvas.drawRoundRect(rectOut, 10, 10, main);
+		canvas.drawRoundRect(rectIn, 10, 10, base);
+		BitmapDrawable mb = new BitmapDrawable(context.getResources(), bitmap);
 		
-		// 
-		Shape touchBackShape = new RoundRectShape(outerRadii, null, null);
-		ShapeDrawable touchBack = new ShapeDrawable(touchBackShape);
-		touchBack.getPaint().setColor(accentColor);
-		Drawable[] touchBackLayers = {line, touchBack};
-		LayerDrawable touchBackLayer = new LayerDrawable(touchBackLayers);
+		bitmap = Bitmap.createBitmap(buttonSize, buttonSize, Config.ARGB_8888);
+		canvas = new Canvas(bitmap);
+		canvas.drawRoundRect(rectOut, 10, 10, main);
+		canvas.drawRoundRect(rectIn, 10, 10, accent);
+		BitmapDrawable ma = new BitmapDrawable(context.getResources(), bitmap);		
 		
 		// 状態Drawable作成
 		StateListDrawable stateListDrawable = new StateListDrawable();
-		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, touchBackLayer);
-		stateListDrawable.addState(new int[0], backLayer);
+		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, ma);
+		stateListDrawable.addState(new int[0], mb);
 		
 		return stateListDrawable;
+		
 	}
 	
 	/**
@@ -262,5 +130,9 @@ public class ButtonFactory {
 		mainColor = context.getResources().getColor(mainColorValue.resourceId);
 		accentColor = context.getResources().getColor(accentColorValue.resourceId);
 
+	}
+
+	public static void setButtonFrameSize(int size){
+		buttonSize = size;
 	}
 }

@@ -32,7 +32,6 @@
          android:layout_alignParentTop="true"
          android:layout_toLeftOf="@+id/register_description"
          android:layout_toRightOf="@+id/register_tag_viewer"
-         android:background="@color/white"
          android:numColumns="2"
          android:layout_margin="5dp" >
      </GridView>

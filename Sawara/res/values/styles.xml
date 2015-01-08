@@ -48,6 +48,14 @@
         <item name="frameBack">@drawable/theme_yotto_frame</item>
     </style>
     
+    <style name="AutumnTheme">
+        <item name="mainColor">@color/autumn_main</item> 
+        <item name="baseColor">@color/autumn_base</item>
+        <item name="accentColor">@color/autumn_accent</item>
+        <item name="mainBack">@drawable/theme_autumn_back</item>
+        <item name="frameBack">@drawable/theme_autumn_frame</item>
+    </style>
+   
     <style name="sawaraButton">
         <item name="android:background">@drawable/new_button_image</item>
         <item name="android:textColor">@color/button_text</item>

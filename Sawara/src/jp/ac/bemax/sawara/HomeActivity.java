@@ -88,6 +88,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		displayHeight = displaySize.y;
 		buttonSize = (int)(displayHeight / 5);
 		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
+		ButtonFactory.setButtonFrameSize(buttonSize);
 		
 		// マネージャの設定
 		cManager = new CategoryManager(this);
@@ -126,17 +127,17 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		// settingButtonを作成
 		settingButton = new Button(this);
 		settingButton.setId(SETTING_BUTTON);
-		settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(this));
+		settingButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.setting_button_image));
 		settingButton.setOnClickListener(this);
 		// newButtonを作成
 		newButton = new Button(this);
 		newButton.setId(NEW_BUTTON);
-		newButton.setBackground(ButtonFactory.createNewButtonDrawable(this));
+		newButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.new_button_image));
 		newButton.setOnClickListener(this);
 		// returnButtonを作成
 		returnButton = new Button(this);
 		returnButton.setId(RETURN_BUTTON);
-		returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(this));
+		returnButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.return_button_image));
 		returnButton.setOnClickListener(this);
 		
 		setContentView(homeLayout);
@@ -177,9 +178,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
 					homeLayout.setBackground(backDrawable);
 
-					settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(thisObj));
-					newButton.setBackground(ButtonFactory.createNewButtonDrawable(thisObj));
-					returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(thisObj));
+					settingButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.setting_button_image));
+					newButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.new_button_image));
+					returnButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.return_button_image));
 					
 					int count = gridView.getChildCount();
 					for(int i=0; i<count; i++){
@@ -198,9 +199,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem gorstItem = menu.add(Menu.NONE, 0,Menu.NONE, "おばけ");
-		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "ハート");
-		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "ほし");
-		MenuItem summerItem = menu.add(Menu.NONE, 3, Menu.NONE, "夏");
+		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "夏");
+		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "秋");
+		MenuItem summerItem = menu.add(Menu.NONE, 3, Menu.NONE, "星");
 		
 		gorstItem.setOnMenuItemClickListener(this);
 		
@@ -285,16 +286,16 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			conf.setTheme("GorstTheme");
 			break;
 		case 1:
-			this.setTheme(R.style.HeartTheme);
-			conf.setTheme("HeartTheme");
+			this.setTheme(R.style.SummerTheme);
+			conf.setTheme("summerTheme");
 			break;
 		case 2:
-			this.setTheme(R.style.StarTheme);
-			conf.setTheme("StarTheme");
+			this.setTheme(R.style.AutumnTheme);
+			conf.setTheme("AutumnTheme");
 			break;
 		case 3:
-			this.setTheme(R.style.SummerTheme);
-			conf.setTheme("SummerTheme");
+			this.setTheme(R.style.StarTheme);
+			conf.setTheme("StarTheme");
 			break;
 		}
 		File confFile = new File(getFilesDir(), "sawara.conf");

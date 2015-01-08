@@ -9,12 +9,15 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -149,40 +152,52 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		//** Viewの設定 **
 		// レイアウト
 		registerLayout = (RelativeLayout)findViewById(R.id.register_layout);
+		TypedValue outValue = new TypedValue();
+		getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
+		Bitmap backBitmap = BitmapFactory.decodeResource(getResources(), outValue.resourceId);
+		BitmapDrawable backDrawable = new BitmapDrawable(getResources(), backBitmap);
+		backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+		registerLayout.setBackground(backDrawable);
+
 		// 名前テキスト
 		nameTextView = (VTextView)findViewById(R.id.register_name);
 		// 詳細テキスト
 		discriptionTextView = (VTextView)findViewById(R.id.register_description);
 		// アルバムボタン
 		albamButton = new Button(this);
-		albamButton.setBackground(ButtonFactory.createAlbamButtonDrawable(this));
+		albamButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.album_image));
 		albamButton.setId(ALBAM_BUTTON);
 		albamButton.setOnClickListener(this);
 		// 動画ボタン
 		movieButton = new Button(this);
-		movieButton.setBackground(ButtonFactory.createMovieButtonDrawable(this));
+		movieButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.movie_image));
 		movieButton.setId(MOVIE_BUTTON);
 		movieButton.setOnClickListener(this);
 		// 写真ボタン
 		photoButton = new Button(this);
-		photoButton.setBackground(ButtonFactory.createPhotoButtonDrawable(this));
+		photoButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.camera_image));
 		photoButton.setId(PHOTO_BUTTON);
 		photoButton.setOnClickListener(this);
 		// 決定ボタン
 		registButton = new Button(this);	
-		registButton.setBackground(ButtonFactory.createRegistButtonDrawable(this));
+		registButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.regist_button_image));
 		registButton.setId(REGIST_BUTTON);
 		registButton.setOnClickListener(this);
 		// 戻るボタン
 		returnButton = new Button(this);
-		returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(this));
+		returnButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.return_button_image));
 		returnButton.setId(RETURN_BUTTON);
 		returnButton.setOnClickListener(this);
 		// 更新ボタン
 		updateButton = new Button(this);
-		updateButton.setBackground(ButtonFactory.createUpdateButtonDrawable(this));
+		updateButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.update_button_image));
 		updateButton.setId(UPDATE_BUTTON);
 		updateButton.setOnClickListener(this);
+		// 削除ボタン
+		deleteButton = new Button(this);
+		deleteButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.delete_button_image));
+		deleteButton.setId(DELETE_BUTTON);
+		deleteButton.setOnClickListener(this);
 		// 画像ビューア
 		imageViewerView = (GridView)findViewById(R.id.register_image_viewer);
 		imageViewerView.setAdapter(imageViewerAdapter);
@@ -316,6 +331,12 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 			params.setMargins(5, 5, 5, 5);
 			registerLayout.addView(updateButton, params);
+			// 削除ボタン
+			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+			params.addRule(RelativeLayout.LEFT_OF, UPDATE_BUTTON);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			params.setMargins(5, 5, 5, 5);
+			registerLayout.addView(deleteButton, params);
 			// タグビューア
 			params = new RelativeLayout.LayoutParams(300, LayoutParams.MATCH_PARENT);
 			params.addRule(RelativeLayout.ABOVE, RETURN_BUTTON);

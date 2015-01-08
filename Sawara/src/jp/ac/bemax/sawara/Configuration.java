@@ -13,8 +13,8 @@ import java.io.Serializable;
  *
  */
 public class Configuration implements Serializable{
-	//static File confFile = null;
-	private String theme;
+	
+	private String theme;		// テーマ
 	
 	public Configuration(){
 		theme = "";
