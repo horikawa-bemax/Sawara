@@ -4,9 +4,14 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources.Theme;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -92,6 +97,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 
 		// 縦書きのtextViewにアイテムの値をセットする
 		holder.vTextView.setText(listItem.getName());
+		holder.vTextView.setBackground(getVTextBack());
 		
 		return convertView;
 	}
@@ -104,6 +110,19 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 			category.getId();
 			
 		} 
+	}
+
+	private Drawable getVTextBack(){
+		TypedValue mainColorValue = new TypedValue();
+		Theme theme = context.getTheme();
+		theme.resolveAttribute(R.attr.mainColor, mainColorValue, true);
+		
+		GradientDrawable drawable = new GradientDrawable();
+		drawable.setStroke(5, context.getResources().getColor(mainColorValue.resourceId));
+		drawable.setColor(Color.WHITE);
+		drawable.setCornerRadius(10);
+		
+		return drawable;
 	}
 	
 	class ViewHolder{

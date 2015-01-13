@@ -1,19 +1,21 @@
 package jp.ac.bemax.sawara;
 
 import android.content.Context;
+import android.content.res.Resources.Theme;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 /**
@@ -32,25 +34,21 @@ public class VTextView extends EditText{
     private String mText = "";
     private int width;
     private int height;
-    private InputMethodManager mManager;
     private Editable mEditable;
+    private Context mContext;
     
     public VTextView(Context context){
     	super(context);
-        mFace = Typeface.createFromAsset(context.getAssets(),"HGRKK.TTC");
-        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPaint.setTextSize(FONT_SIZE);
-        mPaint.setColor(Color.BLACK);
-        mPaint.setTypeface(mFace);
-
-        mEditable = super.getEditableText();
-        
-        setFocusable(false);
-        setFocusableInTouchMode(false);
+    	init(context);
     }
     
     public VTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init(context);
+    }
+    
+    private void init(Context context){
+    	mContext = context;
         mFace = Typeface.createFromAsset(context.getAssets(),"HGRKK.TTC");
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setTextSize(FONT_SIZE);
@@ -63,6 +61,19 @@ public class VTextView extends EditText{
         setFocusableInTouchMode(false);
     }
      
+    public void setBackGround(){
+    	Theme theme = mContext.getTheme();
+    	TypedValue frameColorValue = new TypedValue();
+    	theme.resolveAttribute(R.attr.mainColor, frameColorValue, true);
+    	
+		GradientDrawable drawable = new GradientDrawable();
+		drawable.setStroke(5, mContext.getResources().getColor(frameColorValue.resourceId));
+		drawable.setColor(Color.WHITE);
+		drawable.setCornerRadius(10);
+		
+		this.setBackground(drawable);
+    }
+    
     @Override
 	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     	width = w;
