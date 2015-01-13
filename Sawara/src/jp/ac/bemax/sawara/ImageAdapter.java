@@ -8,8 +8,10 @@ import android.graphics.Bitmap;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 /**
  * 画像リストのためのアダプタ
@@ -71,18 +73,38 @@ public class ImageAdapter extends BaseAdapter {
 	 */
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		ViewHolder holder;
+		
 		if(convertView == null){
-			convertView = new ImageView(mContext);
+            holder = new ViewHolder();
+            holder.imageView = new ImageView(mContext);
+            holder.imageView.setBackgroundResource(backDrawable);
+                        
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            params.setMargins(10,10,10,10);
+            LinearLayout linearLayout = new LinearLayout(mContext);
+            linearLayout.setLayoutParams(params);
+            linearLayout.addView(holder.imageView);
+            
+            convertView = linearLayout;           
+            AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.MATCH_PARENT);
+            convertView.setLayoutParams(absParams);            
+            convertView.setTag(holder);
+		}else{
+			holder = (ViewHolder)convertView.getTag();
 		}
 		
-		ImageView imageView = (ImageView)convertView;
-		imageView.setImageBitmap(mList.get(position));
-		imageView.setBackgroundResource(backDrawable);
+		holder.imageView.setImageBitmap(mList.get(position));
 		
-		return imageView;
+		return convertView;
 	}
 	
 	public void clear(){
 		mList = new ArrayList<Bitmap>();
 	}
+	
+	class ViewHolder{
+		ImageView imageView;
+	}
 }
+

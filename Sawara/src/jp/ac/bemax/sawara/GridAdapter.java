@@ -65,6 +65,18 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
             holder.imageView = (ImageView)convertView.findViewById(R.id.list_item_image);
             holder.vTextView = (VTextView)convertView.findViewById(R.id.list_vTextView);
             
+    		AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(frameSize, frameSize);
+    		convertView.setLayoutParams(absParams);
+    		
+    		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    		params.setMargins((int)density, (int)(density*10), (int)(density*5), (int)(density*10));
+    		holder.imageView.setLayoutParams(params);
+    		
+    		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
+    		params.setMargins((int)(density*5), (int)(density*5), 0, (int)(density*5));
+    		holder.vTextView.setLayoutParams(params);
+    		holder.vTextView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
+    		
             convertView.setTag(holder);
 		}else{
 			holder = (ViewHolder)convertView.getTag();
@@ -72,25 +84,13 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		// 表示するアイテムを取り出す
 		ListItem listItem = getItem(position);
 		
-		AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(frameSize, frameSize);
-		convertView.setLayoutParams(absParams);
-		
 		// imageViewにitemの画像をセットする
-		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-		params.setMargins((int)density, (int)(density*10), (int)(density*5), (int)(density*10));
 		String iconPath = listItem.getIconPath();
 		Bitmap bmp = StrageManager.loadIcon(iconPath);
 		holder.imageView.setImageBitmap(bmp);
 		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
-		holder.imageView.setLayoutParams(params);
-		//holder.imageView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
-		
+
 		// 縦書きのtextViewにアイテムの値をセットする
-		float den = context.getResources().getDisplayMetrics().density;
-		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
-		params.setMargins((int)(density*5), (int)(density*5), 0, (int)(density*5));
-		holder.vTextView.setLayoutParams(params);
-		holder.vTextView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
 		holder.vTextView.setText(listItem.getName());
 		
 		return convertView;
@@ -105,9 +105,10 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 			
 		} 
 	}
+	
+	class ViewHolder{
+		ImageView imageView;
+		VTextView vTextView;
+	}
 }
 
-class ViewHolder{
-	ImageView imageView;
-	VTextView vTextView;
-}
