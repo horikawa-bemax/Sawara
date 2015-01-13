@@ -6,15 +6,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout.LayoutParams;
+import android.widget.LinearLayout;
 
 
 /**
@@ -27,6 +29,8 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	private int resourceId;			// グリッドに表示するアイテムのレイアウトXML
 	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
 	private Point dispSize; 		// 画面のサイズ
+	static int frameSize;
+	static float density;
 	
 	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
@@ -38,7 +42,11 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		WindowManager wManager = ((Activity)context).getWindowManager();
 		dispSize = new Point();
 		wManager.getDefaultDisplay().getSize(dispSize);
-		
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		wManager.getDefaultDisplay().getMetrics(outMetrics);
+		density = outMetrics.density;
+		int buttonSize = (int)(dispSize.y / 5);
+		frameSize = buttonSize * 2;
 	}
 
 	/* (非 Javadoc)
@@ -57,6 +65,18 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
             holder.imageView = (ImageView)convertView.findViewById(R.id.list_item_image);
             holder.vTextView = (VTextView)convertView.findViewById(R.id.list_vTextView);
             
+    		AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(frameSize, frameSize);
+    		convertView.setLayoutParams(absParams);
+    		
+    		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+    		params.setMargins((int)density, (int)(density*10), (int)(density*5), (int)(density*10));
+    		holder.imageView.setLayoutParams(params);
+    		
+    		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
+    		params.setMargins((int)(density*5), (int)(density*5), 0, (int)(density*5));
+    		holder.vTextView.setLayoutParams(params);
+    		holder.vTextView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
+    		
             convertView.setTag(holder);
 		}else{
 			holder = (ViewHolder)convertView.getTag();
@@ -64,20 +84,15 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		// 表示するアイテムを取り出す
 		ListItem listItem = getItem(position);
 		
-		//LinearLayout view = (LinearLayout)convertView;
-		
 		// imageViewにitemの画像をセットする
 		String iconPath = listItem.getIconPath();
 		Bitmap bmp = StrageManager.loadIcon(iconPath);
 		holder.imageView.setImageBitmap(bmp);
 		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
-		
-		// 縦書きのtextViewにアイテムの値をセットする
-		float den = context.getResources().getDisplayMetrics().density;
-		LayoutParams params = new LayoutParams((int)(50*den), (int)(dispSize.x/5) );
-		holder.vTextView.setLayoutParams(params);
-		holder.vTextView.setText(listItem.getName());
 
+		// 縦書きのtextViewにアイテムの値をセットする
+		holder.vTextView.setText(listItem.getName());
+		
 		return convertView;
 	}
 
@@ -90,9 +105,10 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 			
 		} 
 	}
+	
+	class ViewHolder{
+		ImageView imageView;
+		VTextView vTextView;
+	}
 }
 
-class ViewHolder{
-	ImageView imageView;
-	VTextView vTextView;
-}

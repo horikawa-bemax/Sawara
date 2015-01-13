@@ -6,17 +6,22 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -50,7 +55,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private GridView gridView;
 	private GridAdapter gridAdapter;
 	private List<ListItem> categoryItems;
-	private List<ListItem> articleItems;
 	private CategoryManager cManager;
 	private ArticleManager aManager;
 	private VTextView categoryTextView;
@@ -59,26 +63,46 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private Button returnButton;
 	private int viewMode;
 	private Category thisCategory;
+	// ディスプレイ関連のstaticな変数
+	static float displayDensity;
+	static int buttonSize;
+	static int gridViewColmn;
+	static float displayWidth;
+	static float displayHeight;
+	static int frameSize;
+	// 初期設定用のオブジェクト
+	static Configuration conf;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		// ディスプレイサイズを取得する
-		Display display = getWindowManager().getDefaultDisplay();
-		Point p = new Point();
-		display.getSize(p);
+		WindowManager windowManager = getWindowManager();
+		Point displaySize = new Point();
+		windowManager.getDefaultDisplay().getSize(displaySize);
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		windowManager.getDefaultDisplay().getMetrics(outMetrics);
+		displayDensity = outMetrics.density;
+		displayWidth = displaySize.x;
+		displayHeight = displaySize.y;
+		buttonSize = (int)(displayHeight / 5);
+		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
+		ButtonFactory.setButtonFrameSize(buttonSize);
 		
 		// マネージャの設定
 		cManager = new CategoryManager(this);
 		aManager = new ArticleManager(this);
 		
 		// 設定ファイルを読み込む
-		Configuration.confFile = new File(getFilesDir(), "sawara.conf");
-		if(!Configuration.confFile.exists()){
-			Configuration.makeConfFile();
+		File confFile = new File(getFilesDir(), "sawara.conf");
+		conf = Configuration.loadConfig(confFile);
+		if(conf == null){
+			conf = new Configuration();
+			conf.setTheme("DefaultTheme");
+			Configuration.storeConfig(confFile, conf);
 		}
-		String themeVal = Configuration.getConfig("theme");
+		String themeVal = conf.getTheme();
 		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
 		setTheme(resid);
 		
@@ -95,7 +119,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		// gridViewを作成
 		gridView = new GridView(this);
 		gridView.setId(GRIDVIEW);
-		gridView.setNumColumns(4);
+		gridView.setNumColumns(gridViewColmn);
 		gridView.setOnItemClickListener(this);
 		// categoryTextViewを作成
 		categoryTextView = new VTextView(this);
@@ -103,17 +127,17 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		// settingButtonを作成
 		settingButton = new Button(this);
 		settingButton.setId(SETTING_BUTTON);
-		settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(this));
+		settingButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.setting_button_image));
 		settingButton.setOnClickListener(this);
 		// newButtonを作成
 		newButton = new Button(this);
 		newButton.setId(NEW_BUTTON);
-		newButton.setBackground(ButtonFactory.createNewButtonDrawable(this));
+		newButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.new_button_image));
 		newButton.setOnClickListener(this);
 		// returnButtonを作成
 		returnButton = new Button(this);
 		returnButton.setId(RETURN_BUTTON);
-		returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(this));
+		returnButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.return_button_image));
 		returnButton.setOnClickListener(this);
 		
 		setContentView(homeLayout);
@@ -149,11 +173,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				case THEMA_CHANGE:
 					TypedValue outValue = new TypedValue();
 					getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
-					homeLayout.setBackgroundResource(outValue.resourceId);
+					Bitmap backBitmap = BitmapFactory.decodeResource(getResources(), outValue.resourceId);
+					BitmapDrawable backDrawable = new BitmapDrawable(getResources(), backBitmap);
+					backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+					homeLayout.setBackground(backDrawable);
 
-					settingButton.setBackground(ButtonFactory.createSettingButtonDrawable(thisObj));
-					newButton.setBackground(ButtonFactory.createNewButtonDrawable(thisObj));
-					returnButton.setBackground(ButtonFactory.createReturnButtonDrawable(thisObj));
+					settingButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.setting_button_image));
+					newButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.new_button_image));
+					returnButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.return_button_image));
 					
 					int count = gridView.getChildCount();
 					for(int i=0; i<count; i++){
@@ -172,18 +199,17 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuItem gorstItem = menu.add(Menu.NONE, 0,Menu.NONE, "おばけ");
-		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "はーと");
-		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "ほし");
+		MenuItem heartItem = menu.add(Menu.NONE, 1,Menu.NONE, "夏");
+		MenuItem starItem = menu.add(Menu.NONE, 2, Menu.NONE, "秋");
+		MenuItem summerItem = menu.add(Menu.NONE, 3, Menu.NONE, "星");
 		
-		gorstItem.setIcon(R.drawable.theme_gorst_back_image);
-		//gorstItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
 		gorstItem.setOnMenuItemClickListener(this);
 		
-		heartItem.setIcon(R.drawable.theme_heart_back_image);
 		heartItem.setOnMenuItemClickListener(this);
 		
-		starItem.setIcon(R.drawable.theme_star_back_image);
 		starItem.setOnMenuItemClickListener(this);
+		
+		summerItem.setOnMenuItemClickListener(this);
 		
 		return true;
 	}
@@ -257,17 +283,23 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(item.getItemId()){
 		case 0:
 			this.setTheme(R.style.GorstTheme);
-			Configuration.setConfig("theme", "GorstTheme");
+			conf.setTheme("GorstTheme");
 			break;
 		case 1:
-			this.setTheme(R.style.HeartTheme);
-			Configuration.setConfig("theme", "HeartTheme");
+			this.setTheme(R.style.SummerTheme);
+			conf.setTheme("SummerTheme");
 			break;
 		case 2:
+			this.setTheme(R.style.AutumnTheme);
+			conf.setTheme("AutumnTheme");
+			break;
+		case 3:
 			this.setTheme(R.style.StarTheme);
-			Configuration.setConfig("theme", "StarTheme");
+			conf.setTheme("StarTheme");
 			break;
 		}
+		File confFile = new File(getFilesDir(), "sawara.conf");
+		Configuration.storeConfig(confFile, conf);
 		mHandler.sendEmptyMessage(THEMA_CHANGE);
 		return true;
 	}
@@ -283,7 +315,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
 			thisCategory = (Category)categoryItems.get(position);
-			articleItems = aManager.getArticlesAtCategory(thisCategory);
+			List<ListItem> articleItems = aManager.getArticlesAtCategory(thisCategory);
 			gridAdapter.clear();
 			gridAdapter.addAll(articleItems);
 			gridAdapter.notifyDataSetChanged();
@@ -291,7 +323,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			break;
 		case ARTICLE_VIEW:
 			Intent intent = new Intent(this, RegisterActivity.class);
-			Article article = (Article)articleItems.get(position);
+			Article article = (Article)gridView.getAdapter().getItem(position);
 			intent.putExtra("article", article);
 			intent.putExtra("mode", RegisterActivity.READ_MODE);
 			
@@ -310,14 +342,14 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		RelativeLayout.LayoutParams params;
 		
 		// 設定ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		settingButton.setLayoutParams(params);
 		layout.addView(settingButton);
 		
 		// 新規作成ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		newButton.setLayoutParams(params);
@@ -346,21 +378,21 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		RelativeLayout.LayoutParams params;
 
 		// 設定ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		settingButton.setLayoutParams(params);
 		layout.addView(settingButton);
 		
 		// 戻るボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		returnButton.setLayoutParams(params);
 		layout.addView(returnButton);
 		
 		// 新規作成ボタンのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(200, 200);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
 		params.addRule(RelativeLayout.RIGHT_OF, RETURN_BUTTON);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		newButton.setLayoutParams(params);

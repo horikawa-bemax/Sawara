@@ -1,60 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?><RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/home_base_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/mainBack"
     android:orientation="vertical" >
 
-    <!-- Button
-        android:id="@+id/new_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:background="?attr/newButtonBack" />
-
-    <Button
-        android:id="@+id/return_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_alignBottom="@+id/new_button"
-        android:layout_toRightOf="@+id/new_button"
-        android:background="@drawable/dummy_image"
-        android:text="@string/return_button"
-        android:textColor="?attr/mainColor" />
-
-    <Button
-        android:id="@+id/setting_button"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_alignBottom="@+id/new_button"
-        android:layout_alignParentRight="true"
-        android:background="?attr/settingButtonBack"
-        android:text="@string/setting_button"
-        android:textColor="?attr/baseColor" />
-	-->	
-
 	<jp.ac.bemax.sawara.VTextView
         android:id="@+id/category_text_view"
         android:layout_width="100dp"
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:layout_above="@+id/setting_button"/>
-
-	<!--  
-    <GridView
-        android:id="@+id/gridView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/new_button"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/category_text_view"
-        android:numColumns="4"
-        android:stretchMode="columnWidth" >
-
-    </GridView>
-	-->
+        android:layout_alignParentTop="true"/>
 	
 </RelativeLayout>
