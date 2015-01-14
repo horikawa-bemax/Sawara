@@ -23,6 +23,9 @@ public class ImageAdapter extends BaseAdapter {
 	private List<Bitmap> mList;
 	private int backDrawable;
 	
+	private final int LMP = LinearLayout.LayoutParams.MATCH_PARENT;
+	private final int AMP = AbsListView.LayoutParams.MATCH_PARENT;
+	
 	/**
 	 * ImageAdapter.javaコンストラクタ
 	 * @param context
@@ -80,14 +83,15 @@ public class ImageAdapter extends BaseAdapter {
             holder.imageView = new ImageView(mContext);
             holder.imageView.setBackgroundResource(backDrawable);
                         
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LMP, LMP);
             params.setMargins(10,10,10,10);
-            LinearLayout linearLayout = new LinearLayout(mContext);
-            linearLayout.setLayoutParams(params);
-            linearLayout.addView(holder.imageView);
+            holder.imageView.setLayoutParams(params);
             
-            convertView = linearLayout;           
-            AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.MATCH_PARENT);
+            LinearLayout linearLayout = new LinearLayout(mContext);
+            linearLayout.addView(holder.imageView);
+            convertView = linearLayout;
+            
+            AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(AMP, AMP);
             convertView.setLayoutParams(absParams);            
             convertView.setTag(holder);
 		}else{

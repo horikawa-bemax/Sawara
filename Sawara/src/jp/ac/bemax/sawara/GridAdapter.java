@@ -23,7 +23,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-
 /**
  * ホーム画面のグリッドビューに並べる項目を扱うクラス
  * @author Masaaki Horikawa
@@ -36,7 +35,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	private Point dispSize; 		// 画面のサイズ
 	static int frameSize;
 	static float density;
-	
+
 	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
 		this.context = context;
@@ -74,13 +73,13 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
     		convertView.setLayoutParams(absParams);
     		
     		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-    		params.setMargins((int)density, (int)(density*10), (int)(density*5), (int)(density*10));
+    		params.setMargins(5, 10, 5, 10);
     		holder.imageView.setLayoutParams(params);
     		
     		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
-    		params.setMargins((int)(density*5), (int)(density*5), 0, (int)(density*5));
+    		params.setMargins(5, 5, 0, 5);
     		holder.vTextView.setLayoutParams(params);
-    		holder.vTextView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
+    		holder.vTextView.setPadding(10, 10, 10, 10);
     		
             convertView.setTag(holder);
 		}else{

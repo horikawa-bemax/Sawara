@@ -15,6 +15,7 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -27,7 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
+import android.widget.Toast;
 
 /**
  * 登録画面
@@ -64,20 +65,13 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	private final int MOVIE_MAX_TIME = 20;	// 最大20秒撮影
 	private final int MOVIE_QUALITY = 0;		// 動画のクオリティ（低）
 	
+	private final int MP = RelativeLayout.LayoutParams.MATCH_PARENT;
+	
 	// ** インスタンス変数の宣言 **
+	// ハンドラ
+	private Handler mHandler;
 	// View
 	private RelativeLayout registerLayout;		// レイアウト
-	private VTextView nameTextView;				// 名前テキスト
-	private VTextView discriptionTextView;		// 詳細テキスト
-	private Button albamButton;						// アルバムボタン
-	private Button movieButton;						// 動画ボタン
-	private Button photoButton;						// 写真ボタン
-	private Button registButton;						// 決定ボタン
-	private Button returnButton;						// 戻るボタン
-	private Button updateButton;					// 更新ボタン
-	private Button deleteButton;						// 削除ボタン
-	private GridView imageViewerView;			// 画像一覧
-	private GridView tagViewerView;				// タグ一覧
 	// 画像一覧用のアダプタ
 	private ImageAdapter imageViewerAdapter;
 	// 画像一覧用の変数 
@@ -103,6 +97,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	// 初期設定用のオブジェクト
 	static Configuration conf;
 	
+	private int mode;
+	
 	/* (非 Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
 	 */
@@ -118,7 +114,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		windowManager.getDefaultDisplay().getMetrics(outMetrics);
 		displayDensity = outMetrics.density;
 		displayWidth = displaySize.x;
-		displayHeight = displaySize.y;
+		displayHeight = displaySize.y - 25 * displayDensity;
 		buttonSize = (int)(displayHeight / 5);
 		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
 		
@@ -139,8 +135,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		// ** インテントの処理 **
 		// インテントを取得する
 		Intent intent = getIntent();
-		// インテントから画面モードを取得
-		int mode = intent.getIntExtra("mode", 0); // モード設定が無い場合は、0
+		mode = intent.getIntExtra("mode", 0); // モード設定が無い場合は、0
 		
 		// ArticleManager設定
 		mArticleManager = new ArticleManager(this);
@@ -149,215 +144,258 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		// イメージビューア用のアダプタ設定
 		imageViewerAdapter = new ImageAdapter(this);
 
+		switch(mode){
+		case NEW_MODE:
+			// ** インテントからカテゴリ情報を取得 **
+			thisCategory = (Category)getIntent().getSerializableExtra("category");
+			
+			// ** 画像および動画のリスト設定 **
+			mImagePathList = new ArrayList<String>();
+			mMoviePathList = new ArrayList<String>();
+			break;
+		case READ_MODE:
+			// ** Articleを取得 **
+			Article article = (Article)getIntent().getSerializableExtra("article");
+			mImagePathList = new ArrayList<String>();
+			for(String s: article.getImagePaths()){
+				mImagePathList.add(s);
+			}
+			mMoviePathList = new ArrayList<String>();
+			for(String s: article.getMoviePaths()){
+				mMoviePathList.add(s);
+			}
+		
+			// 写真と動画のパスを取得
+			// アイテムの種類を格納する配列
+			itemType = getImageTypes(article.getImagePaths().length, article.getMoviePaths().length);
+			// アイテムのパスを格納する配列
+			itemPaths = getImagePaths(article.getImagePaths(), article.getMoviePaths());
+			//
+			for(int i=0; i<itemType.length; i++){
+				Bitmap bitmap = null;
+				if(itemType[i] == PICTURE){
+					bitmap =  IconFactory.createIconImage(BitmapFactory.decodeFile(itemPaths[i]));
+					imageViewerAdapter.add(bitmap);
+				}else if(itemType[i] == MOVIE){
+					bitmap = ThumbnailUtils.createVideoThumbnail(itemPaths[i], MediaStore.Images.Thumbnails.MINI_KIND);
+					imageViewerAdapter.add(bitmap);
+				}
+			}
+		}
+		
 		//** Viewの設定 **
 		// レイアウト
 		registerLayout = (RelativeLayout)findViewById(R.id.register_layout);
+		// テーマから背景画像を設定
 		TypedValue outValue = new TypedValue();
 		getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
 		Bitmap backBitmap = BitmapFactory.decodeResource(getResources(), outValue.resourceId);
 		BitmapDrawable backDrawable = new BitmapDrawable(getResources(), backBitmap);
 		backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
 		registerLayout.setBackground(backDrawable);
-
-		// 名前テキスト
-		nameTextView = (VTextView)findViewById(R.id.register_name);
-		// 詳細テキスト
-		discriptionTextView = (VTextView)findViewById(R.id.register_description);
-		// アルバムボタン
-		albamButton = new Button(this);
-		albamButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.album_image));
-		albamButton.setId(ALBAM_BUTTON);
-		albamButton.setOnClickListener(this);
-		// 動画ボタン
-		movieButton = new Button(this);
-		movieButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.movie_image));
-		movieButton.setId(MOVIE_BUTTON);
-		movieButton.setOnClickListener(this);
-		// 写真ボタン
-		photoButton = new Button(this);
-		photoButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.camera_image));
-		photoButton.setId(PHOTO_BUTTON);
-		photoButton.setOnClickListener(this);
-		// 決定ボタン
-		registButton = new Button(this);	
-		registButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.regist_button_image));
-		registButton.setId(REGIST_BUTTON);
-		registButton.setOnClickListener(this);
-		// 戻るボタン
-		returnButton = new Button(this);
-		returnButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.return_button_image));
-		returnButton.setId(RETURN_BUTTON);
-		returnButton.setOnClickListener(this);
-		// 更新ボタン
-		updateButton = new Button(this);
-		updateButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.update_button_image));
-		updateButton.setId(UPDATE_BUTTON);
-		updateButton.setOnClickListener(this);
-		// 削除ボタン
-		deleteButton = new Button(this);
-		deleteButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.delete_button_image));
-		deleteButton.setId(DELETE_BUTTON);
-		deleteButton.setOnClickListener(this);
-		// 画像ビューア
-		imageViewerView = (GridView)findViewById(R.id.register_image_viewer);
-		imageViewerView.setAdapter(imageViewerAdapter);
-		// タグビューア
-		tagViewerView = (GridView)findViewById(R.id.register_tag_viewer);
-
-		// ** Viewの配置 **
-		// LayoutParamsの宣言
-		RelativeLayout.LayoutParams params;
-		// モードごとに配置する
-		switch(mode){
-		case NEW_MODE:	// == 新規登録モード ==
-			// ** ボタン配置 **
-			// アルバムボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
-			params.setMargins(5, 5, 5, 5);
-			albamButton.setLayoutParams(params);
-			registerLayout.addView(	albamButton);
-			// 動画ボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.addRule(RelativeLayout.LEFT_OF, ALBAM_BUTTON);
-			params.setMargins(5, 5, 5, 5);
-			movieButton.setLayoutParams(params);
-			registerLayout.addView(movieButton);
-			// 写真ボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.addRule(RelativeLayout.LEFT_OF, MOVIE_BUTTON);
-			params.setMargins(5, 5, 5, 5);
-			photoButton.setLayoutParams(params);
-			registerLayout.addView(photoButton);
-			// 決定ボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-			params.setMargins(5, 5, 5, 5);
-			registButton.setLayoutParams(params);
-			registerLayout.addView(registButton);
-			// タグビューア
-			params = new RelativeLayout.LayoutParams(300, LayoutParams.MATCH_PARENT);
-			params.addRule(RelativeLayout.ABOVE, REGIST_BUTTON);
-			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-			params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-			params.setMargins(5, 5, 5, 5);
-			tagViewerView.setLayoutParams(params);
-			// 画像ビューア
-			params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-			params.addRule(RelativeLayout.ABOVE, ALBAM_BUTTON);
-			params.addRule(RelativeLayout.ALIGN_RIGHT, ALBAM_BUTTON);
-			params.addRule(RelativeLayout.RIGHT_OF, R.id.register_tag_viewer);
-			params.setMargins(5, 5, 5, 5);
-			imageViewerView.setLayoutParams(params);
-			
-			// ** 画像および動画のリスト設定 **
-			mImagePathList = new ArrayList<String>();
-			mMoviePathList = new ArrayList<String>();
-			
-			// ** リスナー登録 **
-			nameTextView.setOnClickListener(this);
-			discriptionTextView.setOnClickListener(this);
-	
-			// ** 縦書きテキストを編集可能にする＆テキストサイズ指定 **
-			// 名前テキスト
-			nameTextView.setFocusableInTouchMode(true);
-			nameTextView.setTextSize(100);
-			// 詳細テキスト
-			discriptionTextView.setFocusableInTouchMode(true);
-			discriptionTextView.setTextSize(80);
-
-			// ** インテントからカテゴリ情報を取得 **
-			thisCategory = (Category)intent.getSerializableExtra("category");
-			
-			break;
-		case UPDATE_MODE:	// == 更新モード ==
-			
-			// リスナを解除する
-			imageViewerView.setOnItemClickListener(null);
-			
-			break;
-		case READ_MODE:	// == 閲覧モード ==
-			// ** Articleを取得 **
-			Article article = (Article)intent.getSerializableExtra("article");
-			
-			nameTextView.setText(article.getName());
-			discriptionTextView.setText(article.getDescription());
-			
-			// ** 画像ビューア用のデータを準備する **
-			// 写真と動画のパスを取得
-			String[] imagePaths = article.getImagePaths();
-			String[] moviePaths = article.getMoviePaths();
-			// アイテムの種類を格納する配列
-			itemType = new int[imagePaths.length + moviePaths.length];
-			// アイテムのパスを格納する配列
-			itemPaths = new String[imagePaths.length + moviePaths.length];
-			//　データを格納する
-			int j = 0;
-			for(String path: imagePaths){
-				// パスから写真用サムネイル画像を作成
-				Bitmap image = IconFactory.createIconImage(BitmapFactory.decodeFile(path));
-				// アダプタに追加
-				imageViewerAdapter.add(image);
-				// パスの配列に登録
-				itemPaths[j] = path;
-				// 種別を写真にする
-				itemType[j++] = PICTURE;
-			}
-			for(String path: moviePaths){
-				// パスから動画のサムネイル画像を作成する
-				Bitmap image = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
-				// アダプタに追加
-				imageViewerAdapter.add(image);
-				// パスの配列に登録
-				itemPaths [j] = path;
-				// 種別を動画にする
-				itemType[j++] = MOVIE;
-			}
-			
-			// ** Viewの設置 **
-			// 戻るボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.setMargins(5, 5, 5, 5);
-			registerLayout.addView(returnButton, params);
-			// 更新ボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.setMargins(5, 5, 5, 5);
-			registerLayout.addView(updateButton, params);
-			// 削除ボタン
-			params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
-			params.addRule(RelativeLayout.LEFT_OF, UPDATE_BUTTON);
-			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			params.setMargins(5, 5, 5, 5);
-			registerLayout.addView(deleteButton, params);
-			// タグビューア
-			params = new RelativeLayout.LayoutParams(300, LayoutParams.MATCH_PARENT);
-			params.addRule(RelativeLayout.ABOVE, RETURN_BUTTON);
-			params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-			params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-			params.setMargins(5, 5, 5, 5);
-			tagViewerView.setLayoutParams(params);
-			// 画像ビューア
-			params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-			params.addRule(RelativeLayout.ABOVE, UPDATE_BUTTON);
-			params.addRule(RelativeLayout.ALIGN_RIGHT, UPDATE_BUTTON);
-			params.addRule(RelativeLayout.RIGHT_OF, R.id.register_tag_viewer);
-			params.setMargins(5, 5, 5, 5);
-			imageViewerView.setLayoutParams(params);
-			
-			// viewerのitemにタッチされた時の設定
-			imageViewerView.setOnItemClickListener(this);
-			
-			break;
-		}
 		
+		// ** 各Viewの設定 **
+		ViewHolder holder = new ViewHolder();
+		RelativeLayout.LayoutParams params;
+		// 名前テキスト
+		holder.nameTextView = (VTextView)findViewById(R.id.register_name);
+		holder.nameTextView.setBackGround();
+		holder.nameTextView.setTextSize(100);
+		// 詳細テキスト
+		holder.discriptionTextView = (VTextView)findViewById(R.id.register_description);
+		holder.discriptionTextView.setBackGround();
+		holder.discriptionTextView.setTextSize(80);
+		// アルバムボタン作成
+		holder.albamButton = new Button(this);
+		holder.albamButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.album_image));
+		holder.albamButton.setId(ALBAM_BUTTON);
+		holder.albamButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
+		params.setMargins(5, 5, 5, 5);
+		holder.albamButton.setLayoutParams(params);
+		// 動画ボタン作成
+		holder.movieButton = new Button(this);
+		holder.movieButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.movie_image));
+		holder.movieButton.setId(MOVIE_BUTTON);
+		holder.movieButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.addRule(RelativeLayout.LEFT_OF, ALBAM_BUTTON);
+		params.setMargins(5, 5, 5, 5);
+		holder.movieButton.setLayoutParams(params);
+		// 写真ボタン作成
+		holder.photoButton = new Button(this);
+		holder.photoButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.camera_image));
+		holder.photoButton.setId(PHOTO_BUTTON);
+		holder.photoButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.addRule(RelativeLayout.LEFT_OF, MOVIE_BUTTON);
+		params.setMargins(5, 5, 5, 5);
+		holder.photoButton.setLayoutParams(params);
+		// 決定ボタン
+		holder.registButton = new Button(this);	
+		holder.registButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.regist_button_image));
+		holder.registButton.setId(REGIST_BUTTON);
+		holder.registButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		params.setMargins(5, 5, 5, 5);
+		holder.registButton.setLayoutParams(params);
+		// 戻るボタン
+		holder.returnButton = new Button(this);
+		holder.returnButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.return_button_image));
+		holder.returnButton.setId(RETURN_BUTTON);
+		holder.returnButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.setMargins(5, 5, 5, 5);
+		holder.returnButton.setLayoutParams(params);
+		// 更新ボタン
+		holder.updateButton = new Button(this);
+		holder.updateButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.update_button_image));
+		holder.updateButton.setId(UPDATE_BUTTON);
+		holder.updateButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.setMargins(5, 5, 5, 5);
+		holder.updateButton.setLayoutParams(params);
+		// 削除ボタン
+		holder.deleteButton = new Button(this);
+		holder.deleteButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.delete_button_image));
+		holder.deleteButton.setId(DELETE_BUTTON);
+		holder.deleteButton.setOnClickListener(this);
+		params = new RelativeLayout.LayoutParams(buttonSize, buttonSize);
+		params.addRule(RelativeLayout.LEFT_OF, UPDATE_BUTTON);
+		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+		params.setMargins(5, 5, 5, 5);
+		holder.deleteButton.setLayoutParams(params);
+		// タグビューア
+		holder.tagViewerView = (GridView)findViewById(R.id.register_tag_viewer);
+		params = new RelativeLayout.LayoutParams(300, MP);
+		//params.addRule(RelativeLayout.ABOVE, REGIST_BUTTON);
+		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		params.setMargins(5, 5, 5, 5);
+		holder.tagViewerView.setLayoutParams(params);
+		// 画像ビューア
+		holder.imageViewerView = (GridView)findViewById(R.id.register_image_viewer);
+		holder.imageViewerView.setAdapter(imageViewerAdapter);
+		params = new RelativeLayout.LayoutParams(MP, (int)(buttonSize*4));
+		//params.addRule(RelativeLayout.ABOVE, ALBAM_BUTTON);
+		params.addRule(RelativeLayout.LEFT_OF, R.id.register_description);
+		params.addRule(RelativeLayout.RIGHT_OF, R.id.register_tag_viewer);
+		params.setMargins(5, 5, 5, 5);
+		holder.imageViewerView.setLayoutParams(params);
+
+		registerLayout.setTag(holder);
+		
+		final RegisterActivity thisObj = this;
+		mHandler = new Handler(){
+		
+			public void handleMessage(android.os.Message msg) {
+				super.handleMessage(msg);
+				
+				Article article;
+				
+				ViewHolder holder = (ViewHolder) registerLayout.getTag();
+				registerLayout.removeAllViews();
+				// ** Viewの配置 **
+				registerLayout.addView(holder.nameTextView);
+				registerLayout.addView(holder.discriptionTextView);
+				// タグビューア
+				registerLayout.addView(holder.tagViewerView);
+				// 画像ビューア
+				registerLayout.addView(holder.imageViewerView);
+				// LayoutParamsの宣言
+				RelativeLayout.LayoutParams params;
+				// モードごとに配置する
+				switch(msg.what){
+					
+				case NEW_MODE:	// == 新規登録モード ==
+					Toast.makeText(thisObj, "NEW_MODE", Toast.LENGTH_SHORT).show();
+					// ** ボタン配置 **
+					// アルバムボタン
+					registerLayout.addView(	holder.albamButton);
+					// 動画ボタン
+					registerLayout.addView(holder.movieButton);
+					// 写真ボタン
+					registerLayout.addView(holder.photoButton);
+					// 決定ボタン
+					registerLayout.addView(holder.registButton);
+					
+					// ** リスナー登録 **
+					// 名前テキスト
+					holder.nameTextView.setOnClickListener(thisObj);
+					holder.nameTextView.setFocusableInTouchMode(true);					
+					// 詳細テキスト
+					holder.discriptionTextView.setOnClickListener(thisObj);
+					holder.discriptionTextView.setFocusableInTouchMode(true);
+
+
+					break;
+				case UPDATE_MODE:	// == 更新モード ==
+					Toast.makeText(thisObj, "UPDATE_MODE", Toast.LENGTH_SHORT).show();
+					
+					// ** Articleを取得 **
+					article = (Article)thisObj.getIntent().getSerializableExtra("article");
+					holder.nameTextView.setText(article.getName());
+					holder.discriptionTextView.setText(article.getDescription());
+					
+					// ** ボタン配置 **
+					// アルバムボタン
+					registerLayout.addView(	holder.albamButton);
+					// 動画ボタン
+					registerLayout.addView(holder.movieButton);
+					// 写真ボタン
+					registerLayout.addView(holder.photoButton);
+					// 決定ボタン
+					registerLayout.addView(holder.registButton);
+					
+					// ** リスナー登録 **
+					// 名前テキスト
+					holder.nameTextView.setOnClickListener(thisObj);
+					holder.nameTextView.setFocusableInTouchMode(true);					
+					// 詳細テキスト
+					holder.discriptionTextView.setOnClickListener(thisObj);
+					holder.discriptionTextView.setFocusableInTouchMode(true);
+					
+					// リスナを解除する
+					holder.imageViewerView.setOnItemClickListener(null);
+					break;
+				case READ_MODE:	// == 閲覧モード ==
+					Toast.makeText(thisObj, "READ_MODE", Toast.LENGTH_SHORT).show();
+					// ** Articleを取得 **
+					article = (Article)thisObj.getIntent().getSerializableExtra("article");
+					holder.nameTextView.setText(article.getName());
+					holder.discriptionTextView.setText(article.getDescription());
+					
+					// ** Viewの設置 **
+					// 戻るボタン
+					registerLayout.addView(holder.returnButton);
+					// 更新ボタン
+					registerLayout.addView(holder.updateButton);
+					// 削除ボタン
+					registerLayout.addView(holder.deleteButton);
+					
+					// リスナ登録
+					holder.imageViewerView.setOnItemClickListener(thisObj);
+					
+					// リスナ解除
+					holder.nameTextView.setOnClickListener(null);
+					holder.discriptionTextView.setOnClickListener(null);
+					
+					break;
+				}
+			}
+		};
+		
+		mHandler.sendEmptyMessage(mode);
 	}
 
 	/* (非 Javadoc)
@@ -369,6 +407,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		Intent intent = new Intent();		// インテント
 		File dir = null;							// 保存先ファイル
 		
+		ViewHolder holder = (ViewHolder) registerLayout.getTag();
 		switch(v.getId()){
 		case ALBAM_BUTTON:		// == アルバム読み込みモード ==
 			// 結果を呼び出しもとActivityに返す
@@ -413,8 +452,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		//*** 入力データを登録する ***
 		case REGIST_BUTTON:
 			// 基本値をセットする
-			String name = nameTextView.getText().toString();
-			String description = discriptionTextView.getText().toString();
+			String name = holder.nameTextView.getText().toString();
+			String description = holder.discriptionTextView.getText().toString();
 			
 			// 画像ファイルのパスをセットする
 			String[] imagePaths = new String[mImagePathList.size()];
@@ -436,9 +475,22 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				categoryIds = new long[]{2};
 			}
 			
-			// 新しいArticleを作成する
-			Article article = mArticleManager.newArticle(name, description, imagePaths, moviePaths, categoryIds);	
-			
+			Article article = null;
+			if(mode == NEW_MODE){
+				// 新しいArticleを作成する
+				article = mArticleManager.newArticle(name, description, imagePaths, moviePaths, categoryIds);
+				
+			}else if(mode == UPDATE_MODE){
+				// Articleを更新する
+				article = (Article)getIntent().getSerializableExtra("article");
+				article.setName(name);
+				article.setDescription(description);
+				article.setImagePaths(imagePaths);
+				article.setMoviePaths(moviePaths);
+				article.setCategoryIds(categoryIds);
+				article = mArticleManager.updateArticle(article);
+				
+			}
 			// 成功
 			if(article != null){
 				// カテゴリーアイコンの更新
@@ -459,6 +511,10 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			break;
 		case RETURN_BUTTON:
 			finish();
+			break;
+		case UPDATE_BUTTON:
+			mHandler.sendEmptyMessage(UPDATE_MODE);
+			mode = UPDATE_MODE;
 			break;
 		}
 	}
@@ -557,10 +613,54 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		
 	}
 	
+	/*
 	void putNewModeButtons(){
 		RelativeLayout.LayoutParams params;
 		
 		params = new RelativeLayout.LayoutParams(200,200);
 		
+	}
+	*/
+	
+	private int[] getImageTypes(int photo, int movie){
+		int[] types = new int[photo + movie];
+		
+		for(int i=0; i<types.length; i++){
+			if(i < photo){
+				types[i] = PICTURE;
+			}else{
+				types[i] = MOVIE;
+			}
+		}
+		
+		return types;
+	}
+	
+	private String[] getImagePaths(String[] photo, String[] movie){
+		String[] paths = new String[photo.length + movie.length];
+		
+		for(int i=0; i<paths.length; i++){
+			if(i<photo.length){
+				paths[i] = photo[i];
+			}else{
+				paths[i] = movie[i-photo.length];
+			}
+		}
+		
+		return paths;
+	}
+	
+	class ViewHolder{
+		VTextView nameTextView;
+		VTextView discriptionTextView;
+		Button updateButton;
+		Button deleteButton;
+		Button registButton;
+		Button albamButton;
+		Button returnButton;
+		Button photoButton;
+		Button movieButton;
+		GridView imageViewerView;
+		GridView tagViewerView;
 	}
 }

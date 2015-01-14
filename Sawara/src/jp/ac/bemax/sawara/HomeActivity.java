@@ -50,6 +50,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	static final int CATEGORY_TEXTVIEW = 5;
 	static final int HOMELAYOUT = 6;
 	
+	private final int MP = RelativeLayout.LayoutParams.MATCH_PARENT;
+	
 	private Handler mHandler;
 	private RelativeLayout homeLayout;
 	private GridView gridView;
@@ -85,7 +87,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		windowManager.getDefaultDisplay().getMetrics(outMetrics);
 		displayDensity = outMetrics.density;
 		displayWidth = displaySize.x;
-		displayHeight = displaySize.y;
+		displayHeight = displaySize.y - 25 * displayDensity;
 		buttonSize = (int)(displayHeight / 5);
 		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
 		ButtonFactory.setButtonFrameSize(buttonSize);
@@ -356,7 +358,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		layout.addView(newButton);
 		
 		// GridViewのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+		params = new RelativeLayout.LayoutParams(MP, MP);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
 		params.addRule(RelativeLayout.ABOVE, NEW_BUTTON);
@@ -399,7 +401,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		layout.addView(newButton);
 		
 		// GridViewのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+		params = new RelativeLayout.LayoutParams(MP, MP);
 		params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
 		params.addRule(RelativeLayout.ABOVE, NEW_BUTTON);
@@ -408,7 +410,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		layout.addView(gridView);
 		
 		// categoryTextViewのLayoutParamsを設定する
-		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+		params = new RelativeLayout.LayoutParams(MP, MP);
 		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.addRule(RelativeLayout.ALIGN_LEFT, SETTING_BUTTON);

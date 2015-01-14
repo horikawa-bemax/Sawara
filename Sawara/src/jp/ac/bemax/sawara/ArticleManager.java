@@ -305,6 +305,92 @@ public class ArticleManager {
 		return article;
 	}
 	
+	
+	
+	/**
+	 * データを元に、新しいarticleを作成し、DBに保存する。
+	 * @param name 名前
+	 * @param description 説明
+	 * @param modified 更新日
+	 * @param imagePaths 画像パスの配列
+	 * @param moviePaths 動画パスの配列
+	 * @param categoryIds カテゴリIDの配列
+	 * @return Articleオブジェクトを返す。失敗したらnullを返す。
+	 */
+	public Article updateArticle(Article article){
+		SQLiteDatabase db = mHelper.getWritableDatabase();
+		article = updateArticle(db, article);
+		db.close();
+		return article;
+	}
+	
+	public Article updateArticle(SQLiteDatabase db, Article article){	
+		String[] value = {""+article.getId()};
+		
+		// Articleオブジェクトに値をセットする
+		article.setModified(System.currentTimeMillis());
+		
+		try{
+			// DBに基本値をセットする
+			ContentValues values = new ContentValues();
+			values.put("name", article.getName());
+			values.put("description", article.getDescription());
+			values.put("modified", article.getModified());
+			int num = db.update("article_table", values, "ROWID=?", value);
+
+			if(num < 1) throw new Exception();
+			
+			// 画像を元にアイコンを作成する
+			Bitmap icon = IconFactory.createArticleIcon(article);
+			StrageManager manager = new StrageManager(mContext);
+			String iconPath = manager.saveIcon(icon);
+			article.setIconPath(iconPath);
+			
+			// 位置情報とアイコン情報をDBに追加する。
+			values.put("position", article.getPosition());
+			values.put("icon", iconPath);
+			
+			db.update("article_table", values, "ROWID = " + article.getId(), null);
+	
+			String[] imagePaths = article.getImagePaths();
+			// image_tableへ登録
+			if(imagePaths != null){
+				values = new ContentValues();
+				values.put("article_id", article.getId());
+				for(String path: imagePaths){
+					values.put("image_path", path);
+					db.insert("image_table", null, values);
+				}
+			}
+			
+			String[] moviePaths = article.getMoviePaths();
+			// movie_tableへ登録
+			if(moviePaths != null){
+				values = new ContentValues();
+				values.put("article_id", article.getId());
+				for(String path: moviePaths){
+					values.put("movie_path", path);
+					db.insert("movie_table", null, values);
+				}
+			}
+			
+			// カテゴリーの更新
+			/*
+			values = new ContentValues();
+			values.put("article_id", aid);
+			for(long id: categoryIds){
+				values.put("category_id", id);
+				db.insert("category_article_table", null, values);
+			}
+			*/
+		}catch(Exception e){
+			article = null;
+			e.printStackTrace();
+		}
+		
+		return article;
+	}
+	
 	/**
 	 * カテゴリーIDを元に、Articleのリストを返す
 	 * @param categoryId カテゴリーID
