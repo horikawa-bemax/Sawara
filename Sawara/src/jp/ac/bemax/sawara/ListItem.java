@@ -2,6 +2,8 @@ package jp.ac.bemax.sawara;
 
 import java.io.Serializable;
 
+import android.database.sqlite.SQLiteDatabase;
+
 /**
  * GridViewに表示するアイテムに実装するインターフェイス
  * @author Masaaki Horikawa
@@ -9,6 +11,6 @@ import java.io.Serializable;
  */
 public interface ListItem extends Serializable{
 	public long getId();
-	public String getName();
+	public String getName(SQLiteDatabase db);
 	public String getIconPath();
 }

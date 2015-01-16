@@ -13,6 +13,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
 import android.util.Log;
 
@@ -74,111 +75,130 @@ public class SawaraDBAdapter{
 		public void onCreate(SQLiteDatabase db) {
 			String sql;
 			
-			// カテゴリテーブルを新規作成
-			sql = "create table category_table " +
-					"(name text unique not null, " +				// カテゴリ名
-					" icon text unique," +				// アイコン画像のパス
-					" position integer unique," +		// 表示位置
-					" modified integer unique)";		// 更新日時
-			db.execSQL(sql);
-			
-			// アーティクルテーブルを新規作成
-			sql = "create table article_table " +
-					"(name text unique not null, " +	// 名前 
-					" description text not null," +				// 説明
-					" icon text unique," +						// アイコン画像のパス
-					" position integer unique," +				// 表示位置
-					" modified integer unique)";				// 更新日時
-			db.execSQL(sql);
-			
-			sql = "create table category_article_table " +
-					"(category_id integer not null," +		// カテゴリID
-					" article_id integer not null," +		// アーティクルID
-					" unique (category_id, article_id))";	// ユニーク制約条件
-			db.execSQL(sql);
-			
-			// メディアテーブルの新規作成
-			sql = "create table media_table " +
-					"(path text unique not null, " +
-					"type integer not null," +
-					"article_id integer," +
-					"modified integer)";
-			db.execSQL(sql);
-			
-			sql = "create table media_article_table "
-					+ "(article_id integer, media_id integer, "
-					+ "unique(article_id, media_id))";
-			db.execSQL(sql);
-			
-			// イメージテーブルを新規作成
-			String create_image_table_sql = "create table image_table " +
-					"(image_path text unique not null, " +	// 画像URL
-					" article_id integer not null)";		// アーティクルID
-			db.execSQL(create_image_table_sql);
-			
-			// ムービーテーブルを新規作成
-			String create_movie_table_sql = "create table movie_table " +
-					"(movie_path text unique not null," +	// 動画URL
-					" article_id integer not null)";		// アーティクルID
-			db.execSQL(create_movie_table_sql);
-			
-			// 
-			sql = "create view category_icon_view as " +
-					"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
-					"order by A.category_id";
-			db.execSQL(sql);
+			db.beginTransaction();
+			try{
+				// カテゴリテーブルを新規作成
+				sql = "create table category_table " +
+						"(name text unique not null, " +				// カテゴリ名
+						" icon text unique," +				// アイコン画像のパス
+						" position integer unique," +		// 表示位置
+						" modified integer unique)";		// 更新日時
+				db.execSQL(sql);
+				
+				// アーティクルテーブルを新規作成
+				sql = "create table article_table " +
+						"(name text unique not null, " +	// 名前 
+						" description text not null," +				// 説明
+						" icon text unique," +						// アイコン画像のパス
+						" position integer unique," +				// 表示位置
+						" modified integer unique)";				// 更新日時
+				db.execSQL(sql);
+				
+				sql = "create table category_article_table " +
+						"(category_id integer not null," +		// カテゴリID
+						" article_id integer not null," +		// アーティクルID
+						" unique (category_id, article_id))";	// ユニーク制約条件
+				db.execSQL(sql);
+				
+				// メディアテーブルの新規作成
+				sql = "create table media_table " +
+						"(path text unique not null, " +
+						"type integer not null," +
+						"article_id integer," +
+						"modified integer)";
+				db.execSQL(sql);
+				
+				sql = "create table media_article_table "
+						+ "(article_id integer, media_id integer, "
+						+ "unique(article_id, media_id))";
+				db.execSQL(sql);
+				
+				// イメージテーブルを新規作成
+				String create_image_table_sql = "create table image_table " +
+						"(image_path text unique not null, " +	// 画像URL
+						" article_id integer not null)";		// アーティクルID
+				db.execSQL(create_image_table_sql);
+				
+				// ムービーテーブルを新規作成
+				String create_movie_table_sql = "create table movie_table " +
+						"(movie_path text unique not null," +	// 動画URL
+						" article_id integer not null)";		// アーティクルID
+				db.execSQL(create_movie_table_sql);
+				
+				// 
+				sql = "create view category_icon_view as " +
+						"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
+						"order by A.category_id";
+				db.execSQL(sql);
+				
+				db.setTransactionSuccessful();
+			}finally{
+				db.endTransaction();
+			}
 			
 		/****  サンプルデータセット ***/
 			ContentValues cv, cv2;
 			File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			
-			// CategoryTable
-			String[] catNames = {"くるま","その他"};
-			
-			CategoryManager cManager = new CategoryManager(context);
-			Category[] categorys = new Category[catNames.length];
-			for(int i=0; i<categorys.length; i++){
-				categorys[i] = cManager.newCategory(db, catNames[i]);
+			db.beginTransaction();
+			try{
+				// CategoryTable
+				String[] catNames = {"くるま","その他"};
+				sql = "insert into category_table(name, position, modified) values (?,?,?);";
+				SQLiteStatement statement = db.compileStatement(sql);
+				for(int i=0; i<catNames.length; i++){
+					statement.bindString(0, catNames[i]);
+					statement.bindLong(1, i);
+					statement.bindLong(2, System.currentTimeMillis());
+					statement.executeInsert();
+				}
 				
-				String logStr = "|" +
-						categorys[i].getId() + "|" +
-						categorys[i].getName() + "|" +
-						categorys[i].getIconPath() + "|" +
-						categorys[i].getPosition() + "|" +
-						categorys[i].getModified() + "|";
-				Log.d("category", logStr);
-			}
-			
-			// ArticleTable
-			String[] artName = {"ふつうしゃ","けい","イギリスのバス"};
-			String[] artDesc = {"ふつうのおおきさのくるま","ちいさいくるま","にかいだてのバス"};
-			String[][] imagePathsS = {
-					{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
-					{copyFromAssets(imageDir, "r1.jpg")},
-					null
-				};
-			String[][] moviePathsS = {
-					null,null,{copyFromAssets(movieDir, "buss.mp4")}
-				};
-			long[] caegoryIds = {1};
-			
-			Article[] articles = new Article[artName.length];
-			for(int i=0; i<artName.length; i++){				
-				articles[i] = Article.createArticle(db, artName[i], artDesc[i]);
-				Log.d("article",articles[i].dump());
-			}
-			
-			for(Category cat: categorys){
-				cManager.setCategoryIcon(db, cat);
+				// ArticleTable
+				String[] artName = {"ふつうしゃ","けい","イギリスのバス"};
+				String[] artDesc = {"ふつうのおおきさのくるま","ちいさいくるま","にかいだてのバス"};
+				String[][] mediaPathsS = {
+						{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
+						{copyFromAssets(imageDir, "r1.jpg")},
+						{copyFromAssets(movieDir, "buss.mp4")}
+					};
+				int[][] movieTypesS = {
+						{Media.PHOTO, Media.PHOTO},
+						{Media.PHOTO},
+						{Media.MOVIE}
+					};
+				long[] caegoryIds = {1};
+				sql = "insert into article_table(name, description, modified) values (?,?,?,?);";
+				statement = db.compileStatement(sql);
+				for(int i=0; i<catNames.length; i++){
+					statement.bindString(0, artName[i]);
+					statement.bindString(1, artDesc[i]);
+					statement.bindLong(2, System.currentTimeMillis());
+					long id = statement.executeInsert();
+					for(int j=0; j<mediaPathsS[i].length; j++){
+						String sql2 = "insert into media_table(path, type, article_id, modified) values (?,?,?,?);";
+						SQLiteStatement statement2 = db.compileStatement(sql2);
+						statement2.bindString(0, mediaPathsS[i][j]);
+						statement2.bindLong(1, movieTypesS[i][j]);
+						statement2.bi
+					}
+				}
 				
-				String logStr = "|" +
-						cat.getId() + "|" +
-						cat.getName() + "|" +
-						cat.getIconPath() + "|" +
-						cat.getPosition() + "|" +
-						cat.getModified() + "|";
-				Log.d("category", logStr);
+				for(Category cat: categorys){
+					cManager.setCategoryIcon(db, cat);
+					
+					String logStr = "|" +
+							cat.getId() + "|" +
+							cat.getName() + "|" +
+							cat.getIconPath() + "|" +
+							cat.getPosition() + "|" +
+							cat.getModified() + "|";
+					Log.d("category", logStr);
+				}
+				
+				db.setTransactionSuccessful();
+			}finally{
+				db.endTransaction();
 			}
 		}
 	
