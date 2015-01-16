@@ -72,29 +72,44 @@ public class SawaraDBAdapter{
 		 */
 		@Override
 		public void onCreate(SQLiteDatabase db) {
+			String sql;
+			
 			// カテゴリテーブルを新規作成
-			String create_category_table_sql = "create table category_table " +
+			sql = "create table category_table " +
 					"(name text unique not null, " +				// カテゴリ名
 					" icon text unique," +				// アイコン画像のパス
 					" position integer unique," +		// 表示位置
 					" modified integer unique)";		// 更新日時
-			db.execSQL(create_category_table_sql);
+			db.execSQL(sql);
 			
 			// アーティクルテーブルを新規作成
-			String create_article_table_sql = "create table article_table " +
+			sql = "create table article_table " +
 					"(name text unique not null, " +	// 名前 
 					" description text not null," +				// 説明
 					" icon text unique," +						// アイコン画像のパス
 					" position integer unique," +				// 表示位置
 					" modified integer unique)";				// 更新日時
-			db.execSQL(create_article_table_sql);
+			db.execSQL(sql);
 			
-			String create_category_article_table_sql = "create table category_article_table " +
+			sql = "create table category_article_table " +
 					"(category_id integer not null," +		// カテゴリID
 					" article_id integer not null," +		// アーティクルID
 					" unique (category_id, article_id))";	// ユニーク制約条件
-			db.execSQL(create_category_article_table_sql);
-					
+			db.execSQL(sql);
+			
+			// メディアテーブルの新規作成
+			sql = "create table media_table " +
+					"(path text unique not null, " +
+					"type integer not null," +
+					"article_id integer," +
+					"modified integer)";
+			db.execSQL(sql);
+			
+			sql = "create table media_article_table "
+					+ "(article_id integer, media_id integer, "
+					+ "unique(article_id, media_id))";
+			db.execSQL(sql);
+			
 			// イメージテーブルを新規作成
 			String create_image_table_sql = "create table image_table " +
 					"(image_path text unique not null, " +	// 画像URL
@@ -107,35 +122,11 @@ public class SawaraDBAdapter{
 					" article_id integer not null)";		// アーティクルID
 			db.execSQL(create_movie_table_sql);
 			
-			String create_category_icon_view_sql = "create view category_icon_view as " +
+			// 
+			sql = "create view category_icon_view as " +
 					"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
 					"order by A.category_id";
-			db.execSQL(create_category_icon_view_sql);
-			
-			String create_category_image_view_sql = "create view category_image_view as " +
-					"select category_id, image_path " +
-					"from (category_article_table A inner join article_table B on A.article_id = B.ROWID) " +
-					"inner join image_table C on B.ROWID = C.article_id " +
-					"order by A.category_id";
-			db.execSQL(create_category_image_view_sql);
-			
-			// アーティクルとムービーの結合ビューを作成
-			String create_article_movie_view_sql = "create view article_movie_view as " +
-					"select A.ROWID article_id, movie_path " +
-					"from article_table A inner join movie_table B " +
-					"on A.ROWID = B.article_id " +
-					"order by A.ROWID";
-			db.execSQL(create_article_movie_view_sql);
-			
-			// アーティクルごとのタグを表すビューを作成
-			String create_categorys_on_article_view_sql = "create view categorys_on_article_view as " +
-					"select C.name name, A.ROWID article_id " +
-					"from (article_table A inner join category_article_table B " +
-					"on A.ROWID = B.article_id) " +
-					"inner join category_table C " +
-					"on B.category_id = C.ROWID " +
-					"order by A.ROWID";
-			db.execSQL(create_categorys_on_article_view_sql);
+			db.execSQL(sql);
 			
 		/****  サンプルデータセット ***/
 			ContentValues cv, cv2;
@@ -172,20 +163,10 @@ public class SawaraDBAdapter{
 				};
 			long[] caegoryIds = {1};
 			
-			ArticleManager articleManager = new ArticleManager(context);		
 			Article[] articles = new Article[artName.length];
 			for(int i=0; i<artName.length; i++){				
-				articles[i] = articleManager.newArticle(db, artName[i], artDesc[i], imagePathsS[i], moviePathsS[i], caegoryIds);
-		
-				String logStr = "|" +
-						articles[i].getId() + "|" +
-						articles[i].getName() + "|" +
-						articles[i].getDescription() + "|" +
-						articles[i].getIconPath() + "|" +
-						articles[i].getPosition() + "|" +
-						articles[i].getModified() + "|";
-				
-				Log.d("article", logStr);
+				articles[i] = Article.createArticle(db, artName[i], artDesc[i]);
+				Log.d("article",articles[i].dump());
 			}
 			
 			for(Category cat: categorys){
@@ -296,6 +277,16 @@ public class SawaraDBAdapter{
 			}
 			Log.d("category_image_view", str);
 		}
+		
+		cursor = db.rawQuery("select * from media_table", null);
+		while(cursor.moveToNext()){
+			String str = "|";
+			for(int i = 0; i < cursor.getColumnCount(); i++){
+				str += cursor.getString(i) + "|";
+			}
+			Log.d("media-table", str);
+		}
+		
 		db.close();
 	}
 }

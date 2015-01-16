@@ -58,7 +58,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private GridAdapter gridAdapter;
 	private List<ListItem> categoryItems;
 	private CategoryManager cManager;
-	private ArticleManager aManager;
 	private VTextView categoryTextView;
 	private Button settingButton;
 	private Button newButton;
@@ -94,7 +93,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		
 		// マネージャの設定
 		cManager = new CategoryManager(this);
-		aManager = new ArticleManager(this);
 		
 		// 設定ファイルを読み込む
 		File confFile = new File(getFilesDir(), "sawara.conf");
@@ -317,7 +315,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
 			thisCategory = (Category)categoryItems.get(position);
-			List<ListItem> articleItems = aManager.getArticlesAtCategory(thisCategory);
+			
+			List<ListItem> articleItems = null; //aManager.getArticlesAtCategory(thisCategory);
+			
 			gridAdapter.clear();
 			gridAdapter.addAll(articleItems);
 			gridAdapter.notifyDataSetChanged();

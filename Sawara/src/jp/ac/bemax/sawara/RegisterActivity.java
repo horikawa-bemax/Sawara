@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -18,6 +19,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -77,16 +79,18 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	// 画像一覧用の変数 
 	private int[] itemType;			// 画像アイテムの種類
 	private String[] itemPaths;	// 画像アイテムのパス
-	private List<String> mImagePathList;
-	private List<String> mMoviePathList;
+	private List<Media> mMediaList;
+	//private List<String> mImagePathList;
+	//private List<String> mMoviePathList;
 	// タグ一覧用のアダプタ
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	// 写真、動画の保存先ファイル
 	private String fileName;
 	// 現在のカテゴリ（新規登録時に使用）
 	private Category thisCategory;
-	// Articleマネージャ
-	private ArticleManager mArticleManager;
+	
+	private SQLiteOpenHelper mHelper;
+	
 	// ディスプレイ関連のstaticな変数
 	static float displayDensity;
 	static int buttonSize;
@@ -118,6 +122,10 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		buttonSize = (int)(displayHeight / 5);
 		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
 		
+		// DBとのコネクション
+		SawaraDBAdapter adapter = new SawaraDBAdapter(this);
+		mHelper = adapter.getHelper();
+		
 		setContentView(R.layout.register);
 		
 		// ** アクティビティにテーマを設定する **
@@ -137,9 +145,6 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		Intent intent = getIntent();
 		mode = intent.getIntExtra("mode", 0); // モード設定が無い場合は、0
 		
-		// ArticleManager設定
-		mArticleManager = new ArticleManager(this);
-		
 		// ** ビューア用の初期設定 **
 		// イメージビューア用のアダプタ設定
 		imageViewerAdapter = new ImageAdapter(this);
@@ -150,12 +155,14 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			thisCategory = (Category)getIntent().getSerializableExtra("category");
 			
 			// ** 画像および動画のリスト設定 **
-			mImagePathList = new ArrayList<String>();
-			mMoviePathList = new ArrayList<String>();
+			//mImagePathList = new ArrayList<String>();
+			//mMoviePathList = new ArrayList<String>();
+			mMediaList = new ArrayList<Media>();
 			break;
 		case READ_MODE:
 			// ** Articleを取得 **
 			Article article = (Article)getIntent().getSerializableExtra("article");
+			/*
 			mImagePathList = new ArrayList<String>();
 			for(String s: article.getImagePaths()){
 				mImagePathList.add(s);
@@ -164,6 +171,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			for(String s: article.getMoviePaths()){
 				mMoviePathList.add(s);
 			}
+			*/
+			mMediaList = Media.findMediasByArticleId(mHelper, article.getId());
 		
 			// 写真と動画のパスを取得
 			// アイテムの種類を格納する配列
@@ -455,6 +464,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			String name = holder.nameTextView.getText().toString();
 			String description = holder.discriptionTextView.getText().toString();
 			
+			/*
 			// 画像ファイルのパスをセットする
 			String[] imagePaths = new String[mImagePathList.size()];
 			for(int i=0; i<imagePaths.length; i++){
@@ -466,6 +476,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			for(int i=0; i<moviePaths.length; i++){
 				moviePaths[i] = mMoviePathList.get(i);
 			}
+			*/
 			
 			// カテゴリーidの設定
 			long[] categoryIds;
@@ -478,17 +489,17 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			Article article = null;
 			if(mode == NEW_MODE){
 				// 新しいArticleを作成する
-				article = mArticleManager.newArticle(name, description, imagePaths, moviePaths, categoryIds);
+				article = Article.createArticle(mHelper.getWritableDatabase(), name, description);
 				
 			}else if(mode == UPDATE_MODE){
 				// Articleを更新する
 				article = (Article)getIntent().getSerializableExtra("article");
+				
+				article.openDB(mHelper.getWritableDatabase());
 				article.setName(name);
 				article.setDescription(description);
-				article.setImagePaths(imagePaths);
-				article.setMoviePaths(moviePaths);
 				article.setCategoryIds(categoryIds);
-				article = mArticleManager.updateArticle(article);
+				article.closeDB();
 				
 			}
 			// 成功
@@ -528,6 +539,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		File dir = null;
 		String path = null;
+		Media media = null;
 		
 		// インテントからの返信が成功した場合
 		if(resultCode == RESULT_OK){
@@ -536,9 +548,12 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			
 			//*** 写真を撮影した場合 ***
 			case IMAGE_CAPTUER:
-				// 画像のサイズを読み込む
+				// 画像のパスを取得
 				dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 				path = new File(dir, fileName).getPath();
+				
+				// media_tableに書き込む
+				media = Media.createMedia(mHelper, path, Media.PHOTO);
 				
 				// サイズを確定するための仮読み込み
 				BitmapFactory.Options opt = new BitmapFactory.Options();
@@ -557,12 +572,15 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				Bitmap image = BitmapFactory.decodeFile(path, opt);
 				
 				// imagePathListに登録する
-				mImagePathList.add(path);
+				//mImagePathList.add(path);
 				
 				// ビューアに反映する
 				imageViewerAdapter.add(IconFactory.createIconImage(image));
 				imageViewerAdapter.notifyDataSetChanged();
 
+
+				Log.d("dump",media.dump());
+				
 				break;
 				
 			//*** 動画を撮影した場合 ***	
@@ -574,12 +592,14 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				Bitmap bmp = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
 				
 				// moviePathListに登録する
-				mMoviePathList.add(path);
+				//mMoviePathList.add(path);
 				
 				// ビューアに反映する
 				imageViewerAdapter.add(IconFactory.createIconImage(bmp));
 				imageViewerAdapter.notifyDataSetChanged();
 
+				media = Media.createMedia(mHelper, path, Media.MOVIE);
+				
 				break;
 			}
 		}
