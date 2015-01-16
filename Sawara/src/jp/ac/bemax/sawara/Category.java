@@ -1,6 +1,11 @@
 package jp.ac.bemax.sawara;
 
 import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
+import android.database.sqlite.SQLiteStatement;
 
 /**
  * Articleが属するカテゴリを表すクラス
@@ -8,44 +13,63 @@ import android.content.ContentValues;
  * 2014/09/30
  */
 public class Category implements ListItem{
-	private long rowid;
-	private String name;
-	private long position;
-	private long modified;
-	private String iconPath;
+	/* name text unique not null
+	 * icon text unique
+	 * position integer unique
+	 * modified integer unique
+	 */
+	static final String TABLE_NAME = "category_table";
+	static final String NAME = "name";
+	static final String POSITION = "position";
+	static final String MODIFIED = "modified";
+	static final String SELECTION = "ROWID=?";
+	
+	static final String SELECT_SQL = "select ? from category_table where ROWID=?";
+	static final String INSERT_SQL = "insert into category_table(?) values (?)";
+	static final String UPDATE_SQL = "update category_table set ? where ROWID=?";
+	static final String DELETE_SQL = "delete from category_table where ROWID=?";
+	
+	private long id;
+	private Context mContext;
+	private ContentValues mValues;
 
-	/**
-	 * Category.javaコンストラクタ
-	 * @param name
-	 * @param position
-	 
-	public Category(String name, int position){
-		this.name = name;
-		this.position = position;
-		modified = System.currentTimeMillis();
+	private Category(Context context){
+		mContext = context;
+		mValues = new ContentValues();
 	}
-	*/
 	
-	/**
-	 * Category.javaコンストラクタ
-	 */
-	public Category(){
+	public static Category createCategory(Context context, SQLiteDatabase db, String name){
+		Category category = new Category(context);
+		db.beginTransaction();
+		try{
+			SQLiteStatement stmt = db.compileStatement(INSERT_SQL);
+			stmt.bindString(0, NAME+","+MODIFIED);
+			stmt.bindString(1, name+","+System.currentTimeMillis());
+			long id = stmt.executeInsert();
+			
+			stmt = db.compileStatement(UPDATE_SQL);
+			stmt.bindString(0, POSITION+"="+id);
+			stmt.bindLong(1, id);
+			int rows = stmt.executeUpdateDelete();
+			
+			category.id = id;
+			
+			db.setTransactionSuccessful();
+		}finally{
+			db.endTransaction();
+		}
 		
+		return category;
 	}
-	
-	/**
-	 * カテゴリのイメージをセットする
-	 * @param image
-	 */
-	public void setIconPath(String iconPath) {
-		this.iconPath = iconPath;
-	}	
 
 	/**
 	 * カテゴリの表示順をゲットする
 	 * @return 表示順
 	 */
-	public long getPosition() {
+	public long getPosition(SQLiteDatabase db) {
+		Cursor cursor = db.query(table, columns, selection, selectionArgs, groupBy, having, orderBy);
+		Long position = cursor.getLong(cursor.getColumnIndex(POSITION));
+		cursor.close();
 		return position;
 	}
 
@@ -53,8 +77,9 @@ public class Category implements ListItem{
 	 * カテゴリの表示順をセットする
 	 * @param cId 表示順
 	 */
-	public void setPosition(long cId) {
-		this.position = cId;
+	public void setPosition(SQLiteDatabase db, long position) {
+		mValues.put(POSITION, position);
+		db.update(TABLE_NAME, mValues, SELECTION, );
 	}
 
 	/**

@@ -180,7 +180,9 @@ public class SawaraDBAdapter{
 						SQLiteStatement statement2 = db.compileStatement(sql2);
 						statement2.bindString(0, mediaPathsS[i][j]);
 						statement2.bindLong(1, movieTypesS[i][j]);
-						statement2.bi
+						statement2.bindLong(2, id);
+						statement2.bindLong(3, System.currentTimeMillis());
+						statement2.executeInsert();
 					}
 				}
 				
