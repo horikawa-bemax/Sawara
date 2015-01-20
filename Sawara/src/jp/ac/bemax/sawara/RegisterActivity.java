@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -478,43 +479,48 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			}
 			*/
 			
-			// カテゴリーidの設定
-			long[] categoryIds;
-			if(thisCategory != null){
-				categoryIds = new long[]{thisCategory.getId()};
-			}else{
-				categoryIds = new long[]{2};
-			}
-			
-			Article article = null;
-			if(mode == NEW_MODE){
-				// 新しいArticleを作成する
-				article = Article.createArticle(mHelper.getWritableDatabase(), name, description);
-				
-			}else if(mode == UPDATE_MODE){
-				// Articleを更新する
-				article = (Article)getIntent().getSerializableExtra("article");
-				
-				article.openDB(mHelper.getWritableDatabase());
-				article.setName(name);
-				article.setDescription(description);
-				article.setCategoryIds(categoryIds);
-				article.closeDB();
-				
-			}
-			// 成功
-			if(article != null){
-				// カテゴリーアイコンの更新
-				CategoryManager cManager = new CategoryManager(this);
-				for(long cId: categoryIds){
-					Category category = cManager.loadCategory(cId);
-					cManager.setCategoryIcon(category);
+			SQLiteDatabase db = mHelper.getWritableDatabase();
+			db.beginTransaction();
+			try{
+				// カテゴリーidの設定
+				long[] categoryIds;
+				if(thisCategory != null){
+					categoryIds = new long[]{thisCategory.getId()};
+				}else{
+					categoryIds = new long[]{2};
 				}
 			
-				intent.putExtra("article", article);
-				setResult(RESULT_OK, intent);
-			}else{
-				setResult(RESULT_CANCELED, intent);
+				Article article = null;
+				if(mode == NEW_MODE){
+					// 新しいArticleを作成する
+					article = new Article(db, name, description);
+				
+				}else if(mode == UPDATE_MODE){
+					// Articleを更新する
+					article = (Article)getIntent().getSerializableExtra("article");
+					article.setDB(db);
+					article.setName(name);
+					article.setDescription(description);
+					article.setModified(System.currentTimeMillis());
+				}
+				// 成功
+				if(article != null){
+					// カテゴリーアイコンの更新
+					//CategoryManager cManager = new CategoryManager(this);
+					for(long cId: categoryIds){
+						Category category = new Category(db, cId);
+					}
+			
+					intent.putExtra("article", article);
+					setResult(RESULT_OK, intent);
+				}else{
+					setResult(RESULT_CANCELED, intent);
+				}
+				
+				db.setTransactionSuccessful();
+			}finally{
+				db.endTransaction();
+				db.close();
 			}
 			
 			finish();

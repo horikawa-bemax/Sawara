@@ -6,6 +6,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -64,6 +65,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	private Button returnButton;
 	private int viewMode;
 	private Category thisCategory;
+	private SawaraDBAdapter dbAdapter;
+	
 	// ディスプレイ関連のstaticな変数
 	static float displayDensity;
 	static int buttonSize;
@@ -92,7 +95,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		ButtonFactory.setButtonFrameSize(buttonSize);
 		
 		// マネージャの設定
-		cManager = new CategoryManager(this);
+		//cManager = new CategoryManager(this);
 		
 		// 設定ファイルを読み込む
 		File confFile = new File(getFilesDir(), "sawara.conf");
@@ -106,10 +109,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		int resid = getResources().getIdentifier(themeVal, "style", getPackageName());
 		setTheme(resid);
 		
+		dbAdapter = new SawaraDBAdapter(this);
+		dbAdapter.dump();
+		
 		// viewMode設定
 		viewMode = CATEGORY_VIEW;
 		// カテゴリーのリストを取得
-		categoryItems = cManager.getAllItems();
+		categoryItems = dbAdapter.getAllCategorys();
 		// アダプタにカテゴリのリストを設定する
 		gridAdapter = new GridAdapter(this, R.layout.list_item, new ArrayList<ListItem>());
 		gridAdapter.addAll(categoryItems);
@@ -160,7 +166,11 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 						break;
 					case ARTICLE_VIEW:
 						createArticleModeDisplay(homeLayout);
+						
+						SQLiteDatabase db = dbAdapter.getHelper().getReadableDatabase();
 						categoryTextView.setText(thisCategory.getName());
+						db.close();
+						
 						break;
 					}
 					
@@ -236,7 +246,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			switch(viewMode){
 			case ARTICLE_VIEW:
 				viewMode = CATEGORY_VIEW;
-				categoryItems = cManager.getAllItems();
+				categoryItems = dbAdapter.getAllCategorys();
 				gridAdapter.clear();
 				gridAdapter.addAll(categoryItems);
 				gridAdapter.notifyDataSetChanged();
@@ -259,7 +269,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				if(resultCode == RESULT_OK){
 					switch(viewMode){
 					case CATEGORY_VIEW:
-						categoryItems = cManager.getAllItems();
+						categoryItems = dbAdapter.getAllCategorys();
 						gridAdapter.clear();
 						gridAdapter.addAll(categoryItems);
 						gridAdapter.notifyDataSetChanged();
@@ -316,7 +326,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			viewMode = ARTICLE_VIEW;
 			thisCategory = (Category)categoryItems.get(position);
 			
-			List<ListItem> articleItems = null; //aManager.getArticlesAtCategory(thisCategory);
+			List<ListItem> articleItems = dbAdapter.getArticlesByCategory(thisCategory);
 			
 			gridAdapter.clear();
 			gridAdapter.addAll(articleItems);

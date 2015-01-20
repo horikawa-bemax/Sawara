@@ -1,9 +1,10 @@
 package jp.ac.bemax.sawara;
 
-import android.content.ContentValues;
+import java.util.List;
+
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 
 
 /**
@@ -12,138 +13,62 @@ import android.database.sqlite.SQLiteOpenHelper;
  * 2014/09/05
  */
 public class Article implements ListItem{
-	static final String TABLE_NAME = "article_table";
-	static final String ID = "ROWID";
-	static final String NAME = "name";
-	static final String DESCRIPTION = "description";
-	static final String POSITION = "position";
-	static final String MODIFIED = "modified";
+	//static final String TABLE_NAME = "article_table";
+	//static final String ID = "ROWID";
+	static final String Name = "name";
+	static final String Description = "description";
+	static final String Position = "position";
+	static final String Modified = "modified";
+
+	static final String UpdateSQL = "update article_table set ?=? where ROWID=?";
+	static final String SelectSQL = "select ? from article_table where ROWID=?";
 	
-	private SQLiteDatabase mDb;
-	private ContentValues mContentValues;
-	private long id;
-	private String[] imagePaths;
-	private String[] moviePaths;
-	private long[] categoryIds;
-	private String iconPath;
-	
-	static public Article createArticle(SQLiteDatabase db, String name, String description){
-		Article article = new Article(db);
-		try{
-			ContentValues values = new ContentValues();
-			values.put(NAME, name);
-			values.put(DESCRIPTION, description);
-			values.put(MODIFIED, System.currentTimeMillis());
-			
-			long id = article.insertDB(values);
-			article.setPosition(id);
-			
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		return article;
-	}
-	
-	static public Article findArticleById(SQLiteOpenHelper helper, long id){
-		SQLiteDatabase db = helper.getReadableDatabase();
-		
-		String[] columns = {"ROWID"};
-		String[] selectionArgs = {""+id};
-		Cursor cursor = db.query(TABLE_NAME, columns, "ROWID=?", selectionArgs, null, null, null);
-		
-		Article article = null;
-		
-		if(cursor.getCount() > 0){
-			article = new Article(db);
-			article.id = id;
-		}
-		
-		db.close();
-		
-		return article;
-	}
-	
-	static public Article[] getAllArticles(SQLiteOpenHelper helper){
-		SQLiteDatabase db = helper.getReadableDatabase();
-		
-		String[] columns = {"ROWID"};
-		Cursor cursor = db.query(TABLE_NAME, columns, null, null, null, null, null);
-		
-		Article[] articles = new Article[cursor.getCount()];
-		cursor.moveToFirst();
-		for(int i=0; i<articles.length; i++){
-			articles[i] = new Article(db);
-			articles[i].id = cursor.getLong(0);
-			cursor.moveToNext();
-		}
-		cursor.close();
-		
-		db.close();
-		
-		return articles;
-	}
-	
-	public void openDB(SQLiteDatabase db){
-		mDb = db;
-	}
-	
-	public void closeDB(){
-		mDb.close();
-	}
-	
-	public long insertDB(ContentValues values) throws Exception{
-		long id = mDb.insert(TABLE_NAME, null, values);
-		
-		if(id == -1){
-			throw new Exception("DBへの挿入に失敗しました");
-		}
-		this.id = id;
-		mDb.close();
-		
-		return id;
-	}
-	
-	private Cursor readDB() throws Exception{
-		if(id < 0){
-			throw new Exception("IDが不正です");
-		}
-		if(mDb == null){
-			throw new Exception("DBがnull");
-		}
-		String[] columns = {NAME, DESCRIPTION, POSITION, MODIFIED};
-		String[] selectionArgs = {"" + id};
-		Cursor cursor = mDb.query(TABLE_NAME, columns, "ROWID = ?", selectionArgs, null, null, null);
-		
-		return cursor;
-	}
-	
-	private void writeDB( ContentValues values) throws Exception {
-		String[] whereArgs = {""+this.id};
-		if(mDb == null){
-			throw new Exception("DBがnull");
-		}
-		int num = mDb.update(TABLE_NAME, values, "ROWID=?", whereArgs);
-				
-		if(num < 1){
-			throw new Exception("DBの更新に失敗しました");
-		}
-	}
+	private transient SQLiteDatabase db;
+	private long rowid;
 	
 	/**
 	 * Article.javaコンストラクタ
 	 */
-	private Article(SQLiteDatabase db){
-		mDb = db;
-		mContentValues = new ContentValues();
+	public Article(SQLiteDatabase db, long id){
+		rowid = id;
+		this.db = db;
+	}
+	
+	public Article(SQLiteDatabase db, String name, String description){
+		this.db = db;
+		rowid = insert(name, description);
 	}
 
+	public void setDB(SQLiteDatabase db){
+		this.db = db;
+	}
+	
+	public int delete(){
+		String sql = "delete from article_table where ROWID=?";
+		SQLiteStatement statement = db.compileStatement(sql);
+		statement.bindLong(1, rowid);
+		int row = statement.executeUpdateDelete();
+		
+		return row;
+	}
+	
+	public long insert(String name, String description){
+		String sql = "insert into article_table(name, description, modified) values (?,?,?)";
+		SQLiteStatement statement = db.compileStatement(sql);
+		statement.bindString(1, name);
+		statement.bindString(2, description);
+		statement.bindLong(3, System.currentTimeMillis());
+		long id = statement.executeInsert();
+		
+		return id;
+	}
+	
 	/**
 	 * 
 	 * @param id
 	 */
 	public void setId(long id){
-		this.id = id;
+		rowid = id;
 	}
 	
 	/**
@@ -152,18 +77,11 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public long getModified()  {
-		long modified = 0;
-		Cursor cursor = null;
+		String[] selectionArgs = {Modified, ""+rowid};
+		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+		cursor.moveToFirst();
+		long modified = cursor.getLong(0);
 		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			modified = cursor.getLong(cursor.getColumnIndex(MODIFIED));
-			cursor.close();
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}		
 		return modified;
 	}
 
@@ -173,13 +91,11 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public void setModified(long modified) {
-		mContentValues.put(MODIFIED, modified);
-		try {
-			writeDB(mContentValues);
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		SQLiteStatement statement = db.compileStatement(UpdateSQL);
+		statement.bindString(1, Modified);
+		statement.bindLong(2, modified);
+		statement.bindLong(3, rowid);
+		statement.executeUpdateDelete();
 	}
 
 	/**
@@ -187,13 +103,11 @@ public class Article implements ListItem{
 	 * @param name
 	 */
 	public void setName(String name) {
-		mContentValues.put(NAME, name);
-		try {
-			writeDB(mContentValues);
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		SQLiteStatement statement = db.compileStatement(UpdateSQL);
+		statement.bindString(1, Name);
+		statement.bindString(2, name);
+		statement.bindLong(3, rowid);
+		statement.executeUpdateDelete();
 	}
 
 	/**
@@ -202,13 +116,11 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public void setDescription(String description) {
-		mContentValues.put(MODIFIED, description);
-		try {
-			writeDB(mContentValues);
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		SQLiteStatement statement = db.compileStatement(UpdateSQL);
+		statement.bindString(1, Description);
+		statement.bindString(2, description);
+		statement.bindLong(3, rowid);
+		statement.executeUpdateDelete();
 	}
 
 	/**
@@ -216,7 +128,7 @@ public class Article implements ListItem{
 	 * @return ROWID
 	 */
 	public long getId(){
-		return id;
+		return rowid;
 	}
 	
 	/**
@@ -225,20 +137,11 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public String getName(){
-		String name = null;
-		Cursor cursor = null;
+		String[] selectionArgs = {Name, ""+rowid};
+		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+		cursor.moveToFirst();
+		String name = cursor.getString(0);
 		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			name = cursor.getString(cursor.getColumnIndex(NAME));
-			cursor.close();
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
-
-
 		return name;
 	}
 	
@@ -248,116 +151,52 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public String getDescription() {
-		String description = null;
-		Cursor cursor = null;
+		String[] selectionArgs = {Description, ""+rowid};
+		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+		cursor.moveToFirst();
+		String description = cursor.getString(0);
 		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			description = cursor.getString(cursor.getColumnIndex(DESCRIPTION));
-			cursor.close();
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
-
 		return description;
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public String[] getImagePaths() {	
-		return this.imagePaths;
-	}
-
-	/**
-	 * 
-	 * @param imagePaths
-	 */
-	public void setImagePaths(String[] imagePaths) {
-		this.imagePaths = imagePaths;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public String[] getMoviePaths() {
-		return moviePaths;
-	}
-
-	/**
-	 * 
-	 * @param moviePaths
-	 */
-	public void setMoviePaths(String[] moviePaths) {
-		this.moviePaths = moviePaths;
-	}
-
-	/** 
-	 * このArticleが持つCategoryIDの配列を返す。
-	 * @param manager
-	 * @return
-	 */
-	public long[] getCategories(CategoryManager manager){
-		long[] cIds = null;
-		
-		return cIds;
-	}
-
-	public long[] getCategoryIds() {
-		return categoryIds;
-	}
-
-	public void setCategoryIds(long[] categoryIds) {
-		this.categoryIds = categoryIds;
-	}
-
-	public String getIconPath() {
-		return iconPath;
-	}
-
-	public void setIconPath(String iconPath) {
-		this.iconPath = iconPath;
 	}
 
 	public long getPosition() {
-		long position = 0;
-		Cursor cursor = null;
+		String[] selectionArgs = {Position, ""+rowid};
+		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+		cursor.moveToFirst();
+		long position = cursor.getLong(0);
 		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			position = cursor.getLong(cursor.getColumnIndex(POSITION));
-			cursor.close();
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
-
 		return position;
 	}
 
 	public void setPosition(long position) {
-		mContentValues.put(POSITION, position);
-		try {
-			writeDB(mContentValues);
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
+		SQLiteStatement statement = db.compileStatement(UpdateSQL);
+		statement.bindString(1, Position);
+		statement.bindLong(2, position);
+		statement.bindLong(3, rowid);
+		statement.executeUpdateDelete();
 	}
 	
 	public String dump(){
 		String str = "";
-		str += "ROWID:" + this.id;
+		str += "ROWID:" + rowid;
 		str += "|NAME:" + getName();
 		str += "|DESCRIPTION;" + getDescription();
 		str += "|MODIFIED:" + getModified();
 		str += "|";
 		
 		return str;
+	}
+
+	@Override
+	public String getIconPath() {
+		String path=null;
+		
+		List<Media> list = Media.findMediasByArticle(db, this);
+		if(list.size() > 0){
+			Media media = list.get(0);
+			path = media.getPath();
+		}
+		
+		return path;
 	}
 }

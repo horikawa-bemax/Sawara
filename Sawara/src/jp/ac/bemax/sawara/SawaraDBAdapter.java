@@ -7,12 +7,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
 import android.util.Log;
 
@@ -30,6 +30,55 @@ public class SawaraDBAdapter{
 	
 	public SQLiteOpenHelper getHelper(){
 		return helper;
+	}
+	
+	public List<ListItem> getAllCategorys(){
+		List<ListItem> list = new ArrayList<ListItem>();
+		
+		SQLiteDatabase db = helper.getReadableDatabase();
+		db.beginTransaction();
+		try{
+			String sql = "select ROWID from category_table";
+			Cursor cursor = db.rawQuery(sql, null);
+			
+			while(cursor.moveToNext()){
+				long id = cursor.getLong(0);
+				Category category = new Category(db, id);
+				list.add(category);
+			}
+			
+			db.setTransactionSuccessful();
+		}finally{
+			db.endTransaction();
+			db.close();
+		}
+		
+		return list;
+	}
+	
+	public List<ListItem> getArticlesByCategory(Category category){
+		List<ListItem> list = new ArrayList<ListItem>();
+		
+		SQLiteDatabase db = helper.getReadableDatabase();
+		db.beginTransaction();
+		try{
+			String sql = "select A.ROWID from article_table A inner join category_article_table B on A.ROWID=B.article_id where category_id=?";
+			String[] selectionArgs = {""+category.getId()};
+			Cursor cursor = db.rawQuery(sql, selectionArgs);
+			
+			while(cursor.moveToNext()){
+				long id = cursor.getLong(0);
+				Article article = new Article(db, id);
+				list.add(article);
+			}
+			
+			db.setTransactionSuccessful();
+		}finally{
+			db.endTransaction();
+			db.close();
+		}
+		
+		return list;
 	}
 	
 	/**
@@ -79,7 +128,7 @@ public class SawaraDBAdapter{
 					"(name text unique not null, " +				// カテゴリ名
 					" icon text unique," +				// アイコン画像のパス
 					" position integer unique," +		// 表示位置
-					" modified integer unique)";		// 更新日時
+					" modified integer )";		// 更新日時
 			db.execSQL(sql);
 			
 			// アーティクルテーブルを新規作成
@@ -88,7 +137,7 @@ public class SawaraDBAdapter{
 					" description text not null," +				// 説明
 					" icon text unique," +						// アイコン画像のパス
 					" position integer unique," +				// 表示位置
-					" modified integer unique)";				// 更新日時
+					" modified integer )";				// 更新日時
 			db.execSQL(sql);
 			
 			sql = "create table category_article_table " +
@@ -105,23 +154,6 @@ public class SawaraDBAdapter{
 					"modified integer)";
 			db.execSQL(sql);
 			
-			sql = "create table media_article_table "
-					+ "(article_id integer, media_id integer, "
-					+ "unique(article_id, media_id))";
-			db.execSQL(sql);
-			
-			// イメージテーブルを新規作成
-			String create_image_table_sql = "create table image_table " +
-					"(image_path text unique not null, " +	// 画像URL
-					" article_id integer not null)";		// アーティクルID
-			db.execSQL(create_image_table_sql);
-			
-			// ムービーテーブルを新規作成
-			String create_movie_table_sql = "create table movie_table " +
-					"(movie_path text unique not null," +	// 動画URL
-					" article_id integer not null)";		// アーティクルID
-			db.execSQL(create_movie_table_sql);
-			
 			// 
 			sql = "create view category_icon_view as " +
 					"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
@@ -129,56 +161,53 @@ public class SawaraDBAdapter{
 			db.execSQL(sql);
 			
 		/****  サンプルデータセット ***/
-			ContentValues cv, cv2;
 			File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			
+			SQLiteStatement statement, statement2;
+			String  sql2;
+			
 			// CategoryTable
 			String[] catNames = {"くるま","その他"};
-			
-			CategoryManager cManager = new CategoryManager(context);
-			Category[] categorys = new Category[catNames.length];
-			for(int i=0; i<categorys.length; i++){
-				categorys[i] = cManager.newCategory(db, catNames[i]);
-				
-				String logStr = "|" +
-						categorys[i].getId() + "|" +
-						categorys[i].getName() + "|" +
-						categorys[i].getIconPath() + "|" +
-						categorys[i].getPosition() + "|" +
-						categorys[i].getModified() + "|";
-				Log.d("category", logStr);
+			sql = "insert into category_table(name, modified) values (?,?)";
+			long[] catIds = new long[catNames.length];
+			for(int i=0; i<catNames.length; i++){
+				statement = db.compileStatement(sql);
+				statement.bindString(1, catNames[i]);
+				statement.bindLong(2, System.currentTimeMillis());
+				catIds[i] = statement.executeInsert();
 			}
-			
 			// ArticleTable
 			String[] artName = {"ふつうしゃ","けい","イギリスのバス"};
 			String[] artDesc = {"ふつうのおおきさのくるま","ちいさいくるま","にかいだてのバス"};
-			String[][] imagePathsS = {
+			String[][] paths = {
 					{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
 					{copyFromAssets(imageDir, "r1.jpg")},
-					null
+					{copyFromAssets(movieDir, "buss.mp4")}
 				};
-			String[][] moviePathsS = {
-					null,null,{copyFromAssets(movieDir, "buss.mp4")}
+			int[][] types = {
+					{Media.PHOTO, Media.PHOTO},
+					{Media.PHOTO},
+					{Media.MOVIE}
 				};
-			long[] caegoryIds = {1};
-			
-			Article[] articles = new Article[artName.length];
-			for(int i=0; i<artName.length; i++){				
-				articles[i] = Article.createArticle(db, artName[i], artDesc[i]);
-				Log.d("article",articles[i].dump());
-			}
-			
-			for(Category cat: categorys){
-				cManager.setCategoryIcon(db, cat);
+			sql = "insert into article_table(name, description, modified) values (?,?,?)";
+			statement = db.compileStatement(sql);
+			sql2 = "insert into media_table(path, type, article_id, modified) values (?,?,?,?)";
+			statement2 = db.compileStatement(sql2);			
+			for(int i=0; i<artName.length; i++){
+
+				statement.bindString(1, artName[i]);
+				statement.bindString(2, artDesc[i]);
+				statement.bindLong(3, System.currentTimeMillis());
+				long id = statement.executeInsert();
 				
-				String logStr = "|" +
-						cat.getId() + "|" +
-						cat.getName() + "|" +
-						cat.getIconPath() + "|" +
-						cat.getPosition() + "|" +
-						cat.getModified() + "|";
-				Log.d("category", logStr);
+				for(int j=0; j<paths[i].length; j++){
+					statement2.bindString(1, paths[i][j]);
+					statement2.bindLong(2, types[i][j]);
+					statement2.bindLong(3, id);
+					statement2.bindLong(4, System.currentTimeMillis());
+					statement2.executeInsert();
+				}
 			}
 		}
 	
@@ -242,6 +271,7 @@ public class SawaraDBAdapter{
 			}
 			Log.d("category", str);
 		}
+		
 		cursor = db.rawQuery("select ROWID, * from category_article_table", null);
 		while(cursor.moveToNext()){
 			String str = "|";
@@ -251,40 +281,13 @@ public class SawaraDBAdapter{
 			Log.d("category_article", str);
 		}
 		
-		cursor = db.rawQuery("select ROWID, * from image_table", null);
+		cursor = db.rawQuery("select ROWID, * from media_table", null);
 		while(cursor.moveToNext()){
 			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
 				str += cursor.getString(i) + "|";
 			}
-			Log.d("image_table", str);
-		}
-		
-		cursor = db.rawQuery("select ROWID, * from movie_table", null);
-		while(cursor.moveToNext()){
-			String str = "|";
-			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + "|";
-			}
-			Log.d("movie_table", str);
-		}
-		
-		cursor = db.rawQuery("select * from category_image_view", null);
-		while(cursor.moveToNext()){
-			String str = "|";
-			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + "|";
-			}
-			Log.d("category_image_view", str);
-		}
-		
-		cursor = db.rawQuery("select * from media_table", null);
-		while(cursor.moveToNext()){
-			String str = "|";
-			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + "|";
-			}
-			Log.d("media-table", str);
+			Log.d("media_table", str);
 		}
 		
 		db.close();

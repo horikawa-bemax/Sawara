@@ -3,11 +3,8 @@ package jp.ac.bemax.sawara;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 public class Media {
 	static final int PHOTO = 1;
@@ -20,43 +17,20 @@ public class Media {
 	static final String MODIFIED = "modified";
 	
 	//private Context mContext;
-	private SQLiteDatabase mDb;
-	private ContentValues contentValues;
-	private long id;
+	private SQLiteDatabase db;
+	private long rowid;
 	
-	private Media(){
-		contentValues = new ContentValues();
-		id = -1;
+	public Media(SQLiteDatabase db, long id){
+		rowid = id;
+		this.db = db;
 	}
 	
-	static Media createMedia(SQLiteOpenHelper helper, String path, int type){
-		Media media = new Media();
+	public Media(SQLiteDatabase db, String path, long Type){
+		this.db = db;
 		
-		ContentValues values = new ContentValues(4);
-		values.put(Media.PATH, path);
-		values.put(Media.TYPE, type);
-		values.put(MODIFIED, System.currentTimeMillis());
-		
-		try {
-			media.openDB(helper.getWritableDatabase());
-			media.insertDB(values);
-			media.closeDB();
-		} catch (Exception e) {
-			e.printStackTrace();
-			media = null;
-		}
-		
-		return media;
 	}
 	
-	public void openDB(SQLiteDatabase db){
-		mDb = db;
-	}
-	
-	public void closeDB(){
-		mDb.close();
-	}
-	
+	/*
 	static Media[] getMedias(SQLiteOpenHelper helper){
 		SQLiteDatabase db = helper.getReadableDatabase();
 		
@@ -76,29 +50,26 @@ public class Media {
 		
 		return medias;
 	}
+	*/
 	
-	static List<Media> findMediasByArticleId(SQLiteOpenHelper helper, long article_id){
+
+	static List<Media> findMediasByArticle(SQLiteDatabase db,  Article article){
 		List<Media> mediaList = new ArrayList<Media>();
-		
-		SQLiteDatabase db = helper.getReadableDatabase();
-		
-		String[] columns = {"ROWID"};
-		String[] selectionAStrings = {""+article_id};
-		Cursor cursor = db.query(TABLE_NAME, columns, ARTICLE_ID+"=?", selectionAStrings, null, null, null);
+		String sql = "select ROWID from media_table while article_id=?";
+		String[] selectionArgs = {""+article.getId()};
+		Cursor cursor = db.rawQuery(sql, selectionArgs);
 		
 		while(cursor.moveToNext()){
-			Media media = new Media();
-			media.id = cursor.getLong(0);
+			long id = cursor.getLong(0);
+			Media media = new Media(db, id);
 			mediaList.add(media);
-			Log.d("dump",media.dump());
 		}
-		cursor.close();
-		db.close();
 		
 		return mediaList;
 	}
 	
-	static Media findMediaById(SQLiteOpenHelper helper, long id){
+	/*
+	static Media findMediaById(db, long id){
 		SQLiteDatabase db = helper.getReadableDatabase();
 		
 		String[] columns = {"ROWID"};
@@ -116,49 +87,10 @@ public class Media {
 		
 		return media;
 	}
+	*/
 	
-	static int delete(SQLiteOpenHelper helper, long id){
-		SQLiteDatabase db = helper.getWritableDatabase();
-		
-		String[] whereArgs = {""+id};
-		int rows = db.delete(Media.TABLE_NAME, "ROWID=?", whereArgs);
-		
-		return rows;
-	}
-	
-	private void insertDB(ContentValues values) throws Exception{
-		
-		long id = mDb.insert(TABLE_NAME, null, values);
-		
-		if(id == -1){
-			throw new Exception("DBへの挿入に失敗しました");
-		}
-		
-		this.id = id;
+	public void delete(){
 
-	}
-	
-	private Cursor readDB() throws Exception{
-		
-		if(id < 0){
-			throw new Exception("IDが不正です");
-		}
-		
-		String[] columns = {PATH, TYPE, ARTICLE_ID, MODIFIED};
-		String[] selectionArgs = {"" + id};
-		Cursor cursor = mDb.query(TABLE_NAME, columns, "ROWID = ?", selectionArgs, null, null, null);
-		
-		return cursor;
-	}
-	
-	private void writeDB(ContentValues values) throws Exception{
-		
-		String[] whereArgs = {""+this.id};
-		int num = mDb.update(TABLE_NAME, values, "ROWID=?", whereArgs);
-				
-		if(num < 1){
-			throw new Exception("DBの更新に失敗しました");
-		}
 	}
 	
 	/**
