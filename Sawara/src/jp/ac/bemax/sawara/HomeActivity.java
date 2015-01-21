@@ -41,16 +41,17 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	// インテント呼び出し用ID 
 	static final int REGISTER = 100;
 	// 画面用のID
-	static final int CATEGORY_VIEW = 1;
-	static final int ARTICLE_VIEW = 2;
-	// 各VIEW用のID
-	static final int SETTING_BUTTON = 1;
-	static final int NEW_BUTTON = 2;
-	static final int RETURN_BUTTON = 3;
-	static final int GRIDVIEW = 4;
-	static final int CATEGORY_TEXTVIEW = 5;
-	static final int HOMELAYOUT = 6;
-	
+	private final int CATEGORY_VIEW = 1;
+	private final int ARTICLE_VIEW = 2;
+
+    // 各VIEW用のID
+	private final int HOME_LAYOUT = 1;
+    private final int NEW_BUTTON = 2;
+    private final int SETTING_BUTTON = 3;
+    private final int RETURN_BUTTON = 4;
+    private final int GRID_VIEW = 5;
+    private final int CATEGORY_TEXT_VIEW = 6;
+
 	private final int MP = RelativeLayout.LayoutParams.MATCH_PARENT;
 	
 	private Handler mHandler;
@@ -76,8 +77,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	static int frameSize;
 	// 初期設定用のオブジェクト
 	static Configuration conf;
-	
-	@Override
+
+
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -110,37 +112,38 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		setTheme(resid);
 		
 		dbAdapter = new SawaraDBAdapter(this);
-		dbAdapter.dump();
+        SQLiteDatabase db = dbAdapter.openDb();
+		dbAdapter.dump(db);
 		
 		// viewMode設定
 		viewMode = CATEGORY_VIEW;
 		// カテゴリーのリストを取得
-		categoryItems = dbAdapter.getAllCategorys();
+		categoryItems = Category.getAllCategorys(db);
 		// アダプタにカテゴリのリストを設定する
-		gridAdapter = new GridAdapter(this, R.layout.list_item, new ArrayList<ListItem>());
+		gridAdapter = new GridAdapter(dbAdapter, this, R.layout.list_item, new ArrayList<ListItem>());
 		gridAdapter.addAll(categoryItems);
-		// homeLayoutを作成
+		// homeLayoutを作成 R.id.home_layout
 		homeLayout = new RelativeLayout(this);
-		homeLayout.setId(HOMELAYOUT);
-		// gridViewを作成
+		homeLayout.setId(HOME_LAYOUT);
+		// gridViewを作成 R.id.grid_view
 		gridView = new GridView(this);
-		gridView.setId(GRIDVIEW);
+		gridView.setId(GRID_VIEW);
 		gridView.setNumColumns(gridViewColmn);
 		gridView.setOnItemClickListener(this);
-		// categoryTextViewを作成
+		// categoryTextViewを作成 R.id.category_text_view
 		categoryTextView = new VTextView(this);
-		categoryTextView.setId(CATEGORY_TEXTVIEW);
-		// settingButtonを作成
+		categoryTextView.setId(CATEGORY_TEXT_VIEW);
+		// settingButtonを作成 R.id.setting_button
 		settingButton = new Button(this);
 		settingButton.setId(SETTING_BUTTON);
 		settingButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.setting_button_image));
 		settingButton.setOnClickListener(this);
-		// newButtonを作成
+		// newButtonを作成 R.id.new_button
 		newButton = new Button(this);
 		newButton.setId(NEW_BUTTON);
 		newButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.new_button_image));
 		newButton.setOnClickListener(this);
-		// returnButtonを作成
+		// returnButtonを作成 R.id.return_button
 		returnButton = new Button(this);
 		returnButton.setId(RETURN_BUTTON);
 		returnButton.setBackground(ButtonFactory.getButtonDrawable(this, R.drawable.return_button_image));
@@ -167,8 +170,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 					case ARTICLE_VIEW:
 						createArticleModeDisplay(homeLayout);
 						
-						SQLiteDatabase db = dbAdapter.getHelper().getReadableDatabase();
-						categoryTextView.setText(thisCategory.getName());
+						SQLiteDatabase db = dbAdapter.openDb();
+						categoryTextView.setText(thisCategory.getName(db));
 						db.close();
 						
 						break;
@@ -230,9 +233,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		switch(v.getId()){
 		case NEW_BUTTON:
 			intent = new Intent(this, RegisterActivity.class);
-			intent.putExtra("mode", RegisterActivity.NEW_MODE);
-			
-			switch(viewMode){
+            intent.putExtra("mode", RegisterActivity.NEW_MODE);
+
+            switch(viewMode){
 			case CATEGORY_VIEW:
 				break;
 			case ARTICLE_VIEW:
@@ -246,7 +249,9 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			switch(viewMode){
 			case ARTICLE_VIEW:
 				viewMode = CATEGORY_VIEW;
-				categoryItems = dbAdapter.getAllCategorys();
+                SQLiteDatabase db = dbAdapter.openDb();
+				categoryItems = Category.getAllCategorys(db);
+                db.close();
 				gridAdapter.clear();
 				gridAdapter.addAll(categoryItems);
 				gridAdapter.notifyDataSetChanged();
@@ -261,31 +266,30 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-			super.onActivityResult(requestCode, resultCode, data);
-			
-			switch(requestCode){
-			case REGISTER:
-				
-				if(resultCode == RESULT_OK){
-					switch(viewMode){
-					case CATEGORY_VIEW:
-						categoryItems = dbAdapter.getAllCategorys();
-						gridAdapter.clear();
-						gridAdapter.addAll(categoryItems);
-						gridAdapter.notifyDataSetChanged();
-						break;
-					case ARTICLE_VIEW:
-						Article article = (Article)data.getSerializableExtra("article");
-						gridAdapter.add(article);
-						gridAdapter.notifyDataSetChanged();
-						break;
-					}
-					
-					mHandler.sendEmptyMessage(DISPLAY_CHANGE);
+		super.onActivityResult(requestCode, resultCode, data);
+		SQLiteDatabase db = dbAdapter.openDb();
+		switch(requestCode){
+		case REGISTER:
+			if(resultCode == RESULT_OK){
+				switch(viewMode){
+				case CATEGORY_VIEW:
+					categoryItems = Category.getAllCategorys(db);
+					gridAdapter.clear();
+					gridAdapter.addAll(categoryItems);
+					gridAdapter.notifyDataSetChanged();
+					break;
+				case ARTICLE_VIEW:
+					Article article = (Article)data.getSerializableExtra("article");
+					gridAdapter.add(article);
+					gridAdapter.notifyDataSetChanged();
+					break;
 				}
-				
-				break;
+
+				mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			}
+			break;
+	    }
+        db.close();
 	}
 
 	@Override
@@ -325,9 +329,11 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
 			thisCategory = (Category)categoryItems.get(position);
-			
-			List<ListItem> articleItems = dbAdapter.getArticlesByCategory(thisCategory);
-			
+
+            SQLiteDatabase db = dbAdapter.openDb();
+			List<ListItem> articleItems = thisCategory.getArticles(db);
+			db.close();
+
 			gridAdapter.clear();
 			gridAdapter.addAll(articleItems);
 			gridAdapter.notifyDataSetChanged();

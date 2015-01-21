@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.util.TypedValue;
 import android.view.View;
@@ -20,7 +21,8 @@ import android.widget.LinearLayout;
  */
 public class ImageAdapter extends BaseAdapter {
 	private Context mContext;
-	private List<Bitmap> mList;
+    private SawaraDBAdapter dbAdapter;
+	private List<Media> mList;
 	private int backDrawable;
 	
 	private final int LMP = LinearLayout.LayoutParams.MATCH_PARENT;
@@ -30,20 +32,21 @@ public class ImageAdapter extends BaseAdapter {
 	 * ImageAdapter.javaコンストラクタ
 	 * @param context
 	 */
-	public ImageAdapter(Context context){
+	public ImageAdapter(SawaraDBAdapter adapter, Context context){
 		mContext = context;
+        dbAdapter = adapter;
 		TypedValue outValue = new TypedValue();
 		context.getTheme().resolveAttribute(R.attr.frameBack, outValue, true);
 		backDrawable = outValue.resourceId;
-		mList = new ArrayList<Bitmap>();
+		mList = new ArrayList<Media>();
 	}
 	
 	/**
 	 * アダプタに画像を追加する
-	 * @param image
+	 * @param media
 	 */
-	public void add(Bitmap image){
-		mList.add(image);
+	public void add(Media media){
+		mList.add(media);
 	}
 
 	/**
@@ -59,7 +62,7 @@ public class ImageAdapter extends BaseAdapter {
 	 * @param position アイテムのポジション
 	 */
 	@Override
-	public Bitmap getItem(int position) {
+	public Media getItem(int position) {
 		return mList.get(position);
 	}
 
@@ -97,14 +100,16 @@ public class ImageAdapter extends BaseAdapter {
 		}else{
 			holder = (ViewHolder)convertView.getTag();
 		}
-		
-		holder.imageView.setImageBitmap(mList.get(position));
-		
+
+        SQLiteDatabase db = dbAdapter.openDb();
+		holder.imageView.setImageBitmap(mList.get(position).getImage(db));
+		db.close();
+
 		return convertView;
 	}
 	
 	public void clear(){
-		mList = new ArrayList<Bitmap>();
+		mList = new ArrayList<Media>();
 	}
 	
 	class ViewHolder{

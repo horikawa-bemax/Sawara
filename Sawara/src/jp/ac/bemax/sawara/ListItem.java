@@ -1,5 +1,7 @@
 package jp.ac.bemax.sawara;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import java.io.Serializable;
 
 /**
@@ -9,6 +11,6 @@ import java.io.Serializable;
  */
 public interface ListItem extends Serializable{
 	public long getId();
-	public String getName();
-	public String getIconPath();
+	public String getName(SQLiteDatabase db);
+	public Bitmap getIcon(SQLiteDatabase db);
 }

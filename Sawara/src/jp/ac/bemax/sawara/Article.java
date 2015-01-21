@@ -1,10 +1,16 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
+import android.provider.MediaStore;
 
 
 /**
@@ -15,35 +21,29 @@ import android.database.sqlite.SQLiteStatement;
 public class Article implements ListItem{
 	//static final String TABLE_NAME = "article_table";
 	//static final String ID = "ROWID";
-	static final String Name = "name";
-	static final String Description = "description";
-	static final String Position = "position";
-	static final String Modified = "modified";
+	static final String NAME = "name";
+	static final String DESCRIPTION = "description";
+	static final String POSITION = "position";
+	static final String MODIFIED = "modified";
 
-	static final String UpdateSQL = "update article_table set ?=? where ROWID=?";
-	static final String SelectSQL = "select ? from article_table where ROWID=?";
-	
-	private transient SQLiteDatabase db;
+	static final String UPDATE_SQL = "update article_table set ?=? where ROWID=?";
+	static final String SELECT_SQL = "select ? from article_table where ROWID=?";
+
 	private long rowid;
 	
 	/**
 	 * Article.javaコンストラクタ
 	 */
-	public Article(SQLiteDatabase db, long id){
+	public Article(long id){
 		rowid = id;
-		this.db = db;
 	}
 	
 	public Article(SQLiteDatabase db, String name, String description){
-		this.db = db;
-		rowid = insert(name, description);
-	}
-
-	public void setDB(SQLiteDatabase db){
-		this.db = db;
+		rowid = insert(db, name, description);
+        setPosition(db, rowid);
 	}
 	
-	public int delete(){
+	public int delete(SQLiteDatabase db){
 		String sql = "delete from article_table where ROWID=?";
 		SQLiteStatement statement = db.compileStatement(sql);
 		statement.bindLong(1, rowid);
@@ -52,33 +52,29 @@ public class Article implements ListItem{
 		return row;
 	}
 	
-	public long insert(String name, String description){
-		String sql = "insert into article_table(name, description, modified) values (?,?,?)";
-		SQLiteStatement statement = db.compileStatement(sql);
-		statement.bindString(1, name);
-		statement.bindString(2, description);
-		statement.bindLong(3, System.currentTimeMillis());
-		long id = statement.executeInsert();
-		
-		return id;
-	}
-	
-	/**
-	 * 
-	 * @param id
-	 */
-	public void setId(long id){
-		rowid = id;
-	}
-	
+	public long insert(SQLiteDatabase db, String name, String description) {
+        String sql = "insert into article_table(name, description, modified) values (?,?,?)";
+        SQLiteStatement statement = db.compileStatement(sql);
+        statement.bindString(1, name);
+        statement.bindString(2, description);
+        statement.bindLong(3, System.currentTimeMillis());
+        long id = statement.executeInsert();
+
+        return id;
+    }
+
+    public long getId(){
+        return rowid;
+    }
+
 	/**
 	 * 
 	 * @return
 	 * @throws Exception 
 	 */
-	public long getModified()  {
-		String[] selectionArgs = {Modified, ""+rowid};
-		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+	public long getModified(SQLiteDatabase db)  {
+		String[] selectionArgs = {MODIFIED, ""+rowid};
+		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
 		cursor.moveToFirst();
 		long modified = cursor.getLong(0);
 		
@@ -90,9 +86,9 @@ public class Article implements ListItem{
 	 * @param modified
 	 * @throws Exception 
 	 */
-	public void setModified(long modified) {
-		SQLiteStatement statement = db.compileStatement(UpdateSQL);
-		statement.bindString(1, Modified);
+	public void setModified(SQLiteDatabase db, long modified) {
+		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+		statement.bindString(1, MODIFIED);
 		statement.bindLong(2, modified);
 		statement.bindLong(3, rowid);
 		statement.executeUpdateDelete();
@@ -102,9 +98,9 @@ public class Article implements ListItem{
 	 * 
 	 * @param name
 	 */
-	public void setName(String name) {
-		SQLiteStatement statement = db.compileStatement(UpdateSQL);
-		statement.bindString(1, Name);
+	public void setName(SQLiteDatabase db, String name) {
+		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+		statement.bindString(1, NAME);
 		statement.bindString(2, name);
 		statement.bindLong(3, rowid);
 		statement.executeUpdateDelete();
@@ -115,20 +111,12 @@ public class Article implements ListItem{
 	 * @param description
 	 * @throws Exception 
 	 */
-	public void setDescription(String description) {
-		SQLiteStatement statement = db.compileStatement(UpdateSQL);
-		statement.bindString(1, Description);
+	public void setDescription(SQLiteDatabase db, String description) {
+		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+		statement.bindString(1, DESCRIPTION);
 		statement.bindString(2, description);
 		statement.bindLong(3, rowid);
 		statement.executeUpdateDelete();
-	}
-
-	/**
-	 * ROWIDを返す
-	 * @return ROWID
-	 */
-	public long getId(){
-		return rowid;
 	}
 	
 	/**
@@ -136,9 +124,9 @@ public class Article implements ListItem{
 	 * @return アイテムの名前
 	 * @throws Exception 
 	 */
-	public String getName(){
-		String[] selectionArgs = {Name, ""+rowid};
-		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+	public String getName(SQLiteDatabase db){
+		String[] selectionArgs = {NAME, ""+rowid};
+		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
 		cursor.moveToFirst();
 		String name = cursor.getString(0);
 		
@@ -150,53 +138,75 @@ public class Article implements ListItem{
 	 * @return アイテムの詳細
 	 * @throws Exception 
 	 */
-	public String getDescription() {
-		String[] selectionArgs = {Description, ""+rowid};
-		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+	public String getDescription(SQLiteDatabase db) {
+		String[] selectionArgs = {DESCRIPTION, ""+rowid};
+		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
 		cursor.moveToFirst();
 		String description = cursor.getString(0);
 		
 		return description;
 	}
 
-	public long getPosition() {
-		String[] selectionArgs = {Position, ""+rowid};
-		Cursor cursor = db.rawQuery(SelectSQL, selectionArgs);
+	public long getPosition(SQLiteDatabase db) {
+		String[] selectionArgs = {POSITION, ""+rowid};
+		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
 		cursor.moveToFirst();
 		long position = cursor.getLong(0);
 		
 		return position;
 	}
 
-	public void setPosition(long position) {
-		SQLiteStatement statement = db.compileStatement(UpdateSQL);
-		statement.bindString(1, Position);
+	public void setPosition(SQLiteDatabase db, long position) {
+		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+		statement.bindString(1, POSITION);
 		statement.bindLong(2, position);
 		statement.bindLong(3, rowid);
 		statement.executeUpdateDelete();
 	}
 	
-	public String dump(){
+	public String dump(SQLiteDatabase db){
 		String str = "";
 		str += "ROWID:" + rowid;
-		str += "|NAME:" + getName();
-		str += "|DESCRIPTION;" + getDescription();
-		str += "|MODIFIED:" + getModified();
+		str += "|NAME:" + getName(db);
+		str += "|DESCRIPTION;" + getDescription(db);
+		str += "|MODIFIED:" + getModified(db);
 		str += "|";
 		
 		return str;
 	}
 
-	@Override
-	public String getIconPath() {
-		String path=null;
+	public Bitmap getIcon(SQLiteDatabase db) {
+		Bitmap icon = null;
 		
 		List<Media> list = Media.findMediasByArticle(db, this);
 		if(list.size() > 0){
 			Media media = list.get(0);
-			path = media.getPath();
+			String path = media.getPath(db);
+            long type = media.getType(db);
+
+            if(type == Media.PHOTO){
+                icon = BitmapFactory.decodeFile(path);
+            }else if(type == Media.MOVIE){
+                icon = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+            }
 		}
-		
-		return path;
+
+		return icon;
 	}
+
+    public List<Media> getMedias(SQLiteDatabase db){
+        List<Media> list = new ArrayList<Media>();
+
+        String sql = "select ROWID from media_table where article_id=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+
+        while(cursor.moveToNext()){
+            long mediaId = cursor.getLong(0);
+            Media media = new Media(mediaId);
+            list.add(media);
+        }
+
+        return list;
+    }
 }

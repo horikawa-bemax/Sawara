@@ -23,63 +23,32 @@ import android.util.Log;
  */
 public class SawaraDBAdapter{
 	private SQLiteOpenHelper helper;
+    private SQLiteDatabase mDb;
 	
 	public SawaraDBAdapter(Context context) {
 		helper = new DBAdapter(context, "sawara.db", null, 1);
+        mDb = null;
 	}
 	
 	public SQLiteOpenHelper getHelper(){
 		return helper;
 	}
-	
-	public List<ListItem> getAllCategorys(){
-		List<ListItem> list = new ArrayList<ListItem>();
-		
-		SQLiteDatabase db = helper.getReadableDatabase();
-		db.beginTransaction();
-		try{
-			String sql = "select ROWID from category_table";
-			Cursor cursor = db.rawQuery(sql, null);
-			
-			while(cursor.moveToNext()){
-				long id = cursor.getLong(0);
-				Category category = new Category(db, id);
-				list.add(category);
-			}
-			
-			db.setTransactionSuccessful();
-		}finally{
-			db.endTransaction();
-			db.close();
-		}
-		
-		return list;
-	}
-	
-	public List<ListItem> getArticlesByCategory(Category category){
-		List<ListItem> list = new ArrayList<ListItem>();
-		
-		SQLiteDatabase db = helper.getReadableDatabase();
-		db.beginTransaction();
-		try{
-			String sql = "select A.ROWID from article_table A inner join category_article_table B on A.ROWID=B.article_id where category_id=?";
-			String[] selectionArgs = {""+category.getId()};
-			Cursor cursor = db.rawQuery(sql, selectionArgs);
-			
-			while(cursor.moveToNext()){
-				long id = cursor.getLong(0);
-				Article article = new Article(db, id);
-				list.add(article);
-			}
-			
-			db.setTransactionSuccessful();
-		}finally{
-			db.endTransaction();
-			db.close();
-		}
-		
-		return list;
-	}
+
+    public SQLiteDatabase openDb(){
+        if(mDb == null){
+            mDb = helper.getWritableDatabase();
+        }
+        if(!mDb.isOpen()){
+            mDb = helper.getWritableDatabase();
+        }
+        return mDb;
+    }
+
+    public void closeDb(){
+        if(mDb != null && mDb.isOpen()){
+            mDb.close();
+        }
+    }
 	
 	/**
 	 * group_tableのgroup_nameの写像リストを返す
@@ -185,7 +154,7 @@ public class SawaraDBAdapter{
 					{copyFromAssets(imageDir, "r1.jpg")},
 					{copyFromAssets(movieDir, "buss.mp4")}
 				};
-			int[][] types = {
+			long[][] types = {
 					{Media.PHOTO, Media.PHOTO},
 					{Media.PHOTO},
 					{Media.MOVIE}
@@ -251,8 +220,7 @@ public class SawaraDBAdapter{
 	/**
 	 * データベースをダンプする
 	 */
-	public void dump(){
-		SQLiteDatabase db = helper.getReadableDatabase();
+	public void dump(SQLiteDatabase db){
 		Cursor cursor = db.rawQuery("select ROWID, * from article_table",null);
 		
 		while(cursor.moveToNext()){
@@ -289,7 +257,6 @@ public class SawaraDBAdapter{
 			}
 			Log.d("media_table", str);
 		}
-		
-		db.close();
+
 	}
 }

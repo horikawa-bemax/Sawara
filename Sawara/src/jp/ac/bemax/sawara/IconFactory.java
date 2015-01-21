@@ -21,7 +21,7 @@ public class IconFactory {
 	 * Articleのアイコンを作成する
 	 * @param article 
 	 * @return 作成されたアイコン。画像が無い場合はnull。
-	 */
+
 	public static Bitmap createArticleIcon(Article article){
 		Bitmap icon = null;
 		
@@ -44,7 +44,7 @@ public class IconFactory {
 	 * カテゴリーのアイコンを作成する
 	 * @param paths アイコンの元画像のパスの配列
 	 * @return アイコン画像
-	 */
+
 	public static Bitmap createCategoryIcon(String[] paths){
 		Bitmap bmp = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT*3/2, Config.ARGB_8888);
 		Canvas canvas = new Canvas(bmp);
@@ -70,7 +70,7 @@ public class IconFactory {
 	 * 与えられた画像を、４：３比率の画像に加工する。
 	 * @param bitmap 元の画像
 	 * @return 加工後の画像
-	 */
+
 	public static Bitmap createIconImage(Bitmap bitmap){
 		// アイコン画像の作成準備
 		Bitmap icon = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Config.ARGB_8888);
@@ -105,5 +105,5 @@ public class IconFactory {
 			
 		return icon;
 	}
-
+*/
 }

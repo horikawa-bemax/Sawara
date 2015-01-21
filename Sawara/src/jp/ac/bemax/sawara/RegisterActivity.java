@@ -34,11 +34,6 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 /**
- * 登録画面
- * @author Masaaki Horikawa
- * 2014/07/23
- */
-/**
  * @author horikawa
  *
  */
@@ -77,12 +72,9 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	private RelativeLayout registerLayout;		// レイアウト
 	// 画像一覧用のアダプタ
 	private ImageAdapter imageViewerAdapter;
-	// 画像一覧用の変数 
-	private int[] itemType;			// 画像アイテムの種類
-	private String[] itemPaths;	// 画像アイテムのパス
-	private List<Media> mMediaList;
-	//private List<String> mImagePathList;
-	//private List<String> mMoviePathList;
+	// 画像一覧用の変数
+	//private List<Media> mMediaList;
+
 	// タグ一覧用のアダプタ
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	// 写真、動画の保存先ファイル
@@ -90,7 +82,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	// 現在のカテゴリ（新規登録時に使用）
 	private Category thisCategory;
 	
-	private SQLiteOpenHelper mHelper;
+	private SawaraDBAdapter dbAdapter;
 	
 	// ディスプレイ関連のstaticな変数
 	static float displayDensity;
@@ -124,8 +116,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		gridViewColmn = (int)((displayWidth - buttonSize) / (buttonSize * 2));
 		
 		// DBとのコネクション
-		SawaraDBAdapter adapter = new SawaraDBAdapter(this);
-		mHelper = adapter.getHelper();
+		dbAdapter = new SawaraDBAdapter(this);
 		
 		setContentView(R.layout.register);
 		
@@ -148,49 +139,19 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		
 		// ** ビューア用の初期設定 **
 		// イメージビューア用のアダプタ設定
-		imageViewerAdapter = new ImageAdapter(this);
+		imageViewerAdapter = new ImageAdapter(dbAdapter, this);
 
 		switch(mode){
 		case NEW_MODE:
 			// ** インテントからカテゴリ情報を取得 **
 			thisCategory = (Category)getIntent().getSerializableExtra("category");
-			
-			// ** 画像および動画のリスト設定 **
-			//mImagePathList = new ArrayList<String>();
-			//mMoviePathList = new ArrayList<String>();
-			mMediaList = new ArrayList<Media>();
+
 			break;
 		case READ_MODE:
 			// ** Articleを取得 **
 			Article article = (Article)getIntent().getSerializableExtra("article");
-			/*
-			mImagePathList = new ArrayList<String>();
-			for(String s: article.getImagePaths()){
-				mImagePathList.add(s);
-			}
-			mMoviePathList = new ArrayList<String>();
-			for(String s: article.getMoviePaths()){
-				mMoviePathList.add(s);
-			}
-			*/
-			mMediaList = Media.findMediasByArticleId(mHelper, article.getId());
-		
-			// 写真と動画のパスを取得
-			// アイテムの種類を格納する配列
-			itemType = getImageTypes(article.getImagePaths().length, article.getMoviePaths().length);
-			// アイテムのパスを格納する配列
-			itemPaths = getImagePaths(article.getImagePaths(), article.getMoviePaths());
-			//
-			for(int i=0; i<itemType.length; i++){
-				Bitmap bitmap = null;
-				if(itemType[i] == PICTURE){
-					bitmap =  IconFactory.createIconImage(BitmapFactory.decodeFile(itemPaths[i]));
-					imageViewerAdapter.add(bitmap);
-				}else if(itemType[i] == MOVIE){
-					bitmap = ThumbnailUtils.createVideoThumbnail(itemPaths[i], MediaStore.Images.Thumbnails.MINI_KIND);
-					imageViewerAdapter.add(bitmap);
-				}
-			}
+
+            break;
 		}
 		
 		//** Viewの設定 **
@@ -324,85 +285,106 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				registerLayout.addView(holder.imageViewerView);
 				// LayoutParamsの宣言
 				RelativeLayout.LayoutParams params;
-				// モードごとに配置する
-				switch(msg.what){
-					
-				case NEW_MODE:	// == 新規登録モード ==
-					Toast.makeText(thisObj, "NEW_MODE", Toast.LENGTH_SHORT).show();
-					// ** ボタン配置 **
-					// アルバムボタン
-					registerLayout.addView(	holder.albamButton);
-					// 動画ボタン
-					registerLayout.addView(holder.movieButton);
-					// 写真ボタン
-					registerLayout.addView(holder.photoButton);
-					// 決定ボタン
-					registerLayout.addView(holder.registButton);
-					
-					// ** リスナー登録 **
-					// 名前テキスト
-					holder.nameTextView.setOnClickListener(thisObj);
-					holder.nameTextView.setFocusableInTouchMode(true);					
-					// 詳細テキスト
-					holder.discriptionTextView.setOnClickListener(thisObj);
-					holder.discriptionTextView.setFocusableInTouchMode(true);
+
+                // DBアクセススタート
+                SQLiteDatabase db = dbAdapter.openDb();
+                db.beginTransaction();
+                try {
+                    // モードごとに配置する
+                    switch (msg.what) {
+                        case NEW_MODE:    // == 新規登録モード ==
+                            Toast.makeText(thisObj, "NEW_MODE", Toast.LENGTH_SHORT).show();
+                            // ** ボタン配置 **
+                            // アルバムボタン
+                            registerLayout.addView(holder.albamButton);
+                            // 動画ボタン
+                            registerLayout.addView(holder.movieButton);
+                            // 写真ボタン
+                            registerLayout.addView(holder.photoButton);
+                            // 決定ボタン
+                            registerLayout.addView(holder.registButton);
+
+                            // ** リスナー登録 **
+                            // 名前テキスト
+                            holder.nameTextView.setOnClickListener(thisObj);
+                            holder.nameTextView.setFocusableInTouchMode(true);
+                            // 詳細テキスト
+                            holder.discriptionTextView.setOnClickListener(thisObj);
+                            holder.discriptionTextView.setFocusableInTouchMode(true);
 
 
-					break;
-				case UPDATE_MODE:	// == 更新モード ==
-					Toast.makeText(thisObj, "UPDATE_MODE", Toast.LENGTH_SHORT).show();
-					
-					// ** Articleを取得 **
-					article = (Article)thisObj.getIntent().getSerializableExtra("article");
-					holder.nameTextView.setText(article.getName());
-					holder.discriptionTextView.setText(article.getDescription());
-					
-					// ** ボタン配置 **
-					// アルバムボタン
-					registerLayout.addView(	holder.albamButton);
-					// 動画ボタン
-					registerLayout.addView(holder.movieButton);
-					// 写真ボタン
-					registerLayout.addView(holder.photoButton);
-					// 決定ボタン
-					registerLayout.addView(holder.registButton);
-					
-					// ** リスナー登録 **
-					// 名前テキスト
-					holder.nameTextView.setOnClickListener(thisObj);
-					holder.nameTextView.setFocusableInTouchMode(true);					
-					// 詳細テキスト
-					holder.discriptionTextView.setOnClickListener(thisObj);
-					holder.discriptionTextView.setFocusableInTouchMode(true);
-					
-					// リスナを解除する
-					holder.imageViewerView.setOnItemClickListener(null);
-					break;
-				case READ_MODE:	// == 閲覧モード ==
-					Toast.makeText(thisObj, "READ_MODE", Toast.LENGTH_SHORT).show();
-					// ** Articleを取得 **
-					article = (Article)thisObj.getIntent().getSerializableExtra("article");
-					holder.nameTextView.setText(article.getName());
-					holder.discriptionTextView.setText(article.getDescription());
-					
-					// ** Viewの設置 **
-					// 戻るボタン
-					registerLayout.addView(holder.returnButton);
-					// 更新ボタン
-					registerLayout.addView(holder.updateButton);
-					// 削除ボタン
-					registerLayout.addView(holder.deleteButton);
-					
-					// リスナ登録
-					holder.imageViewerView.setOnItemClickListener(thisObj);
-					
-					// リスナ解除
-					holder.nameTextView.setOnClickListener(null);
-					holder.discriptionTextView.setOnClickListener(null);
-					
-					break;
-				}
-			}
+                            break;
+                        case UPDATE_MODE:    // == 更新モード ==
+                            Toast.makeText(thisObj, "UPDATE_MODE", Toast.LENGTH_SHORT).show();
+
+                            // ** Articleを取得 **
+                            article = (Article) thisObj.getIntent().getSerializableExtra("article");
+                            holder.nameTextView.setText(article.getName(db));
+                            holder.discriptionTextView.setText(article.getDescription(db));
+
+                            // ImageViewerの初期化
+                            imageViewerAdapter.clear();
+                            for(Media media: article.getMedias(db)) {
+                                imageViewerAdapter.add(media);
+                            }
+
+                            // ** ボタン配置 **
+                            // アルバムボタン
+                            registerLayout.addView(holder.albamButton);
+                            // 動画ボタン
+                            registerLayout.addView(holder.movieButton);
+                            // 写真ボタン
+                            registerLayout.addView(holder.photoButton);
+                            // 決定ボタン
+                            registerLayout.addView(holder.registButton);
+
+                            // ** リスナー登録 **
+                            // 名前テキスト
+                            holder.nameTextView.setOnClickListener(thisObj);
+                            holder.nameTextView.setFocusableInTouchMode(true);
+                            // 詳細テキスト
+                            holder.discriptionTextView.setOnClickListener(thisObj);
+                            holder.discriptionTextView.setFocusableInTouchMode(true);
+
+                            // リスナを解除する
+                            holder.imageViewerView.setOnItemClickListener(null);
+                            break;
+                        case READ_MODE:    // == 閲覧モード ==
+                            Toast.makeText(thisObj, "READ_MODE", Toast.LENGTH_SHORT).show();
+                            // ** Articleを取得 **
+                            article = (Article) thisObj.getIntent().getSerializableExtra("article");
+                            holder.nameTextView.setText(article.getName(db));
+                            holder.discriptionTextView.setText(article.getDescription(db));
+
+                            // ImageViewerの初期化
+                            imageViewerAdapter.clear();
+                            for(Media media: article.getMedias(db)) {
+                                imageViewerAdapter.add(media);
+                            }
+
+                            // ** Viewの設置 **
+                            // 戻るボタン
+                            registerLayout.addView(holder.returnButton);
+                            // 更新ボタン
+                            registerLayout.addView(holder.updateButton);
+                            // 削除ボタン
+                            registerLayout.addView(holder.deleteButton);
+
+                            // リスナ登録
+                            holder.imageViewerView.setOnItemClickListener(thisObj);
+
+                            // リスナ解除
+                            holder.nameTextView.setOnClickListener(null);
+                            holder.discriptionTextView.setOnClickListener(null);
+
+                            break;
+                    }
+                    db.setTransactionSuccessful();
+                }finally {
+                    db.endTransaction();
+                    db.close();
+                }
+            }
 		};
 		
 		mHandler.sendEmptyMessage(mode);
@@ -465,21 +447,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			String name = holder.nameTextView.getText().toString();
 			String description = holder.discriptionTextView.getText().toString();
 			
-			/*
-			// 画像ファイルのパスをセットする
-			String[] imagePaths = new String[mImagePathList.size()];
-			for(int i=0; i<imagePaths.length; i++){
-				imagePaths[i] = mImagePathList.get(i);
-			}
-			
-			// 動画ファイルのパスをセットする
-			String[] moviePaths = new String[mMoviePathList.size()];
-			for(int i=0; i<moviePaths.length; i++){
-				moviePaths[i] = mMoviePathList.get(i);
-			}
-			*/
-			
-			SQLiteDatabase db = mHelper.getWritableDatabase();
+			SQLiteDatabase db = dbAdapter.openDb();
 			db.beginTransaction();
 			try{
 				// カテゴリーidの設定
@@ -498,17 +466,16 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				}else if(mode == UPDATE_MODE){
 					// Articleを更新する
 					article = (Article)getIntent().getSerializableExtra("article");
-					article.setDB(db);
-					article.setName(name);
-					article.setDescription(description);
-					article.setModified(System.currentTimeMillis());
+					article.setName(db, name);
+					article.setDescription(db, description);
+					article.setModified(db, System.currentTimeMillis());
 				}
 				// 成功
 				if(article != null){
 					// カテゴリーアイコンの更新
 					//CategoryManager cManager = new CategoryManager(this);
 					for(long cId: categoryIds){
-						Category category = new Category(db, cId);
+						Category category = new Category(cId);
 					}
 			
 					intent.putExtra("article", article);
@@ -549,66 +516,48 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		
 		// インテントからの返信が成功した場合
 		if(resultCode == RESULT_OK){
-			
-			switch(requestCode){
-			
-			//*** 写真を撮影した場合 ***
-			case IMAGE_CAPTUER:
-				// 画像のパスを取得
-				dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-				path = new File(dir, fileName).getPath();
-				
-				// media_tableに書き込む
-				media = Media.createMedia(mHelper, path, Media.PHOTO);
-				
-				// サイズを確定するための仮読み込み
-				BitmapFactory.Options opt = new BitmapFactory.Options();
-				opt.inJustDecodeBounds = true;
-				BitmapFactory.decodeFile(path, opt);
-			
-				// 読み込み時の精度を決定
-				int size = opt.outWidth;
-				if(opt.outHeight > size){
-					size = opt.outHeight;
-				}
-				opt.inSampleSize = size / 480;
-				
-				// 本格的に画像を読み込む
-				opt.inJustDecodeBounds = false;
-				Bitmap image = BitmapFactory.decodeFile(path, opt);
-				
-				// imagePathListに登録する
-				//mImagePathList.add(path);
-				
-				// ビューアに反映する
-				imageViewerAdapter.add(IconFactory.createIconImage(image));
-				imageViewerAdapter.notifyDataSetChanged();
+			SQLiteDatabase db = dbAdapter.openDb();
+            db.beginTransaction();
+            try {
+                switch (requestCode) {
 
+                    //*** 写真を撮影した場合 ***
+                    case IMAGE_CAPTUER:
+                        // 画像のパスを取得
+                        dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                        path = new File(dir, fileName).getPath();
 
-				Log.d("dump",media.dump());
-				
-				break;
-				
-			//*** 動画を撮影した場合 ***	
-			case MOVIE_CAPTUER:
-				dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-				path = new File(dir, fileName).getPath();
-				
-				// 動画のサムネイル画像を取得する
-				Bitmap bmp = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
-				
-				// moviePathListに登録する
-				//mMoviePathList.add(path);
-				
-				// ビューアに反映する
-				imageViewerAdapter.add(IconFactory.createIconImage(bmp));
-				imageViewerAdapter.notifyDataSetChanged();
+                        // media_tableに書き込む
+                        media = new Media(db, path, Media.PHOTO);
 
-				media = Media.createMedia(mHelper, path, Media.MOVIE);
-				
-				break;
-			}
-		}
+                        // ビューアに反映する
+                        imageViewerAdapter.add(media);
+                        imageViewerAdapter.notifyDataSetChanged();
+
+                        Log.d("dump", media.dump(db));
+
+                        break;
+
+                    //*** 動画を撮影した場合 ***
+                    case MOVIE_CAPTUER:
+                        dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+                        path = new File(dir, fileName).getPath();
+
+                        media = new Media(db, path, Media.MOVIE);
+
+                        // ビューアに反映する
+                        imageViewerAdapter.add(media);
+                        imageViewerAdapter.notifyDataSetChanged();
+
+                        break;
+                }
+
+                db.setTransactionSuccessful();
+            }finally {
+                db.endTransaction();
+                db.close();
+            }
+        }
 	}
 
 	
@@ -619,25 +568,33 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	 */
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		
-		switch(parent.getId()){
-		case R.id.register_image_viewer:
-			Uri uri =Uri.fromFile(new File(itemPaths[position]));
-			Intent intent = new Intent();
-			intent.setAction(Intent.ACTION_VIEW);
-			if(itemType[position] == PICTURE){
-				intent.setDataAndType(uri, "image/*");
-			}else{
-				intent.setDataAndType(uri, "video/*");
-			}
-			startActivity(intent);
-			
-			break;
-		case R.id.register_tag_viewer:
-			break;
-		}
-		
-	}
+		SQLiteDatabase db = dbAdapter.openDb();
+
+        db.beginTransaction();
+        try {
+            switch (parent.getId()) {
+                case R.id.register_image_viewer:
+                    Uri uri = Uri.fromFile(new File(imageViewerAdapter.getItem(position).getPath(db)));
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    if (imageViewerAdapter.getItem(position).getType(db) == Media.PHOTO) {
+                        intent.setDataAndType(uri, "image/*");
+                    } else {
+                        intent.setDataAndType(uri, "video/*");
+                    }
+                    startActivity(intent);
+
+                    break;
+                case R.id.register_tag_viewer:
+                    break;
+            }
+
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+            db.close();
+        }
+    }
 	
 	/*
 	void putNewModeButtons(){

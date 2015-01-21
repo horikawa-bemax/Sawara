@@ -5,6 +5,8 @@ import java.util.List;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources.Theme;
+import android.database.sqlite.SQLiteAbortException;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -33,14 +35,17 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	private int resourceId;			// グリッドに表示するアイテムのレイアウトXML
 	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
 	private Point dispSize; 		// 画面のサイズ
+    private SawaraDBAdapter mAdapter;
+
 	static int frameSize;
 	static float density;
 
-	public GridAdapter(Context context, int resource, List<ListItem> objects) {
+	public GridAdapter(SawaraDBAdapter adapter, Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
 		this.context = context;
 		this.resourceId = resource;
 		this.list = objects;
+        mAdapter = adapter;
 		
 		// 画面のサイズを取得して、dispSizeにセットする
 		WindowManager wManager = ((Activity)context).getWindowManager();
@@ -87,18 +92,25 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		}
 		// 表示するアイテムを取り出す
 		ListItem listItem = getItem(position);
-		
-		// imageViewにitemの画像をセットする
-		String iconPath = listItem.getIconPath();
-		Bitmap bmp = StrageManager.loadIcon(iconPath);
-		holder.imageView.setImageBitmap(bmp);
-		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
 
-		// 縦書きのtextViewにアイテムの値をセットする
-		holder.vTextView.setText(listItem.getName());
-		holder.vTextView.setBackground(getVTextBack());
-		
-		return convertView;
+        SQLiteDatabase db = mAdapter.openDb();
+        db.beginTransaction();
+        try {
+            // imageViewにitemの画像をセットする
+            Bitmap bmp = listItem.getIcon(db);
+            holder.imageView.setImageBitmap(bmp);
+            holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
+
+            // 縦書きのtextViewにアイテムの値をセットする
+            holder.vTextView.setText(listItem.getName(db));
+            holder.vTextView.setBackground(getVTextBack());
+
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+            db.close();
+        }
+        return convertView;
 	}
 
 	@Override

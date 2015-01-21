@@ -3,7 +3,13 @@ package jp.ac.bemax.sawara;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -12,40 +18,29 @@ import android.database.sqlite.SQLiteStatement;
  * 2014/09/30
  */
 public class Category implements ListItem{
-	public static final String TabeName = "category_table";
-	public static final String Name = "name";
-	public static final String Modified = "modified";
-	public static final String Position = "position"; 
+	public static final String TABLE_NAME = "category_table";
+	public static final String NAME = "name";
+	public static final String MODIFIED = "modified";
+	public static final String POSITION = "position";
+
+    public static final String SELECT_SQL = "select ? from category_table where ROWID=?";
+    public static final String UPDATE_SQL = "update category_table set ?=? where ROWID=?";
+
+    public static final int ICON_WIDTH = 320;
+    public static final int ICON_HEIGHT = 240;
 	
 	private long rowid;
-	private String name;
-	private long modified;
-	private long position;
 	
 	/**
 	 * Category.javaコンストラクタ
 	 */
-	public Category(SQLiteDatabase db, long id){
+	public Category(long id){
 		rowid = id;
-		load(db);
 	}
 	
 	public Category(SQLiteDatabase db, String name){
 		rowid = insert(db, name);
-		if(rowid != -1){
-			this.name = name;
-		}
-	}
-	
-	public void load(SQLiteDatabase db){
-		String sql = "select name, position, modified from category_table where ROWID=?";
-		String[] selectionArgs = {""+rowid};
-		Cursor cursor = db.rawQuery(sql, selectionArgs);
-		cursor.moveToFirst();
-		name = cursor.getString(cursor.getColumnIndex(Name));
-		position = cursor.getLong(cursor.getColumnIndex(Position));
-		modified = cursor.getLong(cursor.getColumnIndex(Modified));
-		cursor.close();
+        setPosition(db, rowid);
 	}
 	
 	public long insert(SQLiteDatabase db, String name){
@@ -58,18 +53,6 @@ public class Category implements ListItem{
 		return id;
 	}
 	
-	public int update(SQLiteDatabase db){
-		String sql = "update category_table set name=?, position=?, modified=?) where ROWID=?";
-		SQLiteStatement statement = db.compileStatement(sql);
-		statement.bindString(1, name);
-		statement.bindLong(2, position);
-		statement.bindLong(3, modified);
-		statement.bindLong(4, rowid);
-		int row = statement.executeUpdateDelete();
-		
-		return row;
-	}
-	
 	public int delete(SQLiteDatabase db){
 		String sql = "delete from category_table where ROWID=?";
 		SQLiteStatement statement = db.compileStatement(sql);
@@ -78,9 +61,6 @@ public class Category implements ListItem{
 		
 		if(row > 0){
 			rowid = -1;
-			name = null;
-			position = -1;
-			modified = -1;
 		}
 		
 		return row;
@@ -90,26 +70,41 @@ public class Category implements ListItem{
 	 * カテゴリの表示順をゲットする
 	 * @return 表示順
 	 */
-	public long getPosition() {
-		return position;
+	public long getPosition(SQLiteDatabase db) {
+        String[] selectionArgs = {POSITION, ""+rowid};
+		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        long position = cursor.getLong(0);
+        cursor.close();
+
+        return position;
 	}
 
 	/**
 	 * カテゴリの表示順をセットする
-	 * @param cId 表示順
+	 * @param db database
+     * @param position position
 	 */
 	public void setPosition(SQLiteDatabase db, long position) {
-		this.position = position;
-		update(db);
+		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, POSITION);
+        statement.bindLong(2, position);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 
 	/**
 	 * カテゴリの更新日時をゲットする
 	 * @return 更新日時
 	 */
-	public long getModified() {
-		
-		return modified;
+	public long getModified(SQLiteDatabase db) {
+        String[] selectionArgs = {MODIFIED, ""+rowid};
+        Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        long modified = cursor.getLong(0);
+        cursor.close();
+
+        return modified;
 	}
 
 	/**
@@ -117,8 +112,11 @@ public class Category implements ListItem{
 	 * @param modified 更新日時
 	 */
 	public void setModified(SQLiteDatabase db, long modified) {
-		this.modified = modified;
-		update(db);
+        SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, MODIFIED);
+        statement.bindLong(2, modified);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 
 	/**
@@ -126,8 +124,11 @@ public class Category implements ListItem{
 	 * @param name カテゴリの名前
 	 */
 	public void setName(SQLiteDatabase db, String name) {
-		this.name = name;
-		update(db);
+        SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, NAME);
+        statement.bindString(2, name);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 
 	/**
@@ -150,15 +151,65 @@ public class Category implements ListItem{
 	 * カテゴリの名前をゲットする
 	 */
 	@Override
-	public String getName() {
-		return name;
-	}
+	public String getName(SQLiteDatabase db) {
+        String[] selectionArgs = {NAME, ""+rowid};
+        Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        String name = cursor.getString(0);
+        cursor.close();
 
+        return name;
+	}
 
 	@Override
-	public String getIconPath() {
-		String path = null;;
-		
-		return path;
+	public Bitmap getIcon(SQLiteDatabase db) {
+        Bitmap icon = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT*3/2, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(icon);
+        Rect src = new Rect(0, 0, ICON_WIDTH, ICON_HEIGHT);
+        Rect dst = null;
+        int width = ICON_WIDTH/2;
+        int height = ICON_HEIGHT/2;
+
+        List<ListItem> list = getArticles(db);
+        // 最大６つの画像を使ってアイコンを作成する
+        for(int i=0; i<6 && i<list.size(); i++){
+            Bitmap srcImage = list.get(i).getIcon(db);
+            int left = (i%2) * width;
+            int top = (i/2) * height;
+            dst = new Rect(left, top, left + width, top + height);
+            canvas.drawBitmap(srcImage, src, dst, null);
+        }
+
+        return icon;
 	}
+
+    public List<ListItem> getArticles(SQLiteDatabase db){
+        List<ListItem> list = new ArrayList<ListItem>();
+
+        String sql = "select article_id from category_article_table where category_id=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+
+        while(cursor.moveToNext()){
+            long articleId = cursor.getLong(0);
+            Article article = new Article(articleId);
+            list.add(article);
+        }
+        return list;
+    }
+
+    public static List<ListItem> getAllCategorys(SQLiteDatabase db){
+        List<ListItem> list = new ArrayList<ListItem>();
+
+        String sql = "select ROWID from category_table";
+        Cursor cursor = db.rawQuery(sql, null);
+
+        while(cursor.moveToNext()){
+            long id = cursor.getLong(0);
+            Category category = new Category(id);
+            list.add(category);
+        }
+
+        return list;
+    }
 }

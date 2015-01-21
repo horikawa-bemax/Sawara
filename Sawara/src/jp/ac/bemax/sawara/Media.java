@@ -5,53 +5,43 @@ import java.util.List;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
+import android.provider.MediaStore;
 
 public class Media {
-	static final int PHOTO = 1;
-	static final int MOVIE = 2;
+	static final long PHOTO = 1;
+	static final long MOVIE = 2;
 	
 	static final String TABLE_NAME = "media_table";
 	static final String PATH = "path";
 	static final String TYPE = "type";
 	static final String ARTICLE_ID = "article_id";
 	static final String MODIFIED = "modified";
-	
+
+    static final String SELECT_SQL = "select ? from media_table where ROWID=?";
+    static final String UPDATE_SQL = "update media_table set ?=? where ROWID=?";
+
+    static final int IMAGE_SIZE = 480;
+
 	//private Context mContext;
-	private SQLiteDatabase db;
 	private long rowid;
 	
-	public Media(SQLiteDatabase db, long id){
+	public Media( long id){
 		rowid = id;
-		this.db = db;
 	}
 	
-	public Media(SQLiteDatabase db, String path, long Type){
-		this.db = db;
-		
+	public Media(SQLiteDatabase db, String path, long type){
+        String sql = "insert into media_table(path, type, modified) values (?,?,?)";
+        SQLiteStatement statement = db.compileStatement(sql);
+        statement.bindString(1, path);
+        statement.bindLong(2, type);
+        statement.bindLong(3, System.currentTimeMillis());
+        long id = statement.executeInsert();
+        rowid = id;
 	}
-	
-	/*
-	static Media[] getMedias(SQLiteOpenHelper helper){
-		SQLiteDatabase db = helper.getReadableDatabase();
-		
-		String[] columns = {"ROWID"};
-		Cursor cursor = db.query(TABLE_NAME, columns, null, null, null, null, null);
-		
-		Media[] medias = new Media[cursor.getCount()];
-		cursor.moveToFirst();
-		for(int i=0; i<medias.length; i++){
-			medias[i] = new Media();
-			medias[i].id = cursor.getLong(0);
-			cursor.moveToNext();
-		}
-		cursor.close();
-		
-		db.close();
-		
-		return medias;
-	}
-	*/
-	
 
 	static List<Media> findMediasByArticle(SQLiteDatabase db,  Article article){
 		List<Media> mediaList = new ArrayList<Media>();
@@ -61,117 +51,77 @@ public class Media {
 		
 		while(cursor.moveToNext()){
 			long id = cursor.getLong(0);
-			Media media = new Media(db, id);
+			Media media = new Media(id);
 			mediaList.add(media);
 		}
 		
 		return mediaList;
 	}
 	
-	/*
-	static Media findMediaById(db, long id){
-		SQLiteDatabase db = helper.getReadableDatabase();
-		
-		String[] columns = {"ROWID"};
-		String[] selectionArgs = {""+id};
-		Cursor cursor = db.query(TABLE_NAME, columns, "ROWID=?", selectionArgs, null, null, null);
-		
-		Media media = null;
-		
-		if(cursor.getCount() > 0){
-			media = new Media();
-			media.id = id;
-		}
-		
-		db.close();
-		
-		return media;
-	}
-	*/
-	
-	public void delete(){
-
+	public void delete(SQLiteDatabase db){
+        String sql = "delete from media_table where ROWID=?";
+        SQLiteStatement statement = db.compileStatement(sql);
+        statement.bindLong(1, rowid);
+        statement.executeUpdateDelete();
 	}
 	
 	/**
 	 * @return path
 	 */
-	public String getPath() {
-		String path = null;
-		Cursor cursor = null;
-		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			path = cursor.getString(cursor.getColumnIndex(PATH));
-			cursor.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return path;
+	public String getPath(SQLiteDatabase db) {
+        String[] selectionArgs = {PATH, ""+rowid};
+        Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        String path = cursor.getString(0);
+        cursor.close();
+
+        return path;
 	}
 
 	/**
 	 * @param path セットする path
 	 */
-	public void setPath(String path) {
-		SQLiteDatabase db = null;
-		contentValues.put(PATH, path);
-		try {
-			writeDB(contentValues);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void setPath(SQLiteDatabase db, String path) {
+        SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, PATH);
+        statement.bindString(2, path);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 
 	/**
 	 * @return type
 	 */
-	public int getType() {
-		int type = 0;
-		Cursor cursor = null;
-		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			type = cursor.getInt(cursor.getColumnIndex(TYPE));
-			cursor.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
+	public long getType(SQLiteDatabase db) {
+        String[] selectionArgs = {TYPE, ""+rowid};
+        Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        Long type = cursor.getLong(0);
+        cursor.close();
+
 		return type;
 	}
 
 	/**
 	 * @param type セットする type
 	 */
-	public void setType(int type) {
-		contentValues.put(TYPE, type);
-		try {
-			writeDB(contentValues);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void setType(SQLiteDatabase db, int type) {
+        SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, TYPE);
+        statement.bindLong(2, type);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 
 	/**
 	 * @return modified
 	 */
-	public long getModified() {
-		long modified = 0;
-		Cursor cursor = null;
-		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			modified = cursor.getLong(cursor.getColumnIndex(MODIFIED));
-			cursor.close();
-		} catch (Exception e) {
-			modified = -1;
-			e.printStackTrace();
-		}
+	public long getModified(SQLiteDatabase db) {
+        String[] selectionArgs = {MODIFIED, ""+rowid};
+        Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        Long modified = cursor.getLong(0);
+        cursor.close();
 		
 		return modified;
 	}
@@ -179,61 +129,82 @@ public class Media {
 	/**
 	 * @param modified セットする modified
 	 */
-	public void setModified(long modified) {
-		contentValues.put(MODIFIED, modified);
-		try {
-			writeDB(contentValues);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void setModified(SQLiteDatabase db, long modified) {
+        SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, MODIFIED);
+        statement.bindLong(2, modified);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 
 	/**
 	 * @return modified
 	 */
-	public long getArticleId() {
-		long id = 0;
-		Cursor cursor = null;
+	public long getArticleId(SQLiteDatabase db) {
+        String[] selectionArgs = {ARTICLE_ID, ""+rowid};
+        Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+        cursor.moveToFirst();
+        Long articleId = cursor.getLong(0);
+        cursor.close();
 		
-		try {
-			cursor = readDB();
-			cursor.moveToFirst();
-			id = cursor.getLong(cursor.getColumnIndex(ARTICLE_ID));
-			cursor.close();
-		} catch (Exception e) {
-			id = -1;
-			e.printStackTrace();
-		}
-		
-		return id;
+		return articleId;
 	}
 
 	/**
-	 * @param modified セットする modified
+	 * @param  articleId セットする articleId
 	 */
-	public void setArticleId(long id) {
-		contentValues.put(ARTICLE_ID, id);
-		try {
-			writeDB(contentValues);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void setArticleId(SQLiteDatabase db, long articleId) {
+        SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
+        statement.bindString(1, ARTICLE_ID);
+        statement.bindLong(2, articleId);
+        statement.bindLong(3, rowid);
+        statement.executeUpdateDelete();
 	}
 	
 	/**
 	 * @return id
 	 */
 	public long getId() {
-		return id;
+		return rowid;
 	}
 
-	public String dump(){
+    public Bitmap getImage(SQLiteDatabase db){
+        Bitmap image = null;
+
+        String path = getPath(db);
+        long type = getType(db);
+        if(type == Media.PHOTO) {
+            // サイズを確定するための仮読み込み
+            BitmapFactory.Options opt = new BitmapFactory.Options();
+            opt.inJustDecodeBounds = true;
+
+            BitmapFactory.decodeFile(path, opt);
+
+            // 読み込み時の精度を決定
+            int size = opt.outWidth;
+            if (opt.outHeight > size) {
+                size = opt.outHeight;
+            }
+            opt.inSampleSize = size / IMAGE_SIZE;
+
+            // 本格的に画像を読み込む
+            opt.inJustDecodeBounds = false;
+            image = BitmapFactory.decodeFile(path, opt);
+        }else if(type == Media.MOVIE){
+            // 動画のサムネイル画像を取得する
+            image = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+        }
+
+        return image;
+    }
+
+	public String dump(SQLiteDatabase db){
 		String str = "";
-		str += "ROWID:" + this.id;
-		str += "|PATH:"+ getPath();
-		str += "|TYPE:" + getType();
-		str += "|ARTICLE_ID:" + getArticleId();
-		str += "|MODIFIED:" + getModified();
+		str += "ROWID:" + rowid;
+		str += "|PATH:"+ getPath(db);
+		str += "|TYPE:" + getType(db);
+		str += "|ARTICLE_ID:" + getArticleId(db);
+		str += "|MODIFIED:" + getModified(db);
 		str += "|";
 		
 		return str;
