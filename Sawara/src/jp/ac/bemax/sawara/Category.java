@@ -230,7 +230,7 @@ public class Category implements Serializable{
             for(int i=0; i<6 && i<list.size(); i++){
                 Article article = list.get(i);
                 Media articleIcon = article.getIcon(db);
-                Bitmap srcImage = articleIcon.getImage(db, context);
+                Bitmap srcImage = articleIcon.getIcon(db, context);
 
                 int left = (i%2) * width;
                 int top = (i/2) * height;
@@ -244,7 +244,7 @@ public class Category implements Serializable{
             fos = new FileOutputStream(saveFile);
             icon.compress(Bitmap.CompressFormat.PNG, 100, fos);
 
-            media = new Media(db, fileName, Media.PHOTO);
+            media = new Media(db, context, fileName, Media.PHOTO);
             setIcon(db, media);
 
             db.setTransactionSuccessful();

@@ -1,11 +1,18 @@
 package jp.ac.bemax.sawara;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
+import android.media.ThumbnailUtils;
+import android.os.Environment;
+import android.provider.MediaStore;
+
+import java.io.File;
+import java.io.FileOutputStream;
 
 /**
  * 画像からアイコンを作成するクラス
@@ -16,10 +23,9 @@ import android.graphics.Canvas;
 public class IconFactory {
 	static final int ICON_WIDTH = 320;
 	static final int ICON_HEIGHT = 240;
-	
+	static final int IMAGE_SIZE = 480;
 	/**
 	 * Articleのアイコンを作成する
-	 * @param article 
 	 * @return 作成されたアイコン。画像が無い場合はnull。
 
 	public static Bitmap createArticleIcon(Article article){
@@ -39,11 +45,6 @@ public class IconFactory {
 		
 		return icon;
 	}
-	
-	/**
-	 * カテゴリーのアイコンを作成する
-	 * @param paths アイコンの元画像のパスの配列
-	 * @return アイコン画像
 
 	public static Bitmap createCategoryIcon(String[] paths){
 		Bitmap bmp = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT*3/2, Config.ARGB_8888);
@@ -65,13 +66,64 @@ public class IconFactory {
 		
 		return bmp;
 	}
-	
-	/**
-	 * 与えられた画像を、４：３比率の画像に加工する。
-	 * @param bitmap 元の画像
-	 * @return 加工後の画像
+*/
 
-	public static Bitmap createIconImage(Bitmap bitmap){
+    public static boolean saveIcon(Context context, String fileName, Bitmap image){
+        boolean compress = false;
+        File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        FileOutputStream fos = null;
+        try{
+            fos = new FileOutputStream(new File(fileName));
+            compress = image.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(fos!=null)
+                    fos.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return compress;
+    }
+
+    public static Bitmap makeBitmap(Context context, String fileName, long mediaType){
+        Bitmap image = null;
+
+        if(mediaType == Media.PHOTO) {
+            //画像ファイルを指定
+            File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            File imageFile = new File(dir, fileName);
+            // サイズを確定するための仮読み込み
+            BitmapFactory.Options opt = new BitmapFactory.Options();
+            opt.inJustDecodeBounds = true;
+
+            BitmapFactory.decodeFile(imageFile.getPath(), opt);
+
+            // 読み込み時の精度を決定
+            int size = opt.outWidth;
+            if (opt.outHeight > size) {
+                size = opt.outHeight;
+            }
+            opt.inSampleSize = size / IMAGE_SIZE;
+
+            // 本格的に画像を読み込む
+            opt.inJustDecodeBounds = false;
+            image = BitmapFactory.decodeFile(imageFile.getPath(), opt);
+        }
+        if(mediaType == Media.MOVIE){
+            File dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+            File movieFile = new File(dir, fileName);
+            // 動画のサムネイル画像を取得する
+            image = ThumbnailUtils.createVideoThumbnail(movieFile.getPath(), MediaStore.Images.Thumbnails.MINI_KIND);
+        }
+        return image;
+    }
+
+	public static Bitmap getIcon(Context context, String fileName, long mediaType){
+        Bitmap bitmap = makeBitmap(context, fileName, mediaType);
 		// アイコン画像の作成準備
 		Bitmap icon = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Config.ARGB_8888);
 		
@@ -105,5 +157,4 @@ public class IconFactory {
 			
 		return icon;
 	}
-*/
 }

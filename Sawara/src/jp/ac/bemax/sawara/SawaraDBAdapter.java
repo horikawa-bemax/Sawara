@@ -119,6 +119,7 @@ public class SawaraDBAdapter{
                 sql = "create table media_table " +
                         "(path text unique not null, " +
                         "type integer not null," +
+                        "icon_path string not null," +
                         "article_id integer," +
                         "modified integer)";
                 db.execSQL(sql);
@@ -155,7 +156,7 @@ public class SawaraDBAdapter{
                     article.setCateogories(db, cates);
                     for (int j = 0; j < paths[i].length; j++) {
                         copyFromAssets(types[i][j], paths[i][j]);
-                        Media media = new Media(db, paths[i][j], types[i][j], article);
+                        Media media = new Media(db, context, paths[i][j], types[i][j], article);
                     }
                 }
 

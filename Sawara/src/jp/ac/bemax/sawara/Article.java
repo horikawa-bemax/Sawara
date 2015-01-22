@@ -5,12 +5,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
+import android.os.Environment;
 import android.provider.MediaStore;
 
 
@@ -169,24 +171,22 @@ public class Article implements Serializable{
     }
 
 	public String dump(SQLiteDatabase db){
-		String str = "";
-		str += "ROWID:" + rowid;
-		str += "|NAME:" + getName(db);
-		str += "|DESCRIPTION;" + getDescription(db);
-		str += "|MODIFIED:" + getModified(db);
-		str += "|";
-		
+        String str = "";
+        str += "ROWID:" + rowid;
+        str += "|NAME:" + getName(db);
+        str += "|DESCRIPTION;" + getDescription(db);
+        str += "|MODIFIED:" + getModified(db);
+        str += "|";
+
 		return str;
 	}
 
 	public Media getIcon(SQLiteDatabase db) {
 	    Media media = null;
-
-		List<Media> list = Media.findMediasByArticle(db, this);
-        if(list.size() > 0) {
-            media = list.get(0);
+        List<Media> medias = getMedias(db);
+        if(medias.size()>0) {
+            media = medias.get(0);
         }
-
 		return media;
 	}
 
@@ -209,14 +209,48 @@ public class Article implements Serializable{
     public static List<Article> getAllArticles(SQLiteDatabase db){
         List<Article> articles = new ArrayList<Article>();
 
-        String sql = "select ROWID from article_table";
-        Cursor cursor = db.rawQuery(sql, null);
-        while(cursor.moveToNext()){
-            long id = cursor.getLong(0);
-            Article article = new Article(id);
-            articles.add(article);
+        db.beginTransaction();
+        try {
+            String sql = "select ROWID from article_table";
+            Cursor cursor = db.rawQuery(sql, null);
+            while (cursor.moveToNext()) {
+                long id = cursor.getLong(0);
+                Article article = new Article(id);
+                articles.add(article);
+            }
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
         }
 
         return articles;
+    }
+
+    public List<ImageItem> getImageItems(SQLiteDatabase db, Context context){
+        List<ImageItem> mediaList = new ArrayList<ImageItem>();
+
+        db.beginTransaction();
+        try {
+            String sql = "select ROWID from media_table where article_id=?";
+            String[] selectionArgs = {"" + rowid};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+
+            while (cursor.moveToNext()) {
+                long id = cursor.getLong(0);
+                Media media = new Media(id);
+                File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                if(media.getType(db)==Media.MOVIE){
+                    dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+                }
+                String fileName = media.getIconPath(db);
+                File file = new File(dir, fileName);
+                ImageItem item = new ImageItem(context, rowid, file.getPath(), media.getType(db));
+                mediaList.add(item);
+            }
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
+        return mediaList;
     }
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.util.TypedValue;
 import android.view.View;
@@ -23,8 +24,7 @@ import android.widget.LinearLayout;
  */
 public class ImageAdapter extends BaseAdapter {
 	private Context mContext;
-    private SawaraDBAdapter dbAdapter;
-	private List<Media> mList;
+	private List<ImageItem> mList;
 	private int backDrawable;
 	
 	private final int LMP = LinearLayout.LayoutParams.MATCH_PARENT;
@@ -36,20 +36,25 @@ public class ImageAdapter extends BaseAdapter {
 	 */
 	public ImageAdapter(SawaraDBAdapter adapter, Context context){
 		mContext = context;
-        dbAdapter = adapter;
 		TypedValue outValue = new TypedValue();
 		context.getTheme().resolveAttribute(R.attr.frameBack, outValue, true);
 		backDrawable = outValue.resourceId;
-		mList = new ArrayList<Media>();
+		mList = new ArrayList<ImageItem>();
 	}
 	
 	/**
 	 * アダプタに画像を追加する
-	 * @param media
+	 * @param item
 	 */
-	public void add(Media media){
-		mList.add(media);
+	public void add(ImageItem item){
+		mList.add(item);
 	}
+
+    public void addAll(List<ImageItem> items){
+        for(ImageItem item: items){
+            add(item);
+        }
+    }
 
 	/**
 	 * アダプタのアイテム数を返す
@@ -64,7 +69,7 @@ public class ImageAdapter extends BaseAdapter {
 	 * @param position アイテムのポジション
 	 */
 	@Override
-	public Media getItem(int position) {
+	public ImageItem getItem(int position) {
 		return mList.get(position);
 	}
 
@@ -103,15 +108,13 @@ public class ImageAdapter extends BaseAdapter {
 			holder = (ViewHolder)convertView.getTag();
 		}
 
-        SQLiteDatabase db = dbAdapter.openDb();
-		holder.imageView.setImageBitmap(mList.get(position).getImage(db, mContext));
-		db.close();
+		holder.imageView.setImageBitmap(mList.get(position).getIcon());
 
 		return convertView;
 	}
 	
 	public void clear(){
-		mList = new ArrayList<Media>();
+		mList = new ArrayList<ImageItem>();
 	}
 	
 	class ViewHolder{

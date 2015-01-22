@@ -10,6 +10,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.media.ThumbnailUtils;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -25,6 +27,8 @@ public class Media {
 	static final String MODIFIED = "modified";
 
     static final int IMAGE_SIZE = 480;
+    static final int ICON_WIDTH = 320;
+    static final int ICON_HEIGHT = 240;
 
 	//private Context mContext;
 	private long rowid;
@@ -33,41 +37,70 @@ public class Media {
 		rowid = id;
 	}
 	
-	public Media(SQLiteDatabase db, String path, long type){
-        String sql = "insert into media_table(path, type, modified) values (?,?,?)";
-        SQLiteStatement statement = db.compileStatement(sql);
-        statement.bindString(1, path);
-        statement.bindLong(2, type);
-        statement.bindLong(3, System.currentTimeMillis());
-        long id = statement.executeInsert();
-        rowid = id;
-	}
+	public Media(SQLiteDatabase db, Context context, String path, long type){
+        db.beginTransaction();
+        try {
+            String sql = "insert into media_table(path, type, modified) values (?,?,?)";
+            SQLiteStatement statement = db.compileStatement(sql);
+            statement.bindString(1, path);
+            statement.bindLong(2, type);
+            statement.bindLong(3, System.currentTimeMillis());
+            long id = statement.executeInsert();
+            rowid = id;
 
-    public Media(SQLiteDatabase db, String path, long type, Article article){
-        String sql = "insert into media_table(path, type, article_id, modified) values (?,?,?,?)";
-        SQLiteStatement statement = db.compileStatement(sql);
-        statement.bindString(1, path);
-        statement.bindLong(2, type);
-        statement.bindLong(3, article.getId());
-        statement.bindLong(4, System.currentTimeMillis());
-        long id = statement.executeInsert();
-        rowid = id;
+            Bitmap icon = IconFactory.getIcon(context, getPath(db), getType(db));
+            String iconName = "media_icon_" + getId() + ".png";
+            boolean compress = IconFactory.saveIcon(context, iconName, icon);
+            if (compress) {
+                setIconPath(db, iconName);
+            }
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
     }
 
-	static List<Media> findMediasByArticle(SQLiteDatabase db,  Article article){
-		List<Media> mediaList = new ArrayList<Media>();
-		String sql = "select ROWID from media_table where article_id=?";
-		String[] selectionArgs = {""+article.getId()};
-		Cursor cursor = db.rawQuery(sql, selectionArgs);
-		
-		while(cursor.moveToNext()){
-			long id = cursor.getLong(0);
-			Media media = new Media(id);
-			mediaList.add(media);
-		}
-		
-		return mediaList;
-	}
+    public Media(SQLiteDatabase db, Context context, String path, long type, Article article){
+        db.beginTransaction();
+        try {
+            String sql = "insert into media_table(path, type, article_id, modified) values (?,?,?,?)";
+            SQLiteStatement statement = db.compileStatement(sql);
+            statement.bindString(1, path);
+            statement.bindLong(2, type);
+            statement.bindLong(3, article.getId());
+            statement.bindLong(4, System.currentTimeMillis());
+            long id = statement.executeInsert();
+            rowid = id;
+
+            Bitmap icon = IconFactory.getIcon(context, getPath(db), getType(db));
+            String iconName = "media_icon_" + getId() + ".png";
+            boolean compress = IconFactory.saveIcon(context, iconName, icon);
+            if (compress) {
+                setIconPath(db, iconName);
+            }
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
+    }
+
+    public File getFile(SQLiteDatabase db, Context context){
+        File file = null;
+
+        long type = getType(db);
+        if (type == Media.PHOTO) {
+            File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            String fname = getPath(db);
+            file = new File(dir, fname);
+        }
+        if (type == Media.MOVIE) {
+            File dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+            String fname = getPath(db);
+            file = new File(dir, fname);
+        }
+
+        return file;
+    }
 	
 	public void delete(SQLiteDatabase db){
         String sql = "delete from media_table where ROWID=?";
@@ -175,40 +208,30 @@ public class Media {
 		return rowid;
 	}
 
+    public void setIconPath(SQLiteDatabase db, String iconPath){
+        String sql = "update media_table set icon_path=? where ROWID=?";
+        SQLiteStatement statement = db.compileStatement(sql);
+        statement.bindString(1, iconPath);
+        statement.bindLong(2, rowid);
+        statement.executeUpdateDelete();
+    }
 
-    public Bitmap getImage(SQLiteDatabase db, Context context){
-        Bitmap image = null;
+    public String getIconPath(SQLiteDatabase db){
+        String sql = "select icon_path from media_table where ROWID=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        cursor.moveToFirst();
+        String iconPath = cursor.getString(0);
+        cursor.close();
 
-        String path = getPath(db);
-        long type = getType(db);
-        if(type == Media.PHOTO) {
-            //画像ファイルを指定
-            File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            File imageFile = new File(dir, path);
-            // サイズを確定するための仮読み込み
-            BitmapFactory.Options opt = new BitmapFactory.Options();
-            opt.inJustDecodeBounds = true;
+        return iconPath;
+    }
 
-            BitmapFactory.decodeFile(imageFile.getPath(), opt);
-
-            // 読み込み時の精度を決定
-            int size = opt.outWidth;
-            if (opt.outHeight > size) {
-                size = opt.outHeight;
-            }
-            opt.inSampleSize = size / IMAGE_SIZE;
-
-            // 本格的に画像を読み込む
-            opt.inJustDecodeBounds = false;
-            image = BitmapFactory.decodeFile(imageFile.getPath(), opt);
-        }else if(type == Media.MOVIE){
-            File dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-            File movieFile = new File(dir, path);
-            // 動画のサムネイル画像を取得する
-            image = ThumbnailUtils.createVideoThumbnail(movieFile.getPath(), MediaStore.Images.Thumbnails.MINI_KIND);
-        }
-
-        return image;
+    public Bitmap getIcon(SQLiteDatabase db, Context context){
+        File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File file = new File(dir, getIconPath(db));
+        Bitmap icon = BitmapFactory.decodeFile(file.getPath());
+        return icon;
     }
 
 	public String dump(SQLiteDatabase db){
