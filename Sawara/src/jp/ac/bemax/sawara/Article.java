@@ -1,6 +1,7 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,16 +19,13 @@ import android.provider.MediaStore;
  * @author Masaaki Horikawa
  * 2014/09/05
  */
-public class Article implements ListItem{
+public class Article implements Serializable{
 	//static final String TABLE_NAME = "article_table";
 	//static final String ID = "ROWID";
 	static final String NAME = "name";
 	static final String DESCRIPTION = "description";
 	static final String POSITION = "position";
 	static final String MODIFIED = "modified";
-
-	static final String UPDATE_SQL = "update article_table set ?=? where ROWID=?";
-	static final String SELECT_SQL = "select ? from article_table where ROWID=?";
 
 	private long rowid;
 	
@@ -73,8 +71,8 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public long getModified(SQLiteDatabase db)  {
-		String[] selectionArgs = {MODIFIED, ""+rowid};
-		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+		String[] selectionArgs = {""+rowid};
+		Cursor cursor = db.rawQuery("select modified from article_table where ROWID=?", selectionArgs);
 		cursor.moveToFirst();
 		long modified = cursor.getLong(0);
 		
@@ -87,10 +85,9 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public void setModified(SQLiteDatabase db, long modified) {
-		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
-		statement.bindString(1, MODIFIED);
-		statement.bindLong(2, modified);
-		statement.bindLong(3, rowid);
+		SQLiteStatement statement = db.compileStatement("update article_table set modified=? where ROWID=?");
+		statement.bindLong(1, modified);
+		statement.bindLong(2, rowid);
 		statement.executeUpdateDelete();
 	}
 
@@ -99,10 +96,9 @@ public class Article implements ListItem{
 	 * @param name
 	 */
 	public void setName(SQLiteDatabase db, String name) {
-		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
-		statement.bindString(1, NAME);
-		statement.bindString(2, name);
-		statement.bindLong(3, rowid);
+		SQLiteStatement statement = db.compileStatement("update article_table set name=? where ROWID=?");
+		statement.bindString(1, name);
+		statement.bindLong(2, rowid);
 		statement.executeUpdateDelete();
 	}
 
@@ -112,10 +108,9 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public void setDescription(SQLiteDatabase db, String description) {
-		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
-		statement.bindString(1, DESCRIPTION);
-		statement.bindString(2, description);
-		statement.bindLong(3, rowid);
+		SQLiteStatement statement = db.compileStatement("update article_table set description=? where ROWID=?");
+		statement.bindString(1, description);
+		statement.bindLong(2, rowid);
 		statement.executeUpdateDelete();
 	}
 	
@@ -125,8 +120,8 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public String getName(SQLiteDatabase db){
-		String[] selectionArgs = {NAME, ""+rowid};
-		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+		String[] selectionArgs = {""+rowid};
+		Cursor cursor = db.rawQuery("select name from article_table where ROWID=?", selectionArgs);
 		cursor.moveToFirst();
 		String name = cursor.getString(0);
 		
@@ -139,8 +134,8 @@ public class Article implements ListItem{
 	 * @throws Exception 
 	 */
 	public String getDescription(SQLiteDatabase db) {
-		String[] selectionArgs = {DESCRIPTION, ""+rowid};
-		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+		String[] selectionArgs = {""+rowid};
+		Cursor cursor = db.rawQuery("select description from article_table where ROWID=?", selectionArgs);
 		cursor.moveToFirst();
 		String description = cursor.getString(0);
 		
@@ -148,8 +143,8 @@ public class Article implements ListItem{
 	}
 
 	public long getPosition(SQLiteDatabase db) {
-		String[] selectionArgs = {POSITION, ""+rowid};
-		Cursor cursor = db.rawQuery(SELECT_SQL, selectionArgs);
+		String[] selectionArgs = {""+rowid};
+		Cursor cursor = db.rawQuery("select position from article_table where ROWID=?", selectionArgs);
 		cursor.moveToFirst();
 		long position = cursor.getLong(0);
 		
@@ -157,13 +152,22 @@ public class Article implements ListItem{
 	}
 
 	public void setPosition(SQLiteDatabase db, long position) {
-		SQLiteStatement statement = db.compileStatement(UPDATE_SQL);
-		statement.bindString(1, POSITION);
-		statement.bindLong(2, position);
-		statement.bindLong(3, rowid);
+		SQLiteStatement statement = db.compileStatement("update article_table set position=? where ROWID=?");
+		statement.bindLong(1, position);
+		statement.bindLong(2, rowid);
 		statement.executeUpdateDelete();
 	}
-	
+
+    public void setCateogories(SQLiteDatabase db, List<Category> categories){
+        String sql = "insert into category_article_table(category_id, article_id) values (?, ?)";
+        SQLiteStatement statement = db.compileStatement(sql);
+        for(Category category: categories){
+            statement.bindLong(1, category.getId());
+            statement.bindLong(2, rowid);
+            statement.executeInsert();
+        }
+    }
+
 	public String dump(SQLiteDatabase db){
 		String str = "";
 		str += "ROWID:" + rowid;
@@ -175,23 +179,15 @@ public class Article implements ListItem{
 		return str;
 	}
 
-	public Bitmap getIcon(SQLiteDatabase db) {
-		Bitmap icon = null;
-		
+	public Media getIcon(SQLiteDatabase db) {
+	    Media media = null;
+
 		List<Media> list = Media.findMediasByArticle(db, this);
-		if(list.size() > 0){
-			Media media = list.get(0);
-			String path = media.getPath(db);
-            long type = media.getType(db);
+        if(list.size() > 0) {
+            media = list.get(0);
+        }
 
-            if(type == Media.PHOTO){
-                icon = BitmapFactory.decodeFile(path);
-            }else if(type == Media.MOVIE){
-                icon = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
-            }
-		}
-
-		return icon;
+		return media;
 	}
 
     public List<Media> getMedias(SQLiteDatabase db){
@@ -208,5 +204,19 @@ public class Article implements ListItem{
         }
 
         return list;
+    }
+
+    public static List<Article> getAllArticles(SQLiteDatabase db){
+        List<Article> articles = new ArrayList<Article>();
+
+        String sql = "select ROWID from article_table";
+        Cursor cursor = db.rawQuery(sql, null);
+        while(cursor.moveToNext()){
+            long id = cursor.getLong(0);
+            Article article = new Article(id);
+            articles.add(article);
+        }
+
+        return articles;
     }
 }

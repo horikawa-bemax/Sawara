@@ -90,120 +90,116 @@ public class SawaraDBAdapter{
 		 */
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			String sql;
-			
-			// カテゴリテーブルを新規作成
-			sql = "create table category_table " +
-					"(name text unique not null, " +				// カテゴリ名
-					" icon text unique," +				// アイコン画像のパス
-					" position integer unique," +		// 表示位置
-					" modified integer )";		// 更新日時
-			db.execSQL(sql);
-			
-			// アーティクルテーブルを新規作成
-			sql = "create table article_table " +
-					"(name text unique not null, " +	// 名前 
-					" description text not null," +				// 説明
-					" icon text unique," +						// アイコン画像のパス
-					" position integer unique," +				// 表示位置
-					" modified integer )";				// 更新日時
-			db.execSQL(sql);
-			
-			sql = "create table category_article_table " +
-					"(category_id integer not null," +		// カテゴリID
-					" article_id integer not null," +		// アーティクルID
-					" unique (category_id, article_id))";	// ユニーク制約条件
-			db.execSQL(sql);
-			
-			// メディアテーブルの新規作成
-			sql = "create table media_table " +
-					"(path text unique not null, " +
-					"type integer not null," +
-					"article_id integer," +
-					"modified integer)";
-			db.execSQL(sql);
-			
-			// 
-			sql = "create view category_icon_view as " +
-					"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
-					"order by A.category_id";
-			db.execSQL(sql);
-			
-		/****  サンプルデータセット ***/
-			File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-			
-			SQLiteStatement statement, statement2;
-			String  sql2;
-			
-			// CategoryTable
-			String[] catNames = {"くるま","その他"};
-			sql = "insert into category_table(name, modified) values (?,?)";
-			long[] catIds = new long[catNames.length];
-			for(int i=0; i<catNames.length; i++){
-				statement = db.compileStatement(sql);
-				statement.bindString(1, catNames[i]);
-				statement.bindLong(2, System.currentTimeMillis());
-				catIds[i] = statement.executeInsert();
-			}
-			// ArticleTable
-			String[] artName = {"ふつうしゃ","けい","イギリスのバス"};
-			String[] artDesc = {"ふつうのおおきさのくるま","ちいさいくるま","にかいだてのバス"};
-			String[][] paths = {
-					{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
-					{copyFromAssets(imageDir, "r1.jpg")},
-					{copyFromAssets(movieDir, "buss.mp4")}
-				};
-			long[][] types = {
-					{Media.PHOTO, Media.PHOTO},
-					{Media.PHOTO},
-					{Media.MOVIE}
-				};
-			sql = "insert into article_table(name, description, modified) values (?,?,?)";
-			statement = db.compileStatement(sql);
-			sql2 = "insert into media_table(path, type, article_id, modified) values (?,?,?,?)";
-			statement2 = db.compileStatement(sql2);			
-			for(int i=0; i<artName.length; i++){
+            String sql;
+            db.beginTransaction();
+            try {
+                // カテゴリテーブルを新規作成
+                sql = "create table category_table " +
+                        "(name text unique not null, " +                // カテゴリ名
+                        " icon integer unique," +                // アイコン画像のパス
+                        " position integer unique," +        // 表示位置
+                        " modified integer )";        // 更新日時
+                db.execSQL(sql);
 
-				statement.bindString(1, artName[i]);
-				statement.bindString(2, artDesc[i]);
-				statement.bindLong(3, System.currentTimeMillis());
-				long id = statement.executeInsert();
-				
-				for(int j=0; j<paths[i].length; j++){
-					statement2.bindString(1, paths[i][j]);
-					statement2.bindLong(2, types[i][j]);
-					statement2.bindLong(3, id);
-					statement2.bindLong(4, System.currentTimeMillis());
-					statement2.executeInsert();
-				}
-			}
-		}
-	
-		public String copyFromAssets(File dir ,String filename){
-			String filePath = null;
-			byte[] buffer = new byte[1024*4];
-			File outFile = new File(dir, filename);
-			InputStream is = null;
-			FileOutputStream fos = null;
-			try{
-				is = context.getAssets().open(filename);
-				fos = new FileOutputStream(outFile);
-				int num = -1;
-				while(-1 != (num = is.read(buffer))){
-					fos.write(buffer, 0, buffer.length);
-				}
-				filePath = outFile.getPath();
-			}catch(IOException e){
-				e.printStackTrace();
-			}finally{
-				try{
-					fos.close();
-					is.close();
-				}catch(IOException e){
-					e.printStackTrace();
-				}
-			}
+                // アーティクルテーブルを新規作成
+                sql = "create table article_table " +
+                        "(name text unique not null, " +    // 名前
+                        " description text not null," +                // 説明
+                        " position integer unique," +                // 表示位置
+                        " modified integer )";                // 更新日時
+                db.execSQL(sql);
+
+                sql = "create table category_article_table " +
+                        "(category_id integer not null," +        // カテゴリID
+                        " article_id integer not null," +        // アーティクルID
+                        " unique (category_id, article_id))";    // ユニーク制約条件
+                db.execSQL(sql);
+
+                // メディアテーブルの新規作成
+                sql = "create table media_table " +
+                        "(path text unique not null, " +
+                        "type integer not null," +
+                        "article_id integer," +
+                        "modified integer)";
+                db.execSQL(sql);
+
+                /****  サンプルデータセット ***/
+                File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+
+                SQLiteStatement statement, statement2;
+                String sql2;
+
+                // CategoryTable作成
+                String[] catNames = {"くるま", "その他"};
+                for (String name : catNames) {
+                    Category category = new Category(db, name);
+                }
+                // ArticleTable
+                String[] artName = {"ふつうしゃ", "けい", "イギリスのバス"};
+                String[] artDesc = {"ふつうのおおきさのくるま", "ちいさいくるま", "にかいだてのバス"};
+                String[][] paths = {
+                        {"legacy.jpg","legacy2.jpg"},
+                        {"r1.jpg"},
+                        {"buss.mp4"}
+                };
+                long[][] types = {
+                        {Media.PHOTO, Media.PHOTO},
+                        {Media.PHOTO},
+                        {Media.MOVIE}
+                };
+                List<Category> cates = new ArrayList<Category>();
+                cates.add(Category.findCategoryByName(db, "くるま"));
+                for (int i = 0; i < artName.length; i++) {
+                    Article article = new Article(db, artName[i], artDesc[i]);
+                    article.setCateogories(db, cates);
+                    for (int j = 0; j < paths[i].length; j++) {
+                        copyFromAssets(types[i][j], paths[i][j]);
+                        Media media = new Media(db, paths[i][j], types[i][j], article);
+                    }
+                }
+
+                List<Category> cs = Category.getAllCategory(db);
+                for(Category category: cs){
+                    category.makeIcon(db, context);
+                }
+
+                db.setTransactionSuccessful();
+            }finally {
+                db.endTransaction();
+            }
+        }
+
+        public String copyFromAssets(long type, String filename){
+            String filePath = null;
+            byte[] buffer = new byte[1024*4];
+            File dir = null;
+            if(type == Media.PHOTO){
+                dir =context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            }else if(type == Media.MOVIE){
+                dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+            }
+            File outFile = new File(dir, filename);
+            InputStream is = null;
+            FileOutputStream fos = null;
+            try{
+                is = context.getAssets().open(filename);
+                fos = new FileOutputStream(outFile);
+                int num = -1;
+                while(-1 != (num = is.read(buffer))){
+                    fos.write(buffer, 0, buffer.length);
+                }
+                filePath = outFile.getPath();
+            }catch(IOException e){
+                e.printStackTrace();
+            }finally{
+                try{
+                    fos.close();
+                    is.close();
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
+            }
 			return filePath;
 		}
 		

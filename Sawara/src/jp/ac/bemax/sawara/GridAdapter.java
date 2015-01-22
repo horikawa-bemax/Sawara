@@ -35,17 +35,15 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	private int resourceId;			// グリッドに表示するアイテムのレイアウトXML
 	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
 	private Point dispSize; 		// 画面のサイズ
-    private SawaraDBAdapter mAdapter;
 
 	static int frameSize;
 	static float density;
 
-	public GridAdapter(SawaraDBAdapter adapter, Context context, int resource, List<ListItem> objects) {
+	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
 		this.context = context;
 		this.resourceId = resource;
 		this.list = objects;
-        mAdapter = adapter;
 		
 		// 画面のサイズを取得して、dispSizeにセットする
 		WindowManager wManager = ((Activity)context).getWindowManager();
@@ -93,34 +91,16 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		// 表示するアイテムを取り出す
 		ListItem listItem = getItem(position);
 
-        SQLiteDatabase db = mAdapter.openDb();
-        db.beginTransaction();
-        try {
-            // imageViewにitemの画像をセットする
-            Bitmap bmp = listItem.getIcon(db);
-            holder.imageView.setImageBitmap(bmp);
-            holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
+        // imageViewにitemの画像をセットする
+        Bitmap bmp = listItem.getIcon();
+        holder.imageView.setImageBitmap(bmp);
+        holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
 
-            // 縦書きのtextViewにアイテムの値をセットする
-            holder.vTextView.setText(listItem.getName(db));
-            holder.vTextView.setBackground(getVTextBack());
+        // 縦書きのtextViewにアイテムの値をセットする
+        holder.vTextView.setText(listItem.getName());
+        holder.vTextView.setBackground(getVTextBack());
 
-            db.setTransactionSuccessful();
-        }finally {
-            db.endTransaction();
-            db.close();
-        }
         return convertView;
-	}
-
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
-		ListItem listItem = list.get(position);
-		if (listItem instanceof Category) {
-			Category category = (Category)listItem;
-			category.getId();
-			
-		} 
 	}
 
 	private Drawable getVTextBack(){
@@ -135,8 +115,13 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		
 		return drawable;
 	}
-	
-	class ViewHolder{
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+    }
+
+    class ViewHolder{
 		ImageView imageView;
 		VTextView vTextView;
 	}

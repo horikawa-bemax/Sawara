@@ -1,11 +1,13 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.os.Environment;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,7 +104,7 @@ public class ImageAdapter extends BaseAdapter {
 		}
 
         SQLiteDatabase db = dbAdapter.openDb();
-		holder.imageView.setImageBitmap(mList.get(position).getImage(db));
+		holder.imageView.setImageBitmap(mList.get(position).getImage(db, mContext));
 		db.close();
 
 		return convertView;

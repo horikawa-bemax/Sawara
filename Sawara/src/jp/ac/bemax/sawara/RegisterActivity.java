@@ -455,6 +455,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				if(thisCategory != null){
 					categoryIds = new long[]{thisCategory.getId()};
 				}else{
+                    // とりあえずその他
 					categoryIds = new long[]{2};
 				}
 			
@@ -462,7 +463,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				if(mode == NEW_MODE){
 					// 新しいArticleを作成する
 					article = new Article(db, name, description);
-				
+
 				}else if(mode == UPDATE_MODE){
 					// Articleを更新する
 					article = (Article)getIntent().getSerializableExtra("article");
@@ -574,7 +575,14 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
         try {
             switch (parent.getId()) {
                 case R.id.register_image_viewer:
-                    Uri uri = Uri.fromFile(new File(imageViewerAdapter.getItem(position).getPath(db)));
+                    Media media = imageViewerAdapter.getItem(position);
+                    long type = media.getType(db);
+                    String path = media.getPath(db);
+                    File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                    if(type == Media.MOVIE){
+                        dir = this.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+                    }
+                    Uri uri = Uri.fromFile(new File(dir, path));
                     Intent intent = new Intent();
                     intent.setAction(Intent.ACTION_VIEW);
                     if (imageViewerAdapter.getItem(position).getType(db) == Media.PHOTO) {
