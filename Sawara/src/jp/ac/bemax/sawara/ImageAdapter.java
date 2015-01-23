@@ -116,7 +116,11 @@ public class ImageAdapter extends BaseAdapter {
 	public void clear(){
 		mList = new ArrayList<ImageItem>();
 	}
-	
+
+	public List<ImageItem> getImageItems(){
+		return mList;
+	}
+
 	class ViewHolder{
 		ImageView imageView;
 	}

@@ -119,7 +119,7 @@ public class SawaraDBAdapter{
                 sql = "create table media_table " +
                         "(path text unique not null, " +
                         "type integer not null," +
-                        "icon_path string not null," +
+                        "icon_path string," +
                         "article_id integer," +
                         "modified integer)";
                 db.execSQL(sql);

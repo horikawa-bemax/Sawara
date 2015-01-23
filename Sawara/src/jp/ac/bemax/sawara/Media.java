@@ -234,6 +234,18 @@ public class Media {
         return icon;
     }
 
+	public static List<Media> createNewMedias(SQLiteDatabase db, Context context, List<ImageItem> items, Article article){
+		List<Media> medias = new ArrayList<Media>();
+		for(ImageItem item: items){
+			if(item.getId() == -1){
+				Media media = new Media(db, context, item.getFileName(), item.getType(), article);
+				medias.add(media);
+			}
+		}
+
+		return medias;
+	}
+
 	public String dump(SQLiteDatabase db){
 		String str = "";
 		str += "ROWID:" + rowid;

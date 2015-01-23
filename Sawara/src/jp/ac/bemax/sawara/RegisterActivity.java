@@ -30,6 +30,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -440,47 +441,58 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			String description = holder.discriptionTextView.getText().toString();
 			
 			SQLiteDatabase db = dbAdapter.openDb();
-			db.beginTransaction();
-			try{
-				// カテゴリーidの設定
-				long[] categoryIds;
-				if(thisCategory != null){
-					categoryIds = new long[]{thisCategory.getId()};
-				}else{
-                    // とりあえずその他
-					categoryIds = new long[]{2};
-				}
-			
-				Article article = null;
-				if(mode == NEW_MODE){
-					// 新しいArticleを作成する
-					article = new Article(db, name, description);
+			// カテゴリーidの設定
+			long[] categoryIds;
+			if(thisCategory != null){
+				categoryIds = new long[]{thisCategory.getId()};
+			}else{
+				// とりあえずその他
+				categoryIds = new long[]{2};
+			}
 
-				}else if(mode == UPDATE_MODE){
-					// Articleを更新する
-					article = (Article)getIntent().getSerializableExtra("article");
+			Article article = null;
+			if(mode == NEW_MODE){
+				// 新しいArticleを作成する
+				db.beginTransaction();
+				try {
+					article = new Article(db, name, description);
+					//新しいMediaを登録する
+					List<ImageItem> items = imageViewerAdapter.getImageItems();
+					List<Media> newMedias = Media.createNewMedias(db, this, items, article);
+					//カテゴリーに登録
+
+					db.setTransactionSuccessful();
+				}finally {
+					db.endTransaction();
+				}
+
+			}else if(mode == UPDATE_MODE){
+				// Articleを更新する
+				db.beginTransaction();
+				try {
+					article = (Article) getIntent().getSerializableExtra("article");
 					article.setName(db, name);
 					article.setDescription(db, description);
 					article.setModified(db, System.currentTimeMillis());
+					List<ImageItem> items = imageViewerAdapter.getImageItems();
+					List<Media> newMedias = Media.createNewMedias(db, this, items, article);
+					db.setTransactionSuccessful();
+				}finally {
+					db.endTransaction();
 				}
-				// 成功
-				if(article != null){
-					// カテゴリーアイコンの更新
-					//CategoryManager cManager = new CategoryManager(this);
-					for(long cId: categoryIds){
-						Category category = new Category(cId);
-					}
-			
-					intent.putExtra("article", article);
-					setResult(RESULT_OK, intent);
-				}else{
-					setResult(RESULT_CANCELED, intent);
+			}
+			// 成功
+			if(article != null){
+				// カテゴリーアイコンの更新
+				//CategoryManager cManager = new CategoryManager(this);
+				for(long cId: categoryIds){
+					Category category = new Category(cId);
 				}
-				
-				db.setTransactionSuccessful();
-			}finally{
-				db.endTransaction();
-				db.close();
+
+				intent.putExtra("article", article);
+				setResult(RESULT_OK, intent);
+			}else{
+				setResult(RESULT_CANCELED, intent);
 			}
 			
 			finish();

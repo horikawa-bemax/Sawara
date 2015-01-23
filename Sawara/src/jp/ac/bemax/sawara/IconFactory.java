@@ -73,7 +73,7 @@ public class IconFactory {
         File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         FileOutputStream fos = null;
         try{
-            fos = new FileOutputStream(new File(fileName));
+            fos = new FileOutputStream(new File(dir,fileName));
             compress = image.compress(Bitmap.CompressFormat.PNG, 100, fos);
 
         }catch (Exception e){

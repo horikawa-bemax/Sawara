@@ -14,6 +14,7 @@ public class ImageItem {
     private long mediaId;
     private long mediaType;
     private String fileName;
+	private String iconPath;
     private Context context;
 
     public ImageItem(Context context, String fileName, long mediaType){
@@ -23,10 +24,19 @@ public class ImageItem {
         this.mediaType = mediaType;
     }
 
-    public ImageItem(Context context, long mediaId, String fileName, long mediaType){
+    public ImageItem(Context context, long mediaId, String fileName, long mediaType, String iconPath){
         this(context, fileName, mediaType);
         this.mediaId = mediaId;
+		this.iconPath = iconPath;
     }
+
+	public String getFileName(){
+		return fileName;
+	}
+
+	public String getIconPath(){
+		return iconPath;
+	}
 
     public Bitmap getIcon(){
         Bitmap icon = null;
@@ -34,7 +44,7 @@ public class ImageItem {
             icon = IconFactory.getIcon(context, fileName, mediaType);
         }else{
             File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            File iconFile = new File(dir, fileName);
+            File iconFile = new File(dir, iconPath);
             icon = BitmapFactory.decodeFile(iconFile.getPath());
         }
         return icon;

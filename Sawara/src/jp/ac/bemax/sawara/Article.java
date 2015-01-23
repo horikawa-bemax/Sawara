@@ -239,12 +239,9 @@ public class Article implements Serializable{
                 long id = cursor.getLong(0);
                 Media media = new Media(id);
                 File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                if(media.getType(db)==Media.MOVIE){
-                    dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-                }
                 String fileName = media.getIconPath(db);
                 File file = new File(dir, fileName);
-                ImageItem item = new ImageItem(context, rowid, file.getPath(), media.getType(db));
+                ImageItem item = new ImageItem(context, id, file.getPath(), media.getType(db), media.getIconPath(db));
                 mediaList.add(item);
             }
             db.setTransactionSuccessful();

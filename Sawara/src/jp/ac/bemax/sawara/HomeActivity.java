@@ -287,6 +287,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				case CATEGORY_VIEW:
 					break;
 				case ARTICLE_VIEW:
+					dbAdapter.dump(db);
 					Article article = (Article)data.getSerializableExtra("article");
                     Media media = article.getIcon(db);
                     long type = media.getType(db);
