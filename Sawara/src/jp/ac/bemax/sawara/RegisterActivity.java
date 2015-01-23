@@ -1,6 +1,7 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -442,16 +443,17 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			
 			SQLiteDatabase db = dbAdapter.openDb();
 			// カテゴリーidの設定
-			long[] categoryIds;
+			List<Category> categories = new ArrayList<Category>();
 			if(thisCategory != null){
-				categoryIds = new long[]{thisCategory.getId()};
+				categories.add(thisCategory);
 			}else{
 				// とりあえずその他
-				categoryIds = new long[]{2};
+				categories.add(new Category(2));
 			}
 
+			boolean success = false;
 			Article article = null;
-			if(mode == NEW_MODE){
+			if(mode == NEW_MODE) {
 				// 新しいArticleを作成する
 				db.beginTransaction();
 				try {
@@ -459,13 +461,19 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 					//新しいMediaを登録する
 					List<ImageItem> items = imageViewerAdapter.getImageItems();
 					List<Media> newMedias = Media.createNewMedias(db, this, items, article);
-					//カテゴリーに登録
+					//カテゴリーを登録
+					article.createCategoriesForArticle(db, categories);
+					for (Category category : categories) {
+						category.makeIcon(db, this);
+					}
 
 					db.setTransactionSuccessful();
+					success = true;
+				}catch(Exception e){
+					e.printStackTrace();
 				}finally {
 					db.endTransaction();
 				}
-
 			}else if(mode == UPDATE_MODE){
 				// Articleを更新する
 				db.beginTransaction();
@@ -476,25 +484,22 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 					article.setModified(db, System.currentTimeMillis());
 					List<ImageItem> items = imageViewerAdapter.getImageItems();
 					List<Media> newMedias = Media.createNewMedias(db, this, items, article);
+
 					db.setTransactionSuccessful();
+					success = true;
 				}finally {
 					db.endTransaction();
 				}
 			}
 			// 成功
-			if(article != null){
-				// カテゴリーアイコンの更新
-				//CategoryManager cManager = new CategoryManager(this);
-				for(long cId: categoryIds){
-					Category category = new Category(cId);
-				}
-
+			if(success){
 				intent.putExtra("article", article);
 				setResult(RESULT_OK, intent);
 			}else{
 				setResult(RESULT_CANCELED, intent);
 			}
-			
+
+			db.close();
 			finish();
 	
 			break;

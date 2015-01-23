@@ -153,7 +153,7 @@ public class SawaraDBAdapter{
                 cates.add(Category.findCategoryByName(db, "くるま"));
                 for (int i = 0; i < artName.length; i++) {
                     Article article = new Article(db, artName[i], artDesc[i]);
-                    article.setCateogories(db, cates);
+                    article.createCategoriesForArticle(db, cates);
                     for (int j = 0; j < paths[i].length; j++) {
                         copyFromAssets(types[i][j], paths[i][j]);
                         Media media = new Media(db, context, paths[i][j], types[i][j], article);

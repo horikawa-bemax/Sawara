@@ -160,14 +160,15 @@ public class Article implements Serializable{
 		statement.executeUpdateDelete();
 	}
 
-    public void setCateogories(SQLiteDatabase db, List<Category> categories){
-        String sql = "insert into category_article_table(category_id, article_id) values (?, ?)";
+    public List<Category> createCategoriesForArticle(SQLiteDatabase db, List<Category> categories){
+		String sql = "insert into category_article_table(category_id, article_id) values (?, ?)";
         SQLiteStatement statement = db.compileStatement(sql);
         for(Category category: categories){
             statement.bindLong(1, category.getId());
             statement.bindLong(2, rowid);
             statement.executeInsert();
         }
+		return categories;
     }
 
 	public String dump(SQLiteDatabase db){
