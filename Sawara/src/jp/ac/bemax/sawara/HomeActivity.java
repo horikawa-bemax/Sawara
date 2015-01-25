@@ -17,7 +17,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -156,7 +155,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                                         if(type == Media.MOVIE){
                                             dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
                                         }
-                                        File iconFile = new File(dir, media.getPath(db));
+                                        File iconFile = new File(dir, media.getMediaFilePath(db));
                                         ListItem item = new ListItem(category.getId(), category.getName(db), iconFile.getPath(), type);
                                         listItems.add(item);
                                     }
@@ -169,13 +168,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                                     List<Article> articles = thisCategory.getArticles(db);
                                     listItems = new ArrayList<ListItem>();
                                     for (Article article : articles) {
-                                        Media media = article.getIcon(db);
+                                        Media media = article.getIconMedia(db);
                                         long type = media.getType(db);
                                         File dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                                         if(type == Media.MOVIE){
                                             dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
                                         }
-                                        File iconFile = new File(dir, media.getPath(db));
+                                        File iconFile = new File(dir, media.getMediaFilePath(db));
                                         ListItem item = new ListItem(article.getId(), article.getName(db), iconFile.getPath(), type);
 
                                         listItems.add(item);
@@ -289,13 +288,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				case ARTICLE_VIEW:
 					dbAdapter.dump(db);
 					Article article = (Article)data.getSerializableExtra("article");
-                    Media media = article.getIcon(db);
+                    Media media = article.getIconMedia(db);
                     long type = media.getType(db);
                     File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                     if(type == Media.MOVIE) {
                         dir = this.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
                     }
-                    File file = new File(dir, media.getPath(db));
+                    File file = new File(dir, media.getMediaFilePath(db));
                     ListItem item = new ListItem(article.getId(), article.getName(db), file.getPath(), media.getType(db));
 
 					gridAdapter.add(item);

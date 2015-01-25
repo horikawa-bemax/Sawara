@@ -1,27 +1,23 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,7 +27,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -464,7 +459,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 					//カテゴリーを登録
 					article.createCategoriesForArticle(db, categories);
 					for (Category category : categories) {
-						category.makeIcon(db, this);
+						category.updateIcon(db, this);
 					}
 
 					db.setTransactionSuccessful();
@@ -580,7 +575,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                     if(item.getId()!=-1) {
                         Media media = new Media(item.getId());
                         long type = media.getType(db);
-                        String path = media.getPath(db);
+                        String path = media.getMediaFilePath(db);
                         File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                         if (type == Media.MOVIE) {
                             dir = this.getExternalFilesDir(Environment.DIRECTORY_MOVIES);

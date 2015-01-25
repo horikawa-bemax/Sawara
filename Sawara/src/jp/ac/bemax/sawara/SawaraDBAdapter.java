@@ -13,6 +13,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
 import android.os.Environment;
 import android.util.Log;
 
@@ -104,9 +105,10 @@ public class SawaraDBAdapter{
                 // アーティクルテーブルを新規作成
                 sql = "create table article_table " +
                         "(name text unique not null, " +    // 名前
-                        " description text not null," +                // 説明
-                        " position integer unique," +                // 表示位置
-                        " modified integer )";                // 更新日時
+                        " description text not null," +        // 説明
+                        " icon long unique, " +          // アイコン
+                        " position integer unique," +         // 表示位置
+                        " modified integer )";                    // 更新日時
                 db.execSQL(sql);
 
                 sql = "create table category_article_table " +
@@ -117,11 +119,18 @@ public class SawaraDBAdapter{
 
                 // メディアテーブルの新規作成
                 sql = "create table media_table " +
-                        "(path text unique not null, " +
+                        "(file_name text unique not null, " +
                         "type integer not null," +
-                        "icon_path string," +
                         "article_id integer," +
                         "modified integer)";
+                db.execSQL(sql);
+
+                // カテゴリーとメディアの関係ビュー
+                sql = "create view category_media_view as " +
+                        "select A.category_id, A.article_id, B.media_id " +
+                        "from category_article_table A " +
+                        "inner join media_table B " +
+                        "on A.article_id=B.article_id";
                 db.execSQL(sql);
 
                 /****  サンプルデータセット ***/
@@ -140,7 +149,7 @@ public class SawaraDBAdapter{
                 String[] artName = {"ふつうしゃ", "けい", "イギリスのバス"};
                 String[] artDesc = {"ふつうのおおきさのくるま", "ちいさいくるま", "にかいだてのバス"};
                 String[][] paths = {
-                        {"legacy.jpg","legacy2.jpg"},
+                        {"legacy.jpg", "legacy2.jpg"},
                         {"r1.jpg"},
                         {"buss.mp4"}
                 };
@@ -155,23 +164,30 @@ public class SawaraDBAdapter{
                     Article article = new Article(db, artName[i], artDesc[i]);
                     article.createCategoriesForArticle(db, cates);
                     for (int j = 0; j < paths[i].length; j++) {
-                        copyFromAssets(types[i][j], paths[i][j]);
-                        Media media = new Media(db, context, paths[i][j], types[i][j], article);
+                        File file = copyFromAssets(types[i][j], paths[i][j]);
+                        Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(file, types[i][j]);
+                        Media media = new Media(db, context, bitmap, paths[i][j], types[i][j], article);
                     }
                 }
 
+                // カテゴリのアイコンを作成する
                 List<Category> cs = Category.getAllCategory(db);
-                for(Category category: cs){
-                    category.makeIcon(db, context);
+                for (Category category : cs) {
+                    Bitmap icon = category.makeCategoryIconBitmap(db, context);
+                    String iconName = "category_icon_"+category.getId()+".png";
+                    Media media = new Media(db, context, icon, iconName, Media.PHOTO);
+                    category.setIcon(db, media);
                 }
 
                 db.setTransactionSuccessful();
+            }catch (Exception e){
+                e.printStackTrace();
             }finally {
                 db.endTransaction();
             }
         }
 
-        public String copyFromAssets(long type, String filename){
+        public File copyFromAssets(long type, String filename){
             String filePath = null;
             byte[] buffer = new byte[1024*4];
             File dir = null;
@@ -201,7 +217,7 @@ public class SawaraDBAdapter{
                     e.printStackTrace();
                 }
             }
-			return filePath;
+			return outFile;
 		}
 		
 		/* (非 Javadoc)

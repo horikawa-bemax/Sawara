@@ -5,13 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.media.ThumbnailUtils;
 import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,14 +32,21 @@ public class Category implements Serializable{
     public static final int ICON_HEIGHT = 240;
 	
 	private long rowid;
-	
-	/**
-	 * Category.javaコンストラクタ
-	 */
-	public Category(long id){
+
+    /**
+     * IDを指定して、カテゴリオブジェクトを作成する
+     * @param id
+     */
+	private Category(long id){
 		rowid = id;
 	}
-	
+
+    /**
+     * カテゴリ名から、新しいカテゴリを作成する。
+     * オブジェクト作成と当時に、DBにinsertする。
+     * @param db
+     * @param name
+     */
 	public Category(SQLiteDatabase db, String name){
         db.beginTransaction();
         try {
@@ -57,27 +58,66 @@ public class Category implements Serializable{
         }
     }
 
-    public Category(SQLiteDatabase db, Context context, String name, Article article){
+    public static Category getCategory(SQLiteDatabase db, long categoryId){
+        Category category = null;
+        if(db != null) {
+            String sql = "select ROWID from Category_table where ROWID=?";
+            String[] selectionArgs = {"" + categoryId};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+            if (cursor.getCount() > 0) {
+                category = new Category(categoryId);
+            }
+        }else{
+            category = new Category(categoryId);
+        }
+        return category;
+    }
+
+    /**
+     * カテゴリ名とアーティクル配列から、新しいカテゴリを作成する
+     * オブジェクト作成と当時に、DBにinsertする。
+     * @param db
+     * @param context
+     * @param name
+     * @param articles
+     */
+    public Category(SQLiteDatabase db, Context context, String name, Article[] articles) throws Exception {
         db.beginTransaction();
         try {
+            // カテゴリテーブルにデータを作成
             rowid = insert(db, name);
             setPosition(db, rowid);
 
+            // カテゴリアーティクルテーブルにデータを作成
             String sql = "insert into category_article_table(article_id, category_id) values (?,?)";
             SQLiteStatement statement = db.compileStatement(sql);
-            statement.bindLong(1, article.getId());
-            statement.bindLong(2, rowid);
-            statement.executeInsert();
+            for (Article article : articles) {
+                statement.bindLong(1, article.getId());
+                statement.bindLong(2, rowid);
+                statement.executeInsert();
+            }
 
-            Media media = makeIcon(db, context);
+            // カテゴリのアイコンを作成する
+            Bitmap iconBitmap = makeCategoryIconBitmap(db, context);
+            String iconFileName = "category_icon_" + rowid + ".PNG";
+            Media media = new Media(db, context, iconBitmap, iconFileName, Media.PHOTO);
             setIcon(db, media);
 
             db.setTransactionSuccessful();
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new Exception("新しいカテゴリを作れなかったよ");
         }finally {
             db.endTransaction();
         }
     }
-	
+
+    /**
+     * DBにインサートを行う。インサートに成功したら、
+     * @param db
+     * @param name
+     * @return
+     */
 	public long insert(SQLiteDatabase db, String name){
 		String sql = "insert into category_table(name, modified) values (?,?)";
 		SQLiteStatement statement = db.compileStatement(sql);
@@ -108,14 +148,14 @@ public class Category implements Serializable{
         statement.executeUpdateDelete();
     }
 
-    public Media getIcon(SQLiteDatabase db){
+    public Media getIcon(SQLiteDatabase db, Context context){
         Media media = null;
         String[] selectionArgs = {""+rowid};
         Cursor cursor = db.rawQuery("select icon from category_table where ROWID=?", selectionArgs);
         if(cursor.getCount()>0) {
             cursor.moveToFirst();
             long icon = cursor.getLong(0);
-            media = new Media(icon);
+            media = Media.getMedia(db, context, icon);
         }
         cursor.close();
 
@@ -212,56 +252,64 @@ public class Category implements Serializable{
         return name;
 	}
 
-	public Media makeIcon(SQLiteDatabase db, Context context) {
-        Media media = null;
-        Bitmap icon = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT*3/2, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(icon);
-        Rect src = new Rect(0, 0, ICON_WIDTH, ICON_HEIGHT);
-        Rect dst = null;
-        int width = ICON_WIDTH/2;
-        int height = ICON_HEIGHT/2;
+    /**
+     * カテゴリのアイコンを作成し、ビットマップで返す
+     * @param db
+     * @param context
+     * @return
+     */
+	public Bitmap makeCategoryIconBitmap(SQLiteDatabase db, Context context) {
+        Bitmap icon = null;
+
         FileOutputStream fos = null;
-
         File iconDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
         db.beginTransaction();
-        try{
-            List<Article> list = getArticles(db);
-            // 最大６つの画像を使ってアイコンを作成する
-            for(int i=0; i<6 && i<list.size(); i++){
-                Article article = list.get(i);
-                Media articleIcon = article.getIcon(db);
-                Bitmap srcImage = articleIcon.getIcon(db, context);
-
-                int left = (i%2) * width;
-                int top = (i/2) * height;
-                dst = new Rect(left, top, left + width, top + height);
-                canvas.drawBitmap(srcImage, src, dst, null);
+        try {
+            String sql = "select min(media_id) from category_media_view where category_id=? group by article_id";
+            String[] selectionArgs = {"" + rowid};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+            if (cursor.getCount() > 0) {
+                Bitmap[] mediaBitmaps = new Bitmap[cursor.getCount()];
+                while (cursor.moveToNext()) {
+                    mediaBitmaps[cursor.getPosition()] = Media.getMedia(null, context, cursor.getLong(0)).getMediaIconBitmap(db);
+                }
+                icon = IconFactory.makeSixMatrixIcon(context, mediaBitmaps);
             }
-
-            String fileName = "icon_category_"+rowid+".png";
-            File saveFile = new File(iconDir, fileName);
-
-            fos = new FileOutputStream(saveFile);
-            icon.compress(Bitmap.CompressFormat.PNG, 100, fos);
-
-            media = new Media(db, context, fileName, Media.PHOTO);
-            setIcon(db, media);
+            cursor.close();
 
             db.setTransactionSuccessful();
-        }catch(Exception e){
+        }catch (Exception e){
             e.printStackTrace();
-            Log.d("majide", "majide");
         }finally {
-            try {
-                fos.close();
-            }catch(IOException e){
-                e.printStackTrace();
-            }
             db.endTransaction();
         }
+        return icon;
+    }
 
-        return media;
-	}
+    public boolean updateIcon(SQLiteDatabase db, Context context, Bitmap newIcon){
+        boolean success = false;
+
+        // あたらしいアイコンをファイルに出力する
+        FileOutputStream fos = null;
+        try {
+            // アイコンメディアを取得
+            Media media = getIcon(db, context);
+            File iconFile = media.getMediaFile(db);
+
+            fos = new FileOutputStream(iconFile);
+            newIcon.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            success = true;
+        }catch(Exception e){
+            try{
+                fos.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
+        return success;
+    }
 
     public static Category findCategoryById(SQLiteDatabase db, long id){
         Category category = null;
@@ -298,17 +346,6 @@ public class Category implements Serializable{
             list.add(article);
         }
         return list;
-    }
-
-    public String dump(SQLiteDatabase db){
-        String str = "";
-        str += "ROWID:" + rowid;
-        str += "|NAME:"+ getName(db);
-        str += "|ICON:" + getIcon(db).getId();
-        str += "|MODIFIED:" + getModified(db);
-        str += "|";
-
-        return str;
     }
 
     public static List<Category> getAllCategory(SQLiteDatabase db){

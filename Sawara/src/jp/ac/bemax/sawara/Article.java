@@ -171,41 +171,62 @@ public class Article implements Serializable{
 		return categories;
     }
 
-	public String dump(SQLiteDatabase db){
-        String str = "";
-        str += "ROWID:" + rowid;
-        str += "|NAME:" + getName(db);
-        str += "|DESCRIPTION;" + getDescription(db);
-        str += "|MODIFIED:" + getModified(db);
-        str += "|";
+    /**
+     * articleのアイコンをセットする
+     * @param db
+     * @param mediaId
+     */
+    public void setIcon(SQLiteDatabase db, Long mediaId){
+        String sql = "updata article_table set icon=? where ROWID=?";
+        SQLiteStatement statement = db.compileStatement(sql);
+        statement.bindLong(1, mediaId);
+        statement.bindLong(2, rowid);
+        statement.executeUpdateDelete();
+    }
 
-		return str;
-	}
-
-	public Media getIcon(SQLiteDatabase db) {
+	public Media getIcon(SQLiteDatabase db, Context context) {
 	    Media media = null;
-        List<Media> medias = getMedias(db);
-        if(medias.size()>0) {
-            media = medias.get(0);
+        String sql = "select icon from article_table where ROWID=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        if(cursor.getCount() > 0){
+            cursor.moveToFirst();
+            long mediaId = cursor.getLong(0);
+            media = Media.getMedia(db, context, mediaId);
+            cursor.close();
         }
 		return media;
 	}
 
-    public List<Media> getMedias(SQLiteDatabase db){
-        List<Media> list = new ArrayList<Media>();
+    /**
+     * このアーティクルに属する画像の配列を返す
+     * @param db
+     * @param context
+     * @return 画像の配列
+     */
+    public Media[] getMedias(SQLiteDatabase db, Context context){
+        Media[] medias = null;
 
-        String sql = "select ROWID from media_table where article_id=?";
-        String[] selectionArgs = {""+rowid};
-        Cursor cursor = db.rawQuery(sql, selectionArgs);
-
-        while(cursor.moveToNext()){
-            long mediaId = cursor.getLong(0);
-            Media media = new Media(mediaId);
-            list.add(media);
+        db.beginTransaction();
+        try {
+            String sql = "select ROWID from media_table where article_id=?";
+            String[] selectionArgs = {"" + rowid};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+            if(cursor.getCount() > 0) {
+                medias = new Media[cursor.getCount()];
+                while (cursor.moveToNext()) {
+                    long mediaId = cursor.getLong(0);
+                    Media media = Media.getMedia(db, context, mediaId);
+                    medias[cursor.getPosition()] = media;
+                }
+            }
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
         }
-
-        return list;
+        return medias;
     }
+
 
     public static List<Article> getAllArticles(SQLiteDatabase db){
         List<Article> articles = new ArrayList<Article>();
@@ -228,27 +249,27 @@ public class Article implements Serializable{
     }
 
     public List<ImageItem> getImageItems(SQLiteDatabase db, Context context){
-        List<ImageItem> mediaList = new ArrayList<ImageItem>();
+        List<ImageItem> iconList = new ArrayList<ImageItem>();
 
         db.beginTransaction();
         try {
-            String sql = "select ROWID from media_table where article_id=?";
+            String sql = "select icon from media_table where article_id=?";
             String[] selectionArgs = {"" + rowid};
             Cursor cursor = db.rawQuery(sql, selectionArgs);
-
-            while (cursor.moveToNext()) {
-                long id = cursor.getLong(0);
-                Media media = new Media(id);
-                File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                String fileName = media.getIconPath(db);
-                File file = new File(dir, fileName);
-                ImageItem item = new ImageItem(context, id, file.getPath(), media.getType(db), media.getIconPath(db));
-                mediaList.add(item);
+            if (cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    long mediaId = cursor.getLong(0);
+                    Media media = Media.getMedia(null, context, mediaId);
+                    ImageItem item = new ImageItem(context, mediaId, media.getMediaFilePath(db), media.getType(db), media.getMediaIconBitmap(db));
+                    iconList.add(item);
+                }
             }
             db.setTransactionSuccessful();
+        }catch (Exception e){
+            e.printStackTrace();
         }finally {
             db.endTransaction();
         }
-        return mediaList;
+        return iconList;
     }
 }

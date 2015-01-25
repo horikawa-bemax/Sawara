@@ -10,122 +10,227 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.media.ThumbnailUtils;
 import android.os.Environment;
-import android.provider.MediaStore;
 
+/**
+ * 写真および動画を扱うテーブル
+ *
+ */
 public class Media {
 	static final long PHOTO = 1;
 	static final long MOVIE = 2;
-	
-	static final String TABLE_NAME = "media_table";
-	static final String PATH = "path";
-	static final String TYPE = "type";
-	static final String ARTICLE_ID = "article_id";
-	static final String MODIFIED = "modified";
 
-    static final int IMAGE_SIZE = 480;
-    static final int ICON_WIDTH = 320;
-    static final int ICON_HEIGHT = 240;
-
-	//private Context mContext;
 	private long rowid;
-	
-	public Media(long id){
-		rowid = id;
+    private Context context;
+
+    /**
+     * IDを指定して、メディアを作成する。
+     * データベース上にメディアがあることを確かめ、あればメディアオブジェクトを返す
+     * @param db データベース もしnullの場合は、データベース上にあることを確かめない
+     * @param context コンテキスト
+     * @param id ID
+     */
+	public static Media getMedia(SQLiteDatabase db, Context context, long id){
+        Media media = null;
+        if(db != null) {
+            String sql = "select ROWID from media_table where ROWID=?";
+            String[] selectionArgs = {"" + id};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+            if (cursor.getCount() > 0) {
+                media = new Media(context, id);
+            }
+        }else{
+            media = new Media(context, id);
+        }
+        return media;
 	}
-	
-	public Media(SQLiteDatabase db, Context context, String path, long type){
+
+    /**
+     * コンストラクタ
+     * @param context
+     * @param id
+     */
+    private Media(Context context, long id){
+        this.context = context;
+        this.rowid = id;
+    }
+
+    private File getDir(long mediaType){
+        if(mediaType == Media.PHOTO){
+            return context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        }else if(mediaType == Media.MOVIE){
+            return context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        }else{
+            return null;
+        }
+    }
+
+    /**
+     * 画像ファイル名とタイプ（画像、動画）を指定して、メディアを作る。
+     * DBへのインサートあり。
+     * @param db データベース
+     * @param context コンテキスト
+     * @param fileName 画像ファイル名
+     * @param mediaType 画像のタイプ
+     * @throws Exception 適当な例外を投げます
+     */
+	public Media(SQLiteDatabase db, Context context, Bitmap bitmap, String fileName, long mediaType) throws Exception{
+        this.context = context;
         db.beginTransaction();
         try {
+            File file = new File(getDir(getType(db)), fileName);
+            // 画像をファイルに保存する
+            IconFactory.storeBitmapToFile(file, bitmap);
+
+            // メディアテーブルにデータを登録
             String sql = "insert into media_table(path, type, modified) values (?,?,?)";
             SQLiteStatement statement = db.compileStatement(sql);
-            statement.bindString(1, path);
-            statement.bindLong(2, type);
+            statement.bindString(1, fileName);
+            statement.bindLong(2, mediaType);
             statement.bindLong(3, System.currentTimeMillis());
             long id = statement.executeInsert();
             rowid = id;
 
-            Bitmap icon = IconFactory.getIcon(context, getPath(db), getType(db));
-            String iconName = "media_icon_" + getId() + ".png";
-            boolean compress = IconFactory.saveIcon(context, iconName, icon);
-            if (compress) {
-                setIconPath(db, iconName);
-            }
             db.setTransactionSuccessful();
-        }finally {
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("メディアを作成できませんでしたよ。");
+        } finally {
             db.endTransaction();
         }
     }
 
-    public Media(SQLiteDatabase db, Context context, String path, long type, Article article){
+    /**
+     * 画像と画像タイプ、アーティクルを指定してメディアを作成する
+     * DBへのインサートあり
+     * @param db データベース
+     * @param context コンテキスト
+     * @param fileName 画像ファイル名
+     * @param mediaType 画像タイプ
+     * @param article アーティクル
+     * @throws Exception 適当な例外を投げます
+     */
+    public Media(SQLiteDatabase db, Context context, Bitmap bitmap, String fileName, long mediaType, Article article) throws Exception {
+        this.context = context;
         db.beginTransaction();
         try {
+            File mediaFile = new File(getDir(getType(db)), fileName);
+            // 画像をファイルに保存する
+            IconFactory.storeBitmapToFile(mediaFile, bitmap);
+
+            // メディアテーブルにデータを登録
             String sql = "insert into media_table(path, type, article_id, modified) values (?,?,?,?)";
             SQLiteStatement statement = db.compileStatement(sql);
-            statement.bindString(1, path);
-            statement.bindLong(2, type);
+            statement.bindString(1, fileName);
+            statement.bindLong(2, mediaType);
             statement.bindLong(3, article.getId());
             statement.bindLong(4, System.currentTimeMillis());
             long id = statement.executeInsert();
             rowid = id;
 
-            Bitmap icon = IconFactory.getIcon(context, getPath(db), getType(db));
-            String iconName = "media_icon_" + getId() + ".png";
-            boolean compress = IconFactory.saveIcon(context, iconName, icon);
-            if (compress) {
-                setIconPath(db, iconName);
-            }
+            // アイコン画像を作成する
+            Bitmap icon = IconFactory.makeNormalIcon(bitmap);
+            // アイコンに名前を付ける
+            String iconName = "article_icon_" + getId() + ".png";
+            File iconFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), iconName);
+            // アイコンをファイルに保存する
+            IconFactory.storeBitmapToFile(iconFile, icon);
+            // アイコンのメディアを新規作成
+            Media iconMedia = new Media(db, context, icon, iconFile.getPath(), Media.PHOTO);
+            // articleテーブルのicon_pathを更新する。
+            article.setIcon(db, iconMedia.getId());
+
             db.setTransactionSuccessful();
-        }finally {
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("メディアを作成できませんでしたよ。");
+        } finally {
             db.endTransaction();
         }
     }
 
-    public File getFile(SQLiteDatabase db, Context context){
-        File file = null;
-
-        long type = getType(db);
-        if (type == Media.PHOTO) {
-            File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            String fname = getPath(db);
-            file = new File(dir, fname);
+    private String getFileName(SQLiteDatabase db){
+        String fileName = null;
+        String sql = "select file_name from media_table where ROWID=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        if(cursor.getCount() > 0){
+            cursor.moveToFirst();
+            fileName = cursor.getString(0);
         }
-        if (type == Media.MOVIE) {
-            File dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-            String fname = getPath(db);
-            file = new File(dir, fname);
-        }
-
-        return file;
+        cursor.close();
+        return fileName;
     }
-	
+
+    /**
+     * データベースのデータから、画像ファイルを取得する
+     * @param db データベース
+     * @return メディアの画像ファイル
+     * @throws Exception 適当な例外を投げます
+     */
+    public File getMediaFile(SQLiteDatabase db) throws Exception {
+        String fileName = getFileName(db);
+        File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if(getType(db) == Media.MOVIE){
+            dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        }
+        return new File(dir, fileName);
+    }
+
+    /**
+     * このメディアに関連するカテゴリを返す
+     * @param db データベース
+     * @return このメディアが関連するカテゴリの配列
+     */
+    public Category[] getCategoriesRelationThisMedia(SQLiteDatabase db){
+        String sql = "select category_id from category_media_view where media_id=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        Category[] categories = new Category[cursor.getCount()];
+        while(cursor.moveToNext()){
+            categories[cursor.getPosition()] = Category.getCategory(null, cursor.getLong(0));
+        }
+        return categories;
+    }
+
+    /**
+     * このメディアを削除する
+     * @param db
+     */
 	public void delete(SQLiteDatabase db){
         String sql = "delete from media_table where ROWID=?";
         SQLiteStatement statement = db.compileStatement(sql);
         statement.bindLong(1, rowid);
         statement.executeUpdateDelete();
-	}
-	
-	/**
-	 * @return path
-	 */
-	public String getPath(SQLiteDatabase db) {
-        String[] selectionArgs = {""+rowid};
-        Cursor cursor = db.rawQuery("select path from media_table where ROWID=?", selectionArgs);
-        cursor.moveToFirst();
-        String path = cursor.getString(0);
-        cursor.close();
 
-        return path;
+        // 関連するカテゴリのアイコンを変更する
+        Category[] categories = getCategoriesRelationThisMedia(db);
+        for(Category category: categories){
+            category.updateIcon(db, context, rowid, null);
+        }
 	}
+
+    /**
+     * 画像のファイル名を、DBから取得する
+     * @param db データベース
+     * @return 取得した画像ファイルの絶対パス
+     * @throws Exception 適当な例外を投げる
+     */
+	public String getMediaFilePath(SQLiteDatabase db) throws Exception {
+        return getMediaFile(db).getPath();
+	}
+
+    public Bitmap getMediaIconBitmap(SQLiteDatabase db) throws Exception {
+        File mediaFile = getMediaFile(db);
+        Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(mediaFile, getType(db));
+        Bitmap icon = IconFactory.makeNormalIcon(bitmap);
+        return icon;
+    }
 
 	/**
 	 * @param path セットする path
 	 */
-	public void setPath(SQLiteDatabase db, String path) {
+	public void setMediaFileName(SQLiteDatabase db, String path) {
         SQLiteStatement statement = db.compileStatement("update media_table set path=? where ROWID=?");
         statement.bindString(1, path);
         statement.bindLong(2, rowid);
@@ -208,33 +313,8 @@ public class Media {
 		return rowid;
 	}
 
-    public void setIconPath(SQLiteDatabase db, String iconPath){
-        String sql = "update media_table set icon_path=? where ROWID=?";
-        SQLiteStatement statement = db.compileStatement(sql);
-        statement.bindString(1, iconPath);
-        statement.bindLong(2, rowid);
-        statement.executeUpdateDelete();
-    }
-
-    public String getIconPath(SQLiteDatabase db){
-        String sql = "select icon_path from media_table where ROWID=?";
-        String[] selectionArgs = {""+rowid};
-        Cursor cursor = db.rawQuery(sql, selectionArgs);
-        cursor.moveToFirst();
-        String iconPath = cursor.getString(0);
-        cursor.close();
-
-        return iconPath;
-    }
-
-    public Bitmap getIcon(SQLiteDatabase db, Context context){
-        File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File file = new File(dir, getIconPath(db));
-        Bitmap icon = BitmapFactory.decodeFile(file.getPath());
-        return icon;
-    }
-
-	public static List<Media> createNewMedias(SQLiteDatabase db, Context context, List<ImageItem> items, Article article){
+    /*
+	public static List<Media> getMedias(SQLiteDatabase db, Context context, List<ImageItem> items, Article article) throws Exception {
 		List<Media> medias = new ArrayList<Media>();
 		for(ImageItem item: items){
 			if(item.getId() == -1){
@@ -245,11 +325,12 @@ public class Media {
 
 		return medias;
 	}
+	*/
 
-	public String dump(SQLiteDatabase db){
+	public String dump(SQLiteDatabase db) throws Exception {
 		String str = "";
 		str += "ROWID:" + rowid;
-		str += "|PATH:"+ getPath(db);
+		str += "|PATH:"+ getMediaFilePath(db);
 		str += "|TYPE:" + getType(db);
 		str += "|ARTICLE_ID:" + getArticleId(db);
 		str += "|MODIFIED:" + getModified(db);
