@@ -132,7 +132,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 
 			@Override
 			public void handleMessage(Message msg) {
-				super.handleMessage(msg);
+                super.handleMessage(msg);
                 List<ListItem> listItems;
                 ViewHolder holder = (ViewHolder) homeLayout.getTag();
 
@@ -149,13 +149,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                                     List<Category> categories = Category.getAllCategory(db);
                                     listItems = new ArrayList<ListItem>();
                                     for (Category category : categories) {
-                                        Media media = category.getIcon(db);
+                                        Media media = category.getIcon(db, thisObj);
                                         long type = media.getType(db);
                                         File dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                                        if(type == Media.MOVIE){
+                                        if (type == Media.MOVIE) {
                                             dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
                                         }
-                                        File iconFile = new File(dir, media.getMediaFilePath(db));
+                                        File iconFile = media.getMediaFile(db);
                                         ListItem item = new ListItem(category.getId(), category.getName(db), iconFile.getPath(), type);
                                         listItems.add(item);
                                     }
@@ -168,10 +168,10 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                                     List<Article> articles = thisCategory.getArticles(db);
                                     listItems = new ArrayList<ListItem>();
                                     for (Article article : articles) {
-                                        Media media = article.getIconMedia(db);
+                                        Media media = article.getIcon(db, thisObj);
                                         long type = media.getType(db);
                                         File dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                                        if(type == Media.MOVIE){
+                                        if (type == Media.MOVIE) {
                                             dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
                                         }
                                         File iconFile = new File(dir, media.getMediaFilePath(db));
@@ -215,6 +215,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                             break;
                     }
                     db.setTransactionSuccessful();
+                }catch (Exception e){
+                    e.printStackTrace();
                 }finally {
                     db.endTransaction();
                     db.close();
@@ -288,17 +290,23 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 				case ARTICLE_VIEW:
 					dbAdapter.dump(db);
 					Article article = (Article)data.getSerializableExtra("article");
-                    Media media = article.getIconMedia(db);
+                    Media media = article.getIcon(db, this);
                     long type = media.getType(db);
                     File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                     if(type == Media.MOVIE) {
                         dir = this.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
                     }
-                    File file = new File(dir, media.getMediaFilePath(db));
-                    ListItem item = new ListItem(article.getId(), article.getName(db), file.getPath(), media.getType(db));
+                    File file = null;
+                    try {
+                        file = media.getMediaFile(db);
 
-					gridAdapter.add(item);
-					gridAdapter.notifyDataSetChanged();
+                        ListItem item = new ListItem(article.getId(), article.getName(db), file.getPath(), media.getType(db));
+
+                        gridAdapter.add(item);
+                        gridAdapter.notifyDataSetChanged();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 					break;
 				}
 
@@ -349,7 +357,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
             item = (ListItem)gridAdapter.getItem(position);
-            thisCategory = new Category(item.getId());
+            thisCategory = Category.getCategory(db, item.getId());
 
 			mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			break;

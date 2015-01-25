@@ -25,7 +25,7 @@ public class Media {
 
     /**
      * IDを指定して、メディアを作成する。
-     * データベース上にメディアがあることを確かめ、あればメディアオブジェクトを返す
+     * データベース上にメディアがあることを確かめ、あればメディアオブジェクトを返す。なければnull
      * @param db データベース もしnullの場合は、データベース上にあることを確かめない
      * @param context コンテキスト
      * @param id ID
@@ -206,7 +206,8 @@ public class Media {
         // 関連するカテゴリのアイコンを変更する
         Category[] categories = getCategoriesRelationThisMedia(db);
         for(Category category: categories){
-            category.updateIcon(db, context, rowid, null);
+            Bitmap newIcon = category.makeCategoryIconBitmap(db, context);
+            category.updateIcon(db, context, newIcon);
         }
 	}
 

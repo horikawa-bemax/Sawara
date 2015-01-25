@@ -443,7 +443,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				categories.add(thisCategory);
 			}else{
 				// とりあえずその他
-				categories.add(new Category(2));
+				categories.add(Category.getCategory(db, 2));
 			}
 
 			boolean success = false;
@@ -455,11 +455,20 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 					article = new Article(db, name, description);
 					//新しいMediaを登録する
 					List<ImageItem> items = imageViewerAdapter.getImageItems();
-					List<Media> newMedias = Media.createNewMedias(db, this, items, article);
-					//カテゴリーを登録
+					Media[] medias = new Media[items.size()];
+                    for(int i=0; i<medias.length; i++){
+                        ImageItem item = items.get(i);
+                        Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(new File(item.getFileName()), item.getType());
+                        medias[i] = new Media(db, this, bitmap, item.getFileName(), item.getType());
+                    }
+
+                    // アーティクルのアイコンを更新
+
+					//カテゴリーのアイコンを更新
 					article.createCategoriesForArticle(db, categories);
 					for (Category category : categories) {
-						category.updateIcon(db, this);
+                        Bitmap newIcon = category.makeCategoryIconBitmap(db, this);
+						category.updateIcon(db, this, newIcon);
 					}
 
 					db.setTransactionSuccessful();
@@ -473,15 +482,28 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				// Articleを更新する
 				db.beginTransaction();
 				try {
-					article = (Article) getIntent().getSerializableExtra("article");
-					article.setName(db, name);
-					article.setDescription(db, description);
-					article.setModified(db, System.currentTimeMillis());
-					List<ImageItem> items = imageViewerAdapter.getImageItems();
-					List<Media> newMedias = Media.createNewMedias(db, this, items, article);
+                    article = (Article) getIntent().getSerializableExtra("article");
+                    article.setName(db, name);
+                    article.setDescription(db, description);
+                    article.setModified(db, System.currentTimeMillis());
 
-					db.setTransactionSuccessful();
-					success = true;
+                    List<ImageItem> items = imageViewerAdapter.getImageItems();
+
+                    // メディアを更新する
+                    Media[] medias = new Media[items.size()];
+                    for (int i = 0; i < medias.length; i++) {
+                        medias[i] = Media.getMedia(db, this, items.get(i).getId());
+                        if (medias[i] == null) {
+                            ImageItem item = items.get(i);
+                            Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(new File(item.getFileName()), item.getType());
+                            medias[i] = new Media(db, this, bitmap, item.getFileName(), item.getType());
+                        }
+                    }
+
+                    db.setTransactionSuccessful();
+                    success = true;
+                }catch (Exception e){
+                    e.printStackTrace();
 				}finally {
 					db.endTransaction();
 				}
@@ -572,15 +594,12 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
             switch (parent.getId()) {
                 case R.id.register_image_viewer:
                     ImageItem item = imageViewerAdapter.getItem(position);
-                    if(item.getId()!=-1) {
-                        Media media = new Media(item.getId());
+                    if (item.getId() != -1) {
+                        Media media = Media.getMedia(db, this, item.getId());
                         long type = media.getType(db);
-                        String path = media.getMediaFilePath(db);
-                        File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                        if (type == Media.MOVIE) {
-                            dir = this.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-                        }
-                        Uri uri = Uri.fromFile(new File(dir, path));
+                        File mediaFile = media.getMediaFile(db);
+
+                        Uri uri = Uri.fromFile(mediaFile);
                         Intent intent = new Intent();
                         intent.setAction(Intent.ACTION_VIEW);
                         if (imageViewerAdapter.getItem(position).getType() == Media.PHOTO) {
@@ -596,6 +615,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
             }
 
             db.setTransactionSuccessful();
+        }catch (Exception e){
+
         }finally {
             db.endTransaction();
             db.close();
