@@ -75,7 +75,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	// タグ一覧用のアダプタ
 	private ArrayAdapter<VTextView> tagViewerAdapter;
 	// 写真、動画の保存先ファイル
-	private String fileName;
+	private File mediaFile;
 	// 現在のカテゴリ（新規登録時に使用）
 	private Category thisCategory;
 	
@@ -399,9 +399,9 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			
 		case PHOTO_BUTTON:		// == 写真撮影モード ==
 			// ** 保存先を作成 **
-			dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			fileName = "" + System.currentTimeMillis() + ".jpg";
-			Uri imageUri = Uri.fromFile(new File(dir, fileName));
+			String fileName = "" + System.currentTimeMillis() + ".jpg";
+            mediaFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
+			Uri imageUri = Uri.fromFile(mediaFile);
 			
 			// ** 写真撮影用の暗黙インテントを呼び出す準備 **
 			intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -414,8 +414,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			
 		case MOVIE_BUTTON:		// == 動画撮影モード ==
 			// ** 保存先を作成 **
-			dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
 			fileName = "" + System.currentTimeMillis() + ".mp4";
+            mediaFile = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), fileName);
 			Uri movieUri = Uri.fromFile(new File(dir, fileName));
 			
 			// ** 動画撮影用の暗黙院展とを呼び出す準備 **
@@ -495,7 +495,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         medias[i] = Media.getMedia(db, this, items.get(i).getId());
                         if (medias[i] == null) {
                             ImageItem item = items.get(i);
-                            Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(new File(item.getFileName()), item.getType());
+                            Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(new File(item.getFilePath()), item.getType());
                             medias[i] = new Media(db, this, bitmap, item.getFileName(), item.getType());
                         }
                     }
@@ -551,7 +551,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                     //*** 写真を撮影した場合 ***
                     case IMAGE_CAPTUER:
 
-                        ImageItem item = new ImageItem(this, fileName, Media.PHOTO);
+                        ImageItem item = new ImageItem(this, mediaFile.getName(), Media.PHOTO);
 
                         // ビューアに反映する
                         imageViewerAdapter.add(item);
@@ -562,7 +562,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                     //*** 動画を撮影した場合 ***
                     case MOVIE_CAPTUER:
 
-                        item = new ImageItem(this, fileName, Media.MOVIE);
+                        item = new ImageItem(this, mediaFile.getName(), Media.MOVIE);
 
                         // ビューアに反映する
                         imageViewerAdapter.add(item);

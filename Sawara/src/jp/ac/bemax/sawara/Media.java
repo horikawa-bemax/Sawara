@@ -78,12 +78,12 @@ public class Media {
         this.context = context;
         db.beginTransaction();
         try {
-            File file = new File(getDir(getType(db)), fileName);
+            File file = new File(getDir(mediaType), fileName);
             // 画像をファイルに保存する
             IconFactory.storeBitmapToFile(file, bitmap);
 
             // メディアテーブルにデータを登録
-            String sql = "insert into media_table(path, type, modified) values (?,?,?)";
+            String sql = "insert into media_table(file_name, type, modified) values (?,?,?)";
             SQLiteStatement statement = db.compileStatement(sql);
             statement.bindString(1, fileName);
             statement.bindLong(2, mediaType);
@@ -100,53 +100,9 @@ public class Media {
         }
     }
 
-    /**
-     * 画像と画像タイプ、アーティクルを指定してメディアを作成する
-     * DBへのインサートあり
-     * @param db データベース
-     * @param context コンテキスト
-     * @param fileName 画像ファイル名
-     * @param mediaType 画像タイプ
-     * @param article アーティクル
-     * @throws Exception 適当な例外を投げます
-     */
-    public Media(SQLiteDatabase db, Context context, Bitmap bitmap, String fileName, long mediaType, Article article) throws Exception {
-        this.context = context;
-        db.beginTransaction();
-        try {
-            File mediaFile = new File(getDir(getType(db)), fileName);
-            // 画像をファイルに保存する
-            IconFactory.storeBitmapToFile(mediaFile, bitmap);
-
-            // メディアテーブルにデータを登録
-            String sql = "insert into media_table(path, type, article_id, modified) values (?,?,?,?)";
-            SQLiteStatement statement = db.compileStatement(sql);
-            statement.bindString(1, fileName);
-            statement.bindLong(2, mediaType);
-            statement.bindLong(3, article.getId());
-            statement.bindLong(4, System.currentTimeMillis());
-            long id = statement.executeInsert();
-            rowid = id;
-
-            // アイコン画像を作成する
-            Bitmap icon = IconFactory.makeNormalIcon(bitmap);
-            // アイコンに名前を付ける
-            String iconName = "article_icon_" + getId() + ".png";
-            File iconFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), iconName);
-            // アイコンをファイルに保存する
-            IconFactory.storeBitmapToFile(iconFile, icon);
-            // アイコンのメディアを新規作成
-            Media iconMedia = new Media(db, context, icon, iconFile.getPath(), Media.PHOTO);
-            // articleテーブルのicon_pathを更新する。
-            article.setIcon(db, iconMedia.getId());
-
-            db.setTransactionSuccessful();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception("メディアを作成できませんでしたよ。");
-        } finally {
-            db.endTransaction();
-        }
+    public Media(SQLiteDatabase db, Context context, Bitmap bitmap, String fileName, long mediaType, Article article) throws Exception{
+        this(db, context, bitmap, fileName, mediaType);
+        setArticleId(db, article.getId());
     }
 
     private String getFileName(SQLiteDatabase db){
@@ -232,7 +188,7 @@ public class Media {
 	 * @param path セットする path
 	 */
 	public void setMediaFileName(SQLiteDatabase db, String path) {
-        SQLiteStatement statement = db.compileStatement("update media_table set path=? where ROWID=?");
+        SQLiteStatement statement = db.compileStatement("update media_table set file_name=? where ROWID=?");
         statement.bindString(1, path);
         statement.bindLong(2, rowid);
         statement.executeUpdateDelete();

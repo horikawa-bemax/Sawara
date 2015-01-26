@@ -30,9 +30,17 @@ public class ImageItem {
 		this.icon = icon;
     }
 
-	public String getFileName(){
-		return fileName;
+	public String getFilePath(){
+        File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if(mediaType == Media.MOVIE){
+            dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        }
+		return new File(dir, fileName).getPath();
 	}
+
+    public String getFileName(){
+        return fileName;
+    }
 
 	public Bitmap getIcon(){
 		return icon;

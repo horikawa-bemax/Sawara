@@ -177,7 +177,7 @@ public class Article implements Serializable{
      * @param mediaId
      */
     public void setIcon(SQLiteDatabase db, Long mediaId){
-        String sql = "updata article_table set icon=? where ROWID=?";
+        String sql = "update article_table set icon=? where ROWID=?";
         SQLiteStatement statement = db.compileStatement(sql);
         statement.bindLong(1, mediaId);
         statement.bindLong(2, rowid);
@@ -253,14 +253,18 @@ public class Article implements Serializable{
 
         db.beginTransaction();
         try {
-            String sql = "select icon from media_table where article_id=?";
+            String sql = "select ROWID from media_table where article_id=?";
             String[] selectionArgs = {"" + rowid};
             Cursor cursor = db.rawQuery(sql, selectionArgs);
             if (cursor.getCount() > 0) {
                 while (cursor.moveToNext()) {
                     long mediaId = cursor.getLong(0);
                     Media media = Media.getMedia(null, context, mediaId);
-                    ImageItem item = new ImageItem(context, mediaId, media.getMediaFilePath(db), media.getType(db), media.getMediaIconBitmap(db));
+                    Bitmap iconBitmap = IconFactory.loadBitmapFromFileAndType(media.getMediaFile(db), media.getType(db));
+                    Bitmap icon = IconFactory.makeNormalIcon(iconBitmap);
+                    String ppp = "/storage/emulated/0/Android/data/jp.ac.bemax.sawara/files/Movies/buss.mp4";
+                    Bitmap bitppp = ThumbnailUtils.createVideoThumbnail(ppp, MediaStore.Video.Thumbnails.MINI_KIND);
+                    ImageItem item = new ImageItem(context, mediaId, media.getMediaFilePath(db), media.getType(db), icon);
                     iconList.add(item);
                 }
             }

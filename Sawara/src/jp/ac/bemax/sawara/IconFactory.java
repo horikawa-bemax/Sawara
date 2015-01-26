@@ -47,6 +47,10 @@ public class IconFactory {
             throw new Exception("アイコン画像の保存に失敗したよ");
     }
 
+    public static Bitmap getNullImage(){
+        return Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Config.ARGB_8888);
+    }
+
     /**
      * ファイルから画像を読み込んで返す
      * @param mediaFile
@@ -104,7 +108,8 @@ public class IconFactory {
             int left = (i%2) * width;
             int top = (i/2) * height;
             dstRect = new Rect(left, top, left + width, top + height);
-            canvas.drawBitmap(src, srcRect, dstRect, null);
+            if(src!=null)
+                canvas.drawBitmap(src, srcRect, dstRect, null);
         }
         return icon;
     }

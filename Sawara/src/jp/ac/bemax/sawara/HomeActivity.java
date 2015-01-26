@@ -12,10 +12,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -170,11 +172,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                                     for (Article article : articles) {
                                         Media media = article.getIcon(db, thisObj);
                                         long type = media.getType(db);
-                                        File dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                                        if (type == Media.MOVIE) {
-                                            dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-                                        }
-                                        File iconFile = new File(dir, media.getMediaFilePath(db));
+                                        File iconFile = new File(media.getMediaFilePath(db));
                                         ListItem item = new ListItem(article.getId(), article.getName(db), iconFile.getPath(), type);
 
                                         listItems.add(item);
@@ -223,7 +221,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                 }
             }
 		};
-		
+
 		mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 		mHandler.sendEmptyMessage(THEMA_CHANGE);
 	}

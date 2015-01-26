@@ -14,7 +14,9 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
+import android.media.ThumbnailUtils;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
 /**
@@ -30,7 +32,15 @@ public class SawaraDBAdapter{
 		helper = new DBAdapter(context, "sawara.db", null, 1);
         mDb = null;
 	}
-	
+
+    public Bitmap ppp(){
+        String ppp = "/storage/emulated/0/Android/data/jp.ac.bemax.sawara/files/Movies/buss.mp4";
+        File file = new File(ppp);
+        boolean open = file.canRead();
+        Bitmap bitppp = ThumbnailUtils.createVideoThumbnail(ppp, MediaStore.Video.Thumbnails.MINI_KIND);
+        return bitppp;
+    }
+
 	public SQLiteOpenHelper getHelper(){
 		return helper;
 	}
@@ -106,7 +116,7 @@ public class SawaraDBAdapter{
                 sql = "create table article_table " +
                         "(name text unique not null, " +    // 名前
                         " description text not null," +        // 説明
-                        " icon long unique, " +          // アイコン
+                        " icon integer unique, " +          // アイコン
                         " position integer unique," +         // 表示位置
                         " modified integer )";                    // 更新日時
                 db.execSQL(sql);
@@ -127,7 +137,7 @@ public class SawaraDBAdapter{
 
                 // カテゴリーとメディアの関係ビュー
                 sql = "create view category_media_view as " +
-                        "select A.category_id, A.article_id, B.media_id " +
+                        "select A.category_id, A.article_id, B.ROWID media_id " +
                         "from category_article_table A " +
                         "inner join media_table B " +
                         "on A.article_id=B.article_id";
@@ -166,7 +176,13 @@ public class SawaraDBAdapter{
                     for (int j = 0; j < paths[i].length; j++) {
                         File file = copyFromAssets(types[i][j], paths[i][j]);
                         Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(file, types[i][j]);
+
                         Media media = new Media(db, context, bitmap, paths[i][j], types[i][j], article);
+                        if(j==0){
+                            Bitmap iconBitmap = IconFactory.makeNormalIcon(bitmap);
+                            Media icon = new Media(db, context, bitmap, "article_icon_"+article.getId(), Media.PHOTO);
+                            article.setIcon(db, icon.getId());
+                        }
                     }
                 }
 
@@ -174,7 +190,10 @@ public class SawaraDBAdapter{
                 List<Category> cs = Category.getAllCategory(db);
                 for (Category category : cs) {
                     Bitmap icon = category.makeCategoryIconBitmap(db, context);
-                    String iconName = "category_icon_"+category.getId()+".png";
+                    String iconName = "category_icon_" + category.getId() + ".png";
+                    if(icon == null){
+                        icon =IconFactory.getNullImage();
+                    }
                     Media media = new Media(db, context, icon, iconName, Media.PHOTO);
                     category.setIcon(db, media);
                 }
@@ -271,5 +290,13 @@ public class SawaraDBAdapter{
 			Log.d("media_table", str);
 		}
 
+        cursor = db.rawQuery("select category_id, article_id, media_id from category_media_view", null);
+        while(cursor.moveToNext()){
+            String str = "|";
+            for(int i=0; i<cursor.getColumnCount(); i++){
+                str += cursor.getString(i) + "|";
+            }
+            Log.d("category_media_view", str);
+        }
 	}
 }

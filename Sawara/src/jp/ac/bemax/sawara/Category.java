@@ -261,9 +261,6 @@ public class Category implements Serializable{
 	public Bitmap makeCategoryIconBitmap(SQLiteDatabase db, Context context) {
         Bitmap icon = null;
 
-        FileOutputStream fos = null;
-        File iconDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
         db.beginTransaction();
         try {
             String sql = "select min(media_id) from category_media_view where category_id=? group by article_id";
