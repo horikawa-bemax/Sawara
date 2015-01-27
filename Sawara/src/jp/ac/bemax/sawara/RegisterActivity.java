@@ -1,6 +1,7 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,6 +79,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	private File mediaFile;
 	// 現在のカテゴリ（新規登録時に使用）
 	private Category thisCategory;
+    private Category[] thisArticleCategories;
 	
 	private SawaraDBAdapter dbAdapter;
 	
@@ -137,19 +139,6 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 		// ** ビューア用の初期設定 **
 		// イメージビューア用のアダプタ設定
 		imageViewerAdapter = new ImageAdapter(dbAdapter, this);
-
-		switch(mode){
-		case NEW_MODE:
-			// ** インテントからカテゴリ情報を取得 **
-			thisCategory = (Category)getIntent().getSerializableExtra("category");
-
-			break;
-		case READ_MODE:
-			// ** Articleを取得 **
-			Article article = (Article)getIntent().getSerializableExtra("article");
-
-            break;
-		}
 		
 		//** Viewの設定 **
 		// レイアウト
@@ -290,6 +279,11 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                 switch (msg.what) {
                     case NEW_MODE:    // == 新規登録モード ==
                         Toast.makeText(thisObj, "NEW_MODE", Toast.LENGTH_SHORT).show();
+
+                        // ** インテントからカテゴリ情報を取得 **
+                        thisCategory = (Category)getIntent().getSerializableExtra("category");
+                        thisArticleCategories = new Category[]{thisCategory};
+
                         // ** ボタン配置 **
                         // アルバムボタン
                         registerLayout.addView(holder.albamButton);
@@ -314,7 +308,9 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         Toast.makeText(thisObj, "UPDATE_MODE", Toast.LENGTH_SHORT).show();
 
                         // ** Articleを取得 **
-                        article = (Article) thisObj.getIntent().getSerializableExtra("article");
+                        article = (Article)getIntent().getSerializableExtra("article");
+                        thisArticleCategories =article.getCategoriesThis(db);
+
                         holder.nameTextView.setText(article.getName(db));
                         holder.discriptionTextView.setText(article.getDescription(db));
 
@@ -345,8 +341,11 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         break;
                     case READ_MODE:    // == 閲覧モード ==
                         Toast.makeText(thisObj, "READ_MODE", Toast.LENGTH_SHORT).show();
+
                         // ** Articleを取得 **
-                        article = (Article) thisObj.getIntent().getSerializableExtra("article");
+                        article = (Article)getIntent().getSerializableExtra("article");
+                        thisArticleCategories =article.getCategoriesThis(db);
+
                         holder.nameTextView.setText(article.getName(db));
                         holder.discriptionTextView.setText(article.getDescription(db));
 
@@ -375,7 +374,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                 db.close();
             }
 		};
-		
+
 		mHandler.sendEmptyMessage(mode);
 	}
 
@@ -416,7 +415,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			// ** 保存先を作成 **
 			fileName = "" + System.currentTimeMillis() + ".mp4";
             mediaFile = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), fileName);
-			Uri movieUri = Uri.fromFile(new File(dir, fileName));
+			Uri movieUri = Uri.fromFile(mediaFile);
 			
 			// ** 動画撮影用の暗黙院展とを呼び出す準備 **
 			intent.setAction(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -456,20 +455,26 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 					//新しいMediaを登録する
 					List<ImageItem> items = imageViewerAdapter.getImageItems();
 					Media[] medias = new Media[items.size()];
+                    Bitmap icon;
                     for(int i=0; i<medias.length; i++){
                         ImageItem item = items.get(i);
-                        Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(new File(item.getFileName()), item.getType());
-                        medias[i] = new Media(db, this, bitmap, item.getFileName(), item.getType());
+                        medias[i] = new Media(db, this, item.getFileName(), item.getType());
+                        if(i==0){
+                            // アーティクルのアイコンを作成する
+                            File iconSrc = new File(item.getFilePath());
+                            icon = IconFactory.makeNormalIcon(IconFactory.loadBitmapFromFileAndType(iconSrc, item.getType()));
+                            String iconFileName = "article_icon_"+article.getId()+".png";
+                            IconFactory.storeBitmapToFile(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),iconFileName), icon);
+                            Media iconMedia = new Media(db, this, iconFileName, Media.PHOTO);
+                            article.setIcon(db, iconMedia.getId());
+                        }
                     }
 
-                    // アーティクルのアイコンを更新
+					//TODO カテゴリーアーティクルテーブルを更新する
+                    for(Category category: thisArticleCategories){
+                        article.setCategory(db, category);
+                    }
 
-					//カテゴリーのアイコンを更新
-					article.createCategoriesForArticle(db, categories);
-					for (Category category : categories) {
-                        Bitmap newIcon = category.makeCategoryIconBitmap(db, this);
-						category.updateIcon(db, this, newIcon);
-					}
 
 					db.setTransactionSuccessful();
 					success = true;
@@ -495,9 +500,13 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         medias[i] = Media.getMedia(db, this, items.get(i).getId());
                         if (medias[i] == null) {
                             ImageItem item = items.get(i);
-                            Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(new File(item.getFilePath()), item.getType());
-                            medias[i] = new Media(db, this, bitmap, item.getFileName(), item.getType());
+                            medias[i] = new Media(db, this, item.getFileName(), item.getType(), article);
                         }
+                    }
+
+                    //TODO カテゴリーアーティクルテーブルを更新する
+                    for(Category category: thisArticleCategories){
+                        article.setCategory(db, category);
                     }
 
                     db.setTransactionSuccessful();
@@ -537,9 +546,6 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		File dir = null;
-		File file = null;
-		Media media = null;
 		
 		// インテントからの返信が成功した場合
 		if(resultCode == RESULT_OK){
@@ -550,8 +556,14 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 
                     //*** 写真を撮影した場合 ***
                     case IMAGE_CAPTUER:
-
-                        ImageItem item = new ImageItem(this, mediaFile.getName(), Media.PHOTO);
+                        Bitmap itemIcon;
+                        try {
+                            itemIcon = IconFactory.makeNormalIcon(IconFactory.loadBitmapFromFileAndType(mediaFile, Media.PHOTO));
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            itemIcon = IconFactory.getNullImage();
+                        }
+                        ImageItem item = new ImageItem(this, mediaFile.getName(), Media.PHOTO, itemIcon);
 
                         // ビューアに反映する
                         imageViewerAdapter.add(item);
@@ -561,8 +573,15 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 
                     //*** 動画を撮影した場合 ***
                     case MOVIE_CAPTUER:
-
-                        item = new ImageItem(this, mediaFile.getName(), Media.MOVIE);
+                        try {
+                            Uri movieUri = data.getData();
+                            File movieFile = new File(movieUri.getPath());
+                            itemIcon = IconFactory.makeNormalIcon(IconFactory.loadBitmapFromFileAndType(movieFile, Media.MOVIE));
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            itemIcon = IconFactory.getNullImage();
+                        }
+                        item = new ImageItem(this, mediaFile.getName(), Media.MOVIE, itemIcon);
 
                         // ビューアに反映する
                         imageViewerAdapter.add(item);
@@ -571,8 +590,9 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         break;
                 }
 
+
                 db.setTransactionSuccessful();
-            }finally {
+            } finally {
                 db.endTransaction();
                 db.close();
             }

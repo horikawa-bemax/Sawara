@@ -74,13 +74,10 @@ public class Media {
      * @param mediaType 画像のタイプ
      * @throws Exception 適当な例外を投げます
      */
-	public Media(SQLiteDatabase db, Context context, Bitmap bitmap, String fileName, long mediaType) throws Exception{
+	public Media(SQLiteDatabase db, Context context, String fileName, long mediaType) throws Exception{
         this.context = context;
         db.beginTransaction();
         try {
-            File file = new File(getDir(mediaType), fileName);
-            // 画像をファイルに保存する
-            IconFactory.storeBitmapToFile(file, bitmap);
 
             // メディアテーブルにデータを登録
             String sql = "insert into media_table(file_name, type, modified) values (?,?,?)";
@@ -100,8 +97,8 @@ public class Media {
         }
     }
 
-    public Media(SQLiteDatabase db, Context context, Bitmap bitmap, String fileName, long mediaType, Article article) throws Exception{
-        this(db, context, bitmap, fileName, mediaType);
+    public Media(SQLiteDatabase db, Context context, String fileName, long mediaType, Article article) throws Exception{
+        this(db, context, fileName, mediaType);
         setArticleId(db, article.getId());
     }
 

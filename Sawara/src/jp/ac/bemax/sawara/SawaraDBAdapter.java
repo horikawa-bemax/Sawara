@@ -33,14 +33,6 @@ public class SawaraDBAdapter{
         mDb = null;
 	}
 
-    public Bitmap ppp(){
-        String ppp = "/storage/emulated/0/Android/data/jp.ac.bemax.sawara/files/Movies/buss.mp4";
-        File file = new File(ppp);
-        boolean open = file.canRead();
-        Bitmap bitppp = ThumbnailUtils.createVideoThumbnail(ppp, MediaStore.Video.Thumbnails.MINI_KIND);
-        return bitppp;
-    }
-
 	public SQLiteOpenHelper getHelper(){
 		return helper;
 	}
@@ -175,12 +167,13 @@ public class SawaraDBAdapter{
                     article.createCategoriesForArticle(db, cates);
                     for (int j = 0; j < paths[i].length; j++) {
                         File file = copyFromAssets(types[i][j], paths[i][j]);
-                        Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(file, types[i][j]);
-
-                        Media media = new Media(db, context, bitmap, paths[i][j], types[i][j], article);
+                        Media media = new Media(db, context, paths[i][j], types[i][j], article);
                         if(j==0){
-                            Bitmap iconBitmap = IconFactory.makeNormalIcon(bitmap);
-                            Media icon = new Media(db, context, bitmap, "article_icon_"+article.getId(), Media.PHOTO);
+                            Bitmap iconSrc = IconFactory.loadBitmapFromFileAndType(file, types[i][j]);
+                            Bitmap iconBitmap = IconFactory.makeNormalIcon(iconSrc);
+                            String iconName = "article_icon_"+article.getId()+".png";
+                            IconFactory.storeBitmapToFile(new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), iconName), iconBitmap);
+                            Media icon = new Media(db, context, iconName, Media.PHOTO);
                             article.setIcon(db, icon.getId());
                         }
                     }
@@ -194,7 +187,8 @@ public class SawaraDBAdapter{
                     if(icon == null){
                         icon =IconFactory.getNullImage();
                     }
-                    Media media = new Media(db, context, icon, iconName, Media.PHOTO);
+                    IconFactory.storeBitmapToFile(new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), iconName), icon);
+                    Media media = new Media(db, context, iconName, Media.PHOTO);
                     category.setIcon(db, media);
                 }
 

@@ -100,7 +100,8 @@ public class Category implements Serializable{
             // カテゴリのアイコンを作成する
             Bitmap iconBitmap = makeCategoryIconBitmap(db, context);
             String iconFileName = "category_icon_" + rowid + ".PNG";
-            Media media = new Media(db, context, iconBitmap, iconFileName, Media.PHOTO);
+            IconFactory.storeBitmapToFile(new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),iconFileName), iconBitmap);
+            Media media = new Media(db, context, iconFileName, Media.PHOTO);
             setIcon(db, media);
 
             db.setTransactionSuccessful();

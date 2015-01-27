@@ -17,17 +17,17 @@ public class ImageItem {
 	private Bitmap icon;
     private Context context;
 
-    public ImageItem(Context context, String fileName, long mediaType){
+    public ImageItem(Context context, String fileName, long mediaType, Bitmap icon){
         this.mediaId = -1;
         this.context = context;
         this.fileName = fileName;
         this.mediaType = mediaType;
+        this.icon = icon;
     }
 
     public ImageItem(Context context, long mediaId, String fileName, long mediaType, Bitmap icon){
-        this(context, fileName, mediaType);
+        this(context, fileName, mediaType, icon);
         this.mediaId = mediaId;
-		this.icon = icon;
     }
 
 	public String getFilePath(){

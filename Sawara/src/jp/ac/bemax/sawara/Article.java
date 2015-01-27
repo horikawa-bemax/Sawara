@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.widget.Toast;
 
 
 /**
@@ -246,6 +247,44 @@ public class Article implements Serializable{
         }
 
         return articles;
+    }
+
+    public void setCategory(SQLiteDatabase db, Category category){
+        db.beginTransaction();
+        try {
+            String sql = "select category_id from category_article_table where article_id=? and category_id=?";
+            String[] selectionArgs = {"" + rowid, "" + category.getId()};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+
+            if (cursor.getCount() <= 0) {
+                sql = "insert into category_article_table(category_id, article_id) values (?, ?)";
+                SQLiteStatement statement = db.compileStatement(sql);
+                statement.bindLong(1, category.getId());
+                statement.bindLong(2, rowid);
+                long id = statement.executeInsert();
+                if (id == -1) {
+                    throw new Exception("インサートに失敗したよ");
+                }
+            }
+            cursor.close();
+
+            db.setTransactionSuccessful();
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally {
+            db.endTransaction();
+        }
+    }
+
+    public Category[] getCategoriesThis(SQLiteDatabase db){
+        String sql = "select category_id from category_article_table where article_id=?";
+        String[] selectionArgs = {""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        Category[] categories = new Category[cursor.getCount()];
+        while(cursor.moveToNext()){
+            categories[cursor.getPosition()] = Category.getCategory(db, cursor.getLong(0));
+        }
+        return categories;
     }
 
     public List<ImageItem> getImageItems(SQLiteDatabase db, Context context){
