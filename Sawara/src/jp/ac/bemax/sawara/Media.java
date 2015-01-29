@@ -121,7 +121,7 @@ public class Media {
      * @return メディアの画像ファイル
      * @throws Exception 適当な例外を投げます
      */
-    public File getMediaFile(SQLiteDatabase db) throws Exception {
+    public File getMediaFile(SQLiteDatabase db) {
         String fileName = getFileName(db);
         File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         if(getType(db) == Media.MOVIE){
@@ -141,28 +141,10 @@ public class Media {
         Cursor cursor = db.rawQuery(sql, selectionArgs);
         Category[] categories = new Category[cursor.getCount()];
         while(cursor.moveToNext()){
-            categories[cursor.getPosition()] = Category.getCategory(null, cursor.getLong(0));
+            categories[cursor.getPosition()] = Category.getCategory(null, context, cursor.getLong(0));
         }
         return categories;
     }
-
-    /**
-     * このメディアを削除する
-     * @param db
-     */
-	public void delete(SQLiteDatabase db){
-        String sql = "delete from media_table where ROWID=?";
-        SQLiteStatement statement = db.compileStatement(sql);
-        statement.bindLong(1, rowid);
-        statement.executeUpdateDelete();
-
-        // 関連するカテゴリのアイコンを変更する
-        Category[] categories = getCategoriesRelationThisMedia(db);
-        for(Category category: categories){
-            Bitmap newIcon = category.makeCategoryIconBitmap(db, context);
-            category.updateIcon(db, context, newIcon);
-        }
-	}
 
     /**
      * 画像のファイル名を、DBから取得する
@@ -174,10 +156,15 @@ public class Media {
         return getMediaFile(db).getPath();
 	}
 
-    public Bitmap getMediaIconBitmap(SQLiteDatabase db) throws Exception {
-        File mediaFile = getMediaFile(db);
-        Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(mediaFile, getType(db));
-        Bitmap icon = IconFactory.makeNormalIcon(bitmap);
+    public Bitmap getIconBitmap(SQLiteDatabase db) {
+        Bitmap icon = null;
+        try {
+            File mediaFile = getMediaFile(db);
+            Bitmap bitmap = IconFactory.loadBitmapFromFileAndType(mediaFile, getType(db));
+            icon = IconFactory.makeNormalIcon(bitmap);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return icon;
     }
 

@@ -1,6 +1,9 @@
 package jp.ac.bemax.sawara;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +25,7 @@ import android.widget.Toast;
  * @author Masaaki Horikawa
  * 2014/09/05
  */
-public class Article implements Serializable{
+public class Article{
 	//static final String TABLE_NAME = "article_table";
 	//static final String ID = "ROWID";
 	static final String NAME = "name";
@@ -31,28 +34,63 @@ public class Article implements Serializable{
 	static final String MODIFIED = "modified";
 
 	private long rowid;
+    private Context context;
 	
 	/**
 	 * Article.javaコンストラクタ
 	 */
-	public Article(long id){
+	private Article(long id, Context context){
 		rowid = id;
+        this.context = context;
 	}
-	
-	public Article(SQLiteDatabase db, String name, String description){
-		rowid = insert(db, name, description);
-        setPosition(db, rowid);
-	}
-	
-	public int delete(SQLiteDatabase db){
-		String sql = "delete from article_table where ROWID=?";
-		SQLiteStatement statement = db.compileStatement(sql);
-		statement.bindLong(1, rowid);
-		int row = statement.executeUpdateDelete();
-		
-		return row;
-	}
-	
+
+    public static Article getArticle(Context context, long id){
+        return new Article(id, context);
+    }
+
+	public Article(SQLiteDatabase db, Context context, String name, String description){
+        db.beginTransaction();
+        try {
+            rowid = insert(db, name, description);
+            setPosition(db, rowid);
+            this.context = context;
+
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
+    }
+
+    /**
+     *
+     * @param db
+     * @param context
+     * @param name
+     * @param description
+     * @param categories
+     */
+    public Article(SQLiteDatabase db, Context context, String name, String description, Category[] categories){
+        db.beginTransaction();
+        try {
+            rowid = insert(db, name, description);
+            setPosition(db, rowid);
+            this.context = context;
+
+            // TODO category_article_tableを更新
+            for(Category category: categories) {
+                String sql = "insert into category_article_table(category_id, article_id) values (?,?)";
+                SQLiteStatement statement = db.compileStatement(sql);
+                statement.bindLong(1, category.getId());
+                statement.bindLong(2, rowid);
+                statement.executeInsert();
+            }
+
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
+    }
+
 	public long insert(SQLiteDatabase db, String name, String description) {
         String sql = "insert into article_table(name, description, modified) values (?,?,?)";
         SQLiteStatement statement = db.compileStatement(sql);
@@ -173,31 +211,92 @@ public class Article implements Serializable{
     }
 
     /**
-     * articleのアイコンをセットする
+     *
      * @param db
-     * @param mediaId
      */
-    public void setIcon(SQLiteDatabase db, Long mediaId){
-        String sql = "update article_table set icon=? where ROWID=?";
-        SQLiteStatement statement = db.compileStatement(sql);
-        statement.bindLong(1, mediaId);
-        statement.bindLong(2, rowid);
-        statement.executeUpdateDelete();
+    public void updateIcon(SQLiteDatabase db){
+        String icon = null;
+        File dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        db.beginTransaction();
+        try {
+            // TODO アイコンファイル名を読みだす
+            String sql = "select icon from article_table where ROWID=?";
+            String[] selectionArgs = {""+rowid};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+            int row = cursor.getCount();
+            while(cursor.moveToNext()){
+                icon = cursor.getString(0);
+            }
+            cursor.close();
+
+            // TODO 画像を保存する
+            icon =  "article_icon_"+rowid+".png";
+            FileOutputStream fos = null;
+            try{
+                Bitmap iconBitmap = makeArticleIconBitmap(db);
+                fos = new FileOutputStream(new File(dir, icon));
+                iconBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+                // TODO 新規作成の場合に実行する
+                SQLiteStatement statement = db.compileStatement("update article_table set icon=? where ROWID=?");
+                statement.bindString(1, icon);
+                statement.bindLong(2, rowid);
+                statement.executeUpdateDelete();
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }finally {
+                try{
+                    if(fos != null)
+                        fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            db.setTransactionSuccessful();
+        }finally {
+            db.endTransaction();
+        }
     }
 
-	public Media getIcon(SQLiteDatabase db, Context context) {
-	    Media media = null;
+    public String getIconFileName(SQLiteDatabase db){
+        String fileName = null;
+
         String sql = "select icon from article_table where ROWID=?";
         String[] selectionArgs = {""+rowid};
         Cursor cursor = db.rawQuery(sql, selectionArgs);
-        if(cursor.getCount() > 0){
+        if(cursor.getCount() > 0) {
             cursor.moveToFirst();
-            long mediaId = cursor.getLong(0);
-            media = Media.getMedia(db, context, mediaId);
-            cursor.close();
+            fileName = cursor.getString(0);
         }
-		return media;
+        cursor.close();
+
+        return fileName;
+    }
+
+	public Bitmap getIcon(SQLiteDatabase db) {
+        String fileName = getIconFileName(db);
+        Bitmap icon = null;
+
+        if(fileName != null){
+            icon = BitmapFactory.decodeFile(fileName);
+        }
+
+		return icon;
 	}
+
+    public File getIconFile(SQLiteDatabase db) {
+        String fileName = getIconFileName(db);
+        File iconFile = null;
+
+        if(fileName != null){
+            iconFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
+        }
+
+        return iconFile;
+    }
 
     /**
      * このアーティクルに属する画像の配列を返す
@@ -229,7 +328,7 @@ public class Article implements Serializable{
     }
 
 
-    public static List<Article> getAllArticles(SQLiteDatabase db){
+    public static List<Article> getAllArticles(SQLiteDatabase db, Context context){
         List<Article> articles = new ArrayList<Article>();
 
         db.beginTransaction();
@@ -238,7 +337,7 @@ public class Article implements Serializable{
             Cursor cursor = db.rawQuery(sql, null);
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
-                Article article = new Article(id);
+                Article article = new Article(id, context);
                 articles.add(article);
             }
             db.setTransactionSuccessful();
@@ -282,9 +381,36 @@ public class Article implements Serializable{
         Cursor cursor = db.rawQuery(sql, selectionArgs);
         Category[] categories = new Category[cursor.getCount()];
         while(cursor.moveToNext()){
-            categories[cursor.getPosition()] = Category.getCategory(db, cursor.getLong(0));
+            categories[cursor.getPosition()] = Category.getCategory(db, context, cursor.getLong(0));
         }
         return categories;
+    }
+
+    public Bitmap makeArticleIconBitmap(SQLiteDatabase db){
+        Bitmap icon = null;
+
+        db.beginTransaction();
+        try {
+            String sql = "select ROWID from media_table where article_id=?";
+            String[] selectionArgs = {"" + rowid};
+            Cursor cursor = db.rawQuery(sql, selectionArgs);
+            if (cursor.getCount() > 0) {
+                Bitmap[] mediaBitmaps = new Bitmap[cursor.getCount()];
+                while (cursor.moveToNext()) {
+                    mediaBitmaps[cursor.getPosition()] = Media.getMedia(null, context, cursor.getLong(0)).getIconBitmap(db);
+                }
+                icon = IconFactory.makeSixMatrixIcon(context, mediaBitmaps);
+            }
+            cursor.close();
+
+            db.setTransactionSuccessful();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            db.endTransaction();
+        }
+        return icon;
+
     }
 
     public List<ImageItem> getImageItems(SQLiteDatabase db, Context context){

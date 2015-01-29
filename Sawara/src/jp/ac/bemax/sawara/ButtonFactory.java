@@ -76,7 +76,7 @@ public class ButtonFactory {
 		StateListDrawable stateListDrawable = new StateListDrawable();
 		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, ma);
 		stateListDrawable.addState(new int[0], mb);
-		
+
 		return stateListDrawable;
 		
 	}
@@ -103,7 +103,6 @@ public class ButtonFactory {
 		TypedValue frameDrawableValue = new TypedValue();
 		thema.resolveAttribute(R.attr.frameBack, frameDrawableValue, true);
 		Drawable frameDrawable = context.getResources().getDrawable(frameDrawableValue.resourceId);
-		
 		return frameDrawable;
 	}
 	

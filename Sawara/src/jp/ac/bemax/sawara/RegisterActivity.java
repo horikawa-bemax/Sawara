@@ -80,6 +80,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 	// 現在のカテゴリ（新規登録時に使用）
 	private Category thisCategory;
     private Category[] thisArticleCategories;
+    private Article thisArticle;
 	
 	private SawaraDBAdapter dbAdapter;
 	
@@ -258,7 +259,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			public void handleMessage(android.os.Message msg) {
 				super.handleMessage(msg);
 				
-				Article article;
+				//Article article;
 				
 				ViewHolder holder = (ViewHolder) registerLayout.getTag();
 				registerLayout.removeAllViews();
@@ -281,7 +282,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         Toast.makeText(thisObj, "NEW_MODE", Toast.LENGTH_SHORT).show();
 
                         // ** インテントからカテゴリ情報を取得 **
-                        thisCategory = (Category)getIntent().getSerializableExtra("category");
+                        long categoryId = getIntent().getLongExtra("category_id", -1);
+                        thisCategory = Category.getCategory(db, thisObj, categoryId);
                         thisArticleCategories = new Category[]{thisCategory};
 
                         // ** ボタン配置 **
@@ -308,15 +310,14 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         Toast.makeText(thisObj, "UPDATE_MODE", Toast.LENGTH_SHORT).show();
 
                         // ** Articleを取得 **
-                        article = (Article)getIntent().getSerializableExtra("article");
-                        thisArticleCategories =article.getCategoriesThis(db);
+                        thisArticleCategories =thisArticle.getCategoriesThis(db);
 
-                        holder.nameTextView.setText(article.getName(db));
-                        holder.discriptionTextView.setText(article.getDescription(db));
+                        holder.nameTextView.setText(thisArticle.getName(db));
+                        holder.discriptionTextView.setText(thisArticle.getDescription(db));
 
                         // ImageViewerの初期化
                         imageViewerAdapter.clear();
-                        imageViewerAdapter.addAll(article.getImageItems(db, thisObj));
+                        imageViewerAdapter.addAll(thisArticle.getImageItems(db, thisObj));
 
                         // ** ボタン配置 **
                         // アルバムボタン
@@ -343,15 +344,16 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         Toast.makeText(thisObj, "READ_MODE", Toast.LENGTH_SHORT).show();
 
                         // ** Articleを取得 **
-                        article = (Article)getIntent().getSerializableExtra("article");
-                        thisArticleCategories =article.getCategoriesThis(db);
+                        long articleId = getIntent().getLongExtra("article_id", -1);
+                        thisArticle = Article.getArticle(thisObj, articleId);
+                        thisArticleCategories =thisArticle.getCategoriesThis(db);
 
-                        holder.nameTextView.setText(article.getName(db));
-                        holder.discriptionTextView.setText(article.getDescription(db));
+                        holder.nameTextView.setText(thisArticle.getName(db));
+                        holder.discriptionTextView.setText(thisArticle.getDescription(db));
 
                         // ImageViewerの初期化
                         imageViewerAdapter.clear();
-                        imageViewerAdapter.addAll(article.getImageItems(db, thisObj));
+                        imageViewerAdapter.addAll(thisArticle.getImageItems(db, thisObj));
 
                         // ** Viewの設置 **
                         // 戻るボタン
@@ -436,45 +438,28 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			String description = holder.discriptionTextView.getText().toString();
 			
 			SQLiteDatabase db = dbAdapter.openDb();
-			// カテゴリーidの設定
-			List<Category> categories = new ArrayList<Category>();
-			if(thisCategory != null){
-				categories.add(thisCategory);
-			}else{
-				// とりあえずその他
-				categories.add(Category.getCategory(db, 2));
-			}
 
 			boolean success = false;
-			Article article = null;
+
 			if(mode == NEW_MODE) {
 				// 新しいArticleを作成する
 				db.beginTransaction();
 				try {
-					article = new Article(db, name, description);
+					thisArticle = new Article(db, this, name, description);
 					//新しいMediaを登録する
 					List<ImageItem> items = imageViewerAdapter.getImageItems();
 					Media[] medias = new Media[items.size()];
                     Bitmap icon;
                     for(int i=0; i<medias.length; i++){
                         ImageItem item = items.get(i);
-                        medias[i] = new Media(db, this, item.getFileName(), item.getType());
-                        if(i==0){
-                            // アーティクルのアイコンを作成する
-                            File iconSrc = new File(item.getFilePath());
-                            icon = IconFactory.makeNormalIcon(IconFactory.loadBitmapFromFileAndType(iconSrc, item.getType()));
-                            String iconFileName = "article_icon_"+article.getId()+".png";
-                            IconFactory.storeBitmapToFile(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES),iconFileName), icon);
-                            Media iconMedia = new Media(db, this, iconFileName, Media.PHOTO);
-                            article.setIcon(db, iconMedia.getId());
-                        }
+                        medias[i] = new Media(db, this, item.getFileName(), item.getType(), thisArticle);
                     }
+                    thisArticle.updateIcon(db);
 
 					//TODO カテゴリーアーティクルテーブルを更新する
                     for(Category category: thisArticleCategories){
-                        article.setCategory(db, category);
+                        thisArticle.setCategory(db, category);
                     }
-
 
 					db.setTransactionSuccessful();
 					success = true;
@@ -487,10 +472,10 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				// Articleを更新する
 				db.beginTransaction();
 				try {
-                    article = (Article) getIntent().getSerializableExtra("article");
-                    article.setName(db, name);
-                    article.setDescription(db, description);
-                    article.setModified(db, System.currentTimeMillis());
+
+                    thisArticle.setName(db, name);
+                    thisArticle.setDescription(db, description);
+                    thisArticle.setModified(db, System.currentTimeMillis());
 
                     List<ImageItem> items = imageViewerAdapter.getImageItems();
 
@@ -500,13 +485,13 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                         medias[i] = Media.getMedia(db, this, items.get(i).getId());
                         if (medias[i] == null) {
                             ImageItem item = items.get(i);
-                            medias[i] = new Media(db, this, item.getFileName(), item.getType(), article);
+                            medias[i] = new Media(db, this, item.getFileName(), item.getType(), thisArticle);
                         }
                     }
 
                     //TODO カテゴリーアーティクルテーブルを更新する
                     for(Category category: thisArticleCategories){
-                        article.setCategory(db, category);
+                        thisArticle.setCategory(db, category);
                     }
 
                     db.setTransactionSuccessful();
@@ -519,7 +504,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 			}
 			// 成功
 			if(success){
-				intent.putExtra("article", article);
+				intent.putExtra("article_id", thisArticle.getId());
 				setResult(RESULT_OK, intent);
 			}else{
 				setResult(RESULT_CANCELED, intent);
@@ -589,7 +574,6 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 
                         break;
                 }
-
 
                 db.setTransactionSuccessful();
             } finally {

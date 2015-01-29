@@ -99,7 +99,7 @@ public class SawaraDBAdapter{
                 // カテゴリテーブルを新規作成
                 sql = "create table category_table " +
                         "(name text unique not null, " +                // カテゴリ名
-                        " icon integer unique," +                // アイコン画像のパス
+                        " icon string unique," +                // アイコン画像のパス
                         " position integer unique," +        // 表示位置
                         " modified integer )";        // 更新日時
                 db.execSQL(sql);
@@ -108,7 +108,7 @@ public class SawaraDBAdapter{
                 sql = "create table article_table " +
                         "(name text unique not null, " +    // 名前
                         " description text not null," +        // 説明
-                        " icon integer unique, " +          // アイコン
+                        " icon string unique, " +          // アイコン
                         " position integer unique," +         // 表示位置
                         " modified integer )";                    // 更新日時
                 db.execSQL(sql);
@@ -144,8 +144,10 @@ public class SawaraDBAdapter{
 
                 // CategoryTable作成
                 String[] catNames = {"くるま", "その他"};
-                for (String name : catNames) {
-                    Category category = new Category(db, name);
+                Category[] categories = new Category[2];
+                for (int i=0; i<categories.length; i++) {
+                    Category category = new Category(db, context, catNames[i]);
+                    categories[i] = category;
                 }
                 // ArticleTable
                 String[] artName = {"ふつうしゃ", "けい", "イギリスのバス"};
@@ -160,36 +162,26 @@ public class SawaraDBAdapter{
                         {Media.PHOTO},
                         {Media.MOVIE}
                 };
-                List<Category> cates = new ArrayList<Category>();
-                cates.add(Category.findCategoryByName(db, "くるま"));
+                Category[] articleCategories = {categories[0]};
+
                 for (int i = 0; i < artName.length; i++) {
-                    Article article = new Article(db, artName[i], artDesc[i]);
-                    article.createCategoriesForArticle(db, cates);
+                    Article article = new Article(db, context, artName[i], artDesc[i], articleCategories);
                     for (int j = 0; j < paths[i].length; j++) {
                         File file = copyFromAssets(types[i][j], paths[i][j]);
                         Media media = new Media(db, context, paths[i][j], types[i][j], article);
                         if(j==0){
                             Bitmap iconSrc = IconFactory.loadBitmapFromFileAndType(file, types[i][j]);
                             Bitmap iconBitmap = IconFactory.makeNormalIcon(iconSrc);
-                            String iconName = "article_icon_"+article.getId()+".png";
-                            IconFactory.storeBitmapToFile(new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), iconName), iconBitmap);
-                            Media icon = new Media(db, context, iconName, Media.PHOTO);
-                            article.setIcon(db, icon.getId());
+                            article.updateIcon(db);
                         }
                     }
+                    article.updateIcon(db);
                 }
 
                 // カテゴリのアイコンを作成する
-                List<Category> cs = Category.getAllCategory(db);
+                List<Category> cs = Category.getAllCategory(db, context);
                 for (Category category : cs) {
-                    Bitmap icon = category.makeCategoryIconBitmap(db, context);
-                    String iconName = "category_icon_" + category.getId() + ".png";
-                    if(icon == null){
-                        icon =IconFactory.getNullImage();
-                    }
-                    IconFactory.storeBitmapToFile(new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), iconName), icon);
-                    Media media = new Media(db, context, iconName, Media.PHOTO);
-                    category.setIcon(db, media);
+                    category.updateIcon(db);
                 }
 
                 db.setTransactionSuccessful();

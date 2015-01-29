@@ -48,7 +48,7 @@ public class IconFactory {
     }
 
     public static Bitmap getNullImage(){
-        return Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Config.ARGB_8888);
+        return Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT, Config.ARGB_4444);
     }
 
     /**
@@ -96,7 +96,7 @@ public class IconFactory {
 	}
 
     public static Bitmap makeSixMatrixIcon(Context context, Bitmap[] bitmaps){
-        Bitmap icon = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT*3/2, Bitmap.Config.ARGB_8888);
+        Bitmap icon = Bitmap.createBitmap(ICON_WIDTH, ICON_HEIGHT*3/2, Bitmap.Config.ARGB_4444);
         Canvas canvas = new Canvas(icon);
         Rect srcRect = new Rect(0, 0, ICON_WIDTH, ICON_HEIGHT);
         Rect dstRect = null;

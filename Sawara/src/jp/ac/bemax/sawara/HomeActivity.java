@@ -148,18 +148,13 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                             switch (viewMode) {
                                 case CATEGORY_VIEW:
                                     // カテゴリーのリストを取得
-                                    List<Category> categories = Category.getAllCategory(db);
+                                    List<Category> categories = Category.getAllCategory(db, thisObj);
                                     listItems = new ArrayList<ListItem>();
                                     for (Category category : categories) {
-                                        Media media = category.getIcon(db, thisObj);
-                                        long type = media.getType(db);
-                                        File dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                                        if (type == Media.MOVIE) {
-                                            dir = thisObj.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-                                        }
-                                        File iconFile = media.getMediaFile(db);
-                                        ListItem item = new ListItem(category.getId(), category.getName(db), iconFile.getPath(), type);
+                                        File iconFile = category.getIconFile(db);
+                                        ListItem item = new ListItem(category.getId(), category.getName(db), iconFile.getPath(), Media.PHOTO);
                                         listItems.add(item);
+                                        category.updateIcon(db);
                                     }
                                     gridAdapter.clear();
                                     gridAdapter.addAll(listItems);
@@ -169,19 +164,21 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                                 case ARTICLE_VIEW:
                                     List<Article> articles = thisCategory.getArticles(db);
                                     listItems = new ArrayList<ListItem>();
-                                    for (Article article : articles) {
-                                        Media media = article.getIcon(db, thisObj);
-                                        long type = media.getType(db);
-                                        File iconFile = new File(media.getMediaFilePath(db));
-                                        ListItem item = new ListItem(article.getId(), article.getName(db), iconFile.getPath(), type);
+                                    try {
+                                        for (Article article : articles) {
+                                            File iconFile = article.getIconFile(db);
+                                            ListItem item = new ListItem(article.getId(), article.getName(db), iconFile.getPath(), Media.PHOTO);
 
-                                        listItems.add(item);
+                                            listItems.add(item);
+                                            article.updateIcon(db);
+                                        }
+                                        gridAdapter.clear();
+                                        gridAdapter.addAll(listItems);
+
+                                    }catch (Exception e){
+                                        e.printStackTrace();
                                     }
-                                    gridAdapter.clear();
-                                    gridAdapter.addAll(listItems);
-
                                     holder.makeArticleModeDisplay(homeLayout);
-
                                     holder.categoryTextView.setText(thisCategory.getName(db));
 
                                     break;
@@ -213,8 +210,6 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                             break;
                     }
                     db.setTransactionSuccessful();
-                }catch (Exception e){
-                    e.printStackTrace();
                 }finally {
                     db.endTransaction();
                     db.close();
@@ -256,7 +251,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			case CATEGORY_VIEW:
 				break;
 			case ARTICLE_VIEW:
-				intent.putExtra("category", thisCategory);
+				intent.putExtra("category_id", thisCategory.getId());
 				break;
 			}
 			startActivityForResult(intent, REGISTER);
@@ -284,21 +279,22 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			if(resultCode == RESULT_OK){
 				switch(viewMode){
 				case CATEGORY_VIEW:
+                    for(int i=0; i<gridAdapter.getCount(); i++){
+                        ListItem item = gridAdapter.getItem(i);
+                        Category category = Category.getCategory(db, this, item.getId());
+                        // カテゴリのアイコンを作成する
+                        category.updateIcon(db);
+
+                    }
 					break;
 				case ARTICLE_VIEW:
-					dbAdapter.dump(db);
-					Article article = (Article)data.getSerializableExtra("article");
-                    Media media = article.getIcon(db, this);
-                    long type = media.getType(db);
-                    File dir = this.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-                    if(type == Media.MOVIE) {
-                        dir = this.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-                    }
-                    File file = null;
-                    try {
-                        file = media.getMediaFile(db);
+                    long articleId = data.getLongExtra("article_id", -1);
+					Article article = Article.getArticle(this, articleId);
 
-                        ListItem item = new ListItem(article.getId(), article.getName(db), file.getPath(), media.getType(db));
+                    try {
+                        article.updateIcon(db);
+                        File file = article.getIconFile(db);
+                        ListItem item = new ListItem(article.getId(), article.getName(db), file.getPath(), Media.PHOTO);
 
                         gridAdapter.add(item);
                         gridAdapter.notifyDataSetChanged();
@@ -312,6 +308,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			}
 			break;
 	    }
+        dbAdapter.dump(db);
         db.close();
 	}
 
@@ -355,15 +352,15 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 		case CATEGORY_VIEW:
 			viewMode = ARTICLE_VIEW;
             item = (ListItem)gridAdapter.getItem(position);
-            thisCategory = Category.getCategory(db, item.getId());
+            thisCategory = Category.getCategory(db, this, item.getId());
 
 			mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			break;
 		case ARTICLE_VIEW:
 			Intent intent = new Intent(this, RegisterActivity.class);
 		    item = (ListItem)holder.gridView.getAdapter().getItem(position);
-            Article article = new Article(item.getId());
-			intent.putExtra("article", article);
+            Article article = Article.getArticle(this, item.getId());
+			intent.putExtra("article_id", article.getId());
 			intent.putExtra("mode", RegisterActivity.READ_MODE);
 
 			startActivity(intent);
@@ -405,6 +402,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
             returnButton.setId(RETURN_BUTTON);
             returnButton.setBackground(ButtonFactory.getButtonDrawable(context, R.drawable.return_button_image));
             returnButton.setOnClickListener(context);
+
+            System.gc();
         }
 
         void makeCategoryModeDisplay(RelativeLayout layout){
@@ -434,6 +433,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
             params.addRule(RelativeLayout.LEFT_OF, SETTING_BUTTON);
             gridView.setLayoutParams(params);
             layout.addView(gridView);
+
+            System.gc();
         }
 
         void makeArticleModeDisplay(RelativeLayout layout){
@@ -481,6 +482,8 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
             categoryTextView.setLayoutParams(params);
             categoryTextView.setTextSize(100);
             layout.addView(categoryTextView);
+
+            System.gc();
         }
     }
 }
