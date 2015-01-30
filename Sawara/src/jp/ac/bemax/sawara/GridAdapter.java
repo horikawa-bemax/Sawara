@@ -4,9 +4,16 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources.Theme;
+import android.database.sqlite.SQLiteAbortException;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +25,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-
 /**
  * ホーム画面のグリッドビューに並べる項目を扱うクラス
  * @author Masaaki Horikawa
@@ -29,9 +35,10 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 	private int resourceId;			// グリッドに表示するアイテムのレイアウトXML
 	private List<ListItem> list;	// グリッドに表示するアイテムのリスト
 	private Point dispSize; 		// 画面のサイズ
+
 	static int frameSize;
 	static float density;
-	
+
 	public GridAdapter(Context context, int resource, List<ListItem> objects) {
 		super(context, resource, objects);
 		this.context = context;
@@ -69,13 +76,13 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
     		convertView.setLayoutParams(absParams);
     		
     		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-    		params.setMargins((int)density, (int)(density*10), (int)(density*5), (int)(density*10));
+    		params.setMargins(5, 10, 5, 10);
     		holder.imageView.setLayoutParams(params);
     		
     		params = new LinearLayout.LayoutParams((int)(frameSize / 5), LinearLayout.LayoutParams.MATCH_PARENT);
-    		params.setMargins((int)(density*5), (int)(density*5), 0, (int)(density*5));
+    		params.setMargins(5, 5, 0, 5);
     		holder.vTextView.setLayoutParams(params);
-    		holder.vTextView.setPadding((int)(density*10), (int)(density*10), (int)(density*10), (int)(density*10));
+    		holder.vTextView.setPadding(10, 10, 10, 10);
     		
             convertView.setTag(holder);
 		}else{
@@ -83,30 +90,38 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 		}
 		// 表示するアイテムを取り出す
 		ListItem listItem = getItem(position);
-		
-		// imageViewにitemの画像をセットする
-		String iconPath = listItem.getIconPath();
-		Bitmap bmp = StrageManager.loadIcon(iconPath);
-		holder.imageView.setImageBitmap(bmp);
-		holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
 
-		// 縦書きのtextViewにアイテムの値をセットする
-		holder.vTextView.setText(listItem.getName());
-		
-		return convertView;
+        // imageViewにitemの画像をセットする
+        Bitmap bmp = listItem.getIcon();
+        holder.imageView.setImageBitmap(bmp);
+        holder.imageView.setBackground(ButtonFactory.getThemaFrame(context));
+
+        // 縦書きのtextViewにアイテムの値をセットする
+        holder.vTextView.setText(listItem.getName());
+        holder.vTextView.setBackground(getVTextBack());
+
+        return convertView;
 	}
 
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position,	long id) {
-		ListItem listItem = list.get(position);
-		if (listItem instanceof Category) {
-			Category category = (Category)listItem;
-			category.getId();
-			
-		} 
+	private Drawable getVTextBack(){
+		TypedValue mainColorValue = new TypedValue();
+		Theme theme = context.getTheme();
+		theme.resolveAttribute(R.attr.mainColor, mainColorValue, true);
+		
+		GradientDrawable drawable = new GradientDrawable();
+		drawable.setStroke(5, context.getResources().getColor(mainColorValue.resourceId));
+		drawable.setColor(Color.WHITE);
+		drawable.setCornerRadius(10);
+		
+		return drawable;
 	}
-	
-	class ViewHolder{
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+    }
+
+    class ViewHolder{
 		ImageView imageView;
 		VTextView vTextView;
 	}

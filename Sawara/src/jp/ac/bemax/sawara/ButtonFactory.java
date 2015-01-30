@@ -58,25 +58,25 @@ public class ButtonFactory {
 		Paint accent = new Paint();
 		accent.setColor(accentColor);
 		RectF rectOut = new RectF(0,buttonSize/3f, buttonSize*4/5f, buttonSize);
-		RectF rectIn = new RectF(10, buttonSize/3f+10, (buttonSize*4/5f)-10, buttonSize-10);
+		RectF rectIn = new RectF(5, buttonSize/3f+5, (buttonSize*4/5f)-5, buttonSize-5);
 		
 		Bitmap bitmap = Bitmap.createBitmap(buttonSize, buttonSize, Config.ARGB_8888);
 		Canvas canvas = new Canvas(bitmap);
-		canvas.drawRoundRect(rectOut, 10, 10, main);
-		canvas.drawRoundRect(rectIn, 10, 10, base);
+		canvas.drawRoundRect(rectOut, 15, 15, main);
+		canvas.drawRoundRect(rectIn, 15, 15, base);
 		BitmapDrawable mb = new BitmapDrawable(context.getResources(), bitmap);
 		
 		bitmap = Bitmap.createBitmap(buttonSize, buttonSize, Config.ARGB_8888);
 		canvas = new Canvas(bitmap);
-		canvas.drawRoundRect(rectOut, 10, 10, main);
-		canvas.drawRoundRect(rectIn, 10, 10, accent);
+		canvas.drawRoundRect(rectOut, 15, 15, main);
+		canvas.drawRoundRect(rectIn, 15, 15, accent);
 		BitmapDrawable ma = new BitmapDrawable(context.getResources(), bitmap);		
 		
 		// 状態Drawable作成
 		StateListDrawable stateListDrawable = new StateListDrawable();
 		stateListDrawable.addState(new int[]{android.R.attr.state_pressed}, ma);
 		stateListDrawable.addState(new int[0], mb);
-		
+
 		return stateListDrawable;
 		
 	}
@@ -103,7 +103,6 @@ public class ButtonFactory {
 		TypedValue frameDrawableValue = new TypedValue();
 		thema.resolveAttribute(R.attr.frameBack, frameDrawableValue, true);
 		Drawable frameDrawable = context.getResources().getDrawable(frameDrawableValue.resourceId);
-		
 		return frameDrawable;
 	}
 	

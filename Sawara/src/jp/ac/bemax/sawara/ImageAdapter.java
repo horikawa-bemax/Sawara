@@ -1,10 +1,14 @@
 package jp.ac.bemax.sawara;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,28 +24,37 @@ import android.widget.LinearLayout;
  */
 public class ImageAdapter extends BaseAdapter {
 	private Context mContext;
-	private List<Bitmap> mList;
+	private List<ImageItem> mList;
 	private int backDrawable;
+	
+	private final int LMP = LinearLayout.LayoutParams.MATCH_PARENT;
+	private final int AMP = AbsListView.LayoutParams.MATCH_PARENT;
 	
 	/**
 	 * ImageAdapter.javaコンストラクタ
 	 * @param context
 	 */
-	public ImageAdapter(Context context){
+	public ImageAdapter(SawaraDBAdapter adapter, Context context){
 		mContext = context;
 		TypedValue outValue = new TypedValue();
 		context.getTheme().resolveAttribute(R.attr.frameBack, outValue, true);
 		backDrawable = outValue.resourceId;
-		mList = new ArrayList<Bitmap>();
+		mList = new ArrayList<ImageItem>();
 	}
 	
 	/**
 	 * アダプタに画像を追加する
-	 * @param image
+	 * @param item
 	 */
-	public void add(Bitmap image){
-		mList.add(image);
+	public void add(ImageItem item){
+		mList.add(item);
 	}
+
+    public void addAll(List<ImageItem> items){
+        for(ImageItem item: items){
+            add(item);
+        }
+    }
 
 	/**
 	 * アダプタのアイテム数を返す
@@ -56,7 +69,7 @@ public class ImageAdapter extends BaseAdapter {
 	 * @param position アイテムのポジション
 	 */
 	@Override
-	public Bitmap getItem(int position) {
+	public ImageItem getItem(int position) {
 		return mList.get(position);
 	}
 
@@ -80,29 +93,34 @@ public class ImageAdapter extends BaseAdapter {
             holder.imageView = new ImageView(mContext);
             holder.imageView.setBackgroundResource(backDrawable);
                         
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LMP, LMP);
             params.setMargins(10,10,10,10);
-            LinearLayout linearLayout = new LinearLayout(mContext);
-            linearLayout.setLayoutParams(params);
-            linearLayout.addView(holder.imageView);
+            holder.imageView.setLayoutParams(params);
             
-            convertView = linearLayout;           
-            AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(AbsListView.LayoutParams.MATCH_PARENT, AbsListView.LayoutParams.MATCH_PARENT);
+            LinearLayout linearLayout = new LinearLayout(mContext);
+            linearLayout.addView(holder.imageView);
+            convertView = linearLayout;
+            
+            AbsListView.LayoutParams absParams = new AbsListView.LayoutParams(AMP, AMP);
             convertView.setLayoutParams(absParams);            
             convertView.setTag(holder);
 		}else{
 			holder = (ViewHolder)convertView.getTag();
 		}
-		
-		holder.imageView.setImageBitmap(mList.get(position));
-		
+
+		holder.imageView.setImageBitmap(mList.get(position).getIcon());
+
 		return convertView;
 	}
 	
 	public void clear(){
-		mList = new ArrayList<Bitmap>();
+		mList = new ArrayList<ImageItem>();
 	}
-	
+
+	public List<ImageItem> getImageItems(){
+		return mList;
+	}
+
 	class ViewHolder{
 		ImageView imageView;
 	}

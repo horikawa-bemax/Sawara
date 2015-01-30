@@ -7,13 +7,16 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+import android.graphics.Bitmap;
+import android.media.ThumbnailUtils;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
 /**
@@ -23,14 +26,32 @@ import android.util.Log;
  */
 public class SawaraDBAdapter{
 	private SQLiteOpenHelper helper;
+    private SQLiteDatabase mDb;
 	
 	public SawaraDBAdapter(Context context) {
 		helper = new DBAdapter(context, "sawara.db", null, 1);
+        mDb = null;
 	}
-	
+
 	public SQLiteOpenHelper getHelper(){
 		return helper;
 	}
+
+    public SQLiteDatabase openDb(){
+        if(mDb == null){
+            mDb = helper.getWritableDatabase();
+        }
+        if(!mDb.isOpen()){
+            mDb = helper.getWritableDatabase();
+        }
+        return mDb;
+    }
+
+    public void closeDb(){
+        if(mDb != null && mDb.isOpen()){
+            mDb.close();
+        }
+    }
 	
 	/**
 	 * group_tableのgroup_nameの写像リストを返す
@@ -72,160 +93,136 @@ public class SawaraDBAdapter{
 		 */
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			// カテゴリテーブルを新規作成
-			String create_category_table_sql = "create table category_table " +
-					"(name text unique not null, " +				// カテゴリ名
-					" icon text unique," +				// アイコン画像のパス
-					" position integer unique," +		// 表示位置
-					" modified integer unique)";		// 更新日時
-			db.execSQL(create_category_table_sql);
-			
-			// アーティクルテーブルを新規作成
-			String create_article_table_sql = "create table article_table " +
-					"(name text unique not null, " +	// 名前 
-					" description text not null," +				// 説明
-					" icon text unique," +						// アイコン画像のパス
-					" position integer unique," +				// 表示位置
-					" modified integer unique)";				// 更新日時
-			db.execSQL(create_article_table_sql);
-			
-			String create_category_article_table_sql = "create table category_article_table " +
-					"(category_id integer not null," +		// カテゴリID
-					" article_id integer not null," +		// アーティクルID
-					" unique (category_id, article_id))";	// ユニーク制約条件
-			db.execSQL(create_category_article_table_sql);
-					
-			// イメージテーブルを新規作成
-			String create_image_table_sql = "create table image_table " +
-					"(image_path text unique not null, " +	// 画像URL
-					" article_id integer not null)";		// アーティクルID
-			db.execSQL(create_image_table_sql);
-			
-			// ムービーテーブルを新規作成
-			String create_movie_table_sql = "create table movie_table " +
-					"(movie_path text unique not null," +	// 動画URL
-					" article_id integer not null)";		// アーティクルID
-			db.execSQL(create_movie_table_sql);
-			
-			String create_category_icon_view_sql = "create view category_icon_view as " +
-					"select category_id, icon from category_article_table A inner join article_table B on a.article_id = B.ROWID " + 
-					"order by A.category_id";
-			db.execSQL(create_category_icon_view_sql);
-			
-			String create_category_image_view_sql = "create view category_image_view as " +
-					"select category_id, image_path " +
-					"from (category_article_table A inner join article_table B on A.article_id = B.ROWID) " +
-					"inner join image_table C on B.ROWID = C.article_id " +
-					"order by A.category_id";
-			db.execSQL(create_category_image_view_sql);
-			
-			// アーティクルとムービーの結合ビューを作成
-			String create_article_movie_view_sql = "create view article_movie_view as " +
-					"select A.ROWID article_id, movie_path " +
-					"from article_table A inner join movie_table B " +
-					"on A.ROWID = B.article_id " +
-					"order by A.ROWID";
-			db.execSQL(create_article_movie_view_sql);
-			
-			// アーティクルごとのタグを表すビューを作成
-			String create_categorys_on_article_view_sql = "create view categorys_on_article_view as " +
-					"select C.name name, A.ROWID article_id " +
-					"from (article_table A inner join category_article_table B " +
-					"on A.ROWID = B.article_id) " +
-					"inner join category_table C " +
-					"on B.category_id = C.ROWID " +
-					"order by A.ROWID";
-			db.execSQL(create_categorys_on_article_view_sql);
-			
-		/****  サンプルデータセット ***/
-			ContentValues cv, cv2;
-			File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-			File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-			
-			// CategoryTable
-			String[] catNames = {"くるま","その他"};
-			
-			CategoryManager cManager = new CategoryManager(context);
-			Category[] categorys = new Category[catNames.length];
-			for(int i=0; i<categorys.length; i++){
-				categorys[i] = cManager.newCategory(db, catNames[i]);
-				
-				String logStr = "|" +
-						categorys[i].getId() + "|" +
-						categorys[i].getName() + "|" +
-						categorys[i].getIconPath() + "|" +
-						categorys[i].getPosition() + "|" +
-						categorys[i].getModified() + "|";
-				Log.d("category", logStr);
-			}
-			
-			// ArticleTable
-			String[] artName = {"ふつうしゃ","けい","イギリスのバス"};
-			String[] artDesc = {"ふつうのおおきさのくるま","ちいさいくるま","にかいだてのバス"};
-			String[][] imagePathsS = {
-					{copyFromAssets(imageDir, "legacy.jpg"),copyFromAssets(imageDir, "legacy2.jpg")},
-					{copyFromAssets(imageDir, "r1.jpg")},
-					null
-				};
-			String[][] moviePathsS = {
-					null,null,{copyFromAssets(movieDir, "buss.mp4")}
-				};
-			long[] caegoryIds = {1};
-			
-			ArticleManager articleManager = new ArticleManager(context);		
-			Article[] articles = new Article[artName.length];
-			for(int i=0; i<artName.length; i++){				
-				articles[i] = articleManager.newArticle(db, artName[i], artDesc[i], imagePathsS[i], moviePathsS[i], caegoryIds);
-		
-				String logStr = "|" +
-						articles[i].getId() + "|" +
-						articles[i].getName() + "|" +
-						articles[i].getDescription() + "|" +
-						articles[i].getIconPath() + "|" +
-						articles[i].getPosition() + "|" +
-						articles[i].getModified() + "|";
-				
-				Log.d("article", logStr);
-			}
-			
-			for(Category cat: categorys){
-				cManager.setCategoryIcon(db, cat);
-				
-				String logStr = "|" +
-						cat.getId() + "|" +
-						cat.getName() + "|" +
-						cat.getIconPath() + "|" +
-						cat.getPosition() + "|" +
-						cat.getModified() + "|";
-				Log.d("category", logStr);
-			}
-		}
-	
-		public String copyFromAssets(File dir ,String filename){
-			String filePath = null;
-			byte[] buffer = new byte[1024*4];
-			File outFile = new File(dir, filename);
-			InputStream is = null;
-			FileOutputStream fos = null;
-			try{
-				is = context.getAssets().open(filename);
-				fos = new FileOutputStream(outFile);
-				int num = -1;
-				while(-1 != (num = is.read(buffer))){
-					fos.write(buffer, 0, buffer.length);
-				}
-				filePath = outFile.getPath();
-			}catch(IOException e){
-				e.printStackTrace();
-			}finally{
-				try{
-					fos.close();
-					is.close();
-				}catch(IOException e){
-					e.printStackTrace();
-				}
-			}
-			return filePath;
+            String sql;
+            db.beginTransaction();
+            try {
+                // カテゴリテーブルを新規作成
+                sql = "create table category_table " +
+                        "(name text unique not null, " +                // カテゴリ名
+                        " icon string unique," +                // アイコン画像のパス
+                        " position integer unique," +        // 表示位置
+                        " modified integer )";        // 更新日時
+                db.execSQL(sql);
+
+                // アーティクルテーブルを新規作成
+                sql = "create table article_table " +
+                        "(name text unique not null, " +    // 名前
+                        " description text not null," +        // 説明
+                        " icon string unique, " +          // アイコン
+                        " position integer unique," +         // 表示位置
+                        " modified integer )";                    // 更新日時
+                db.execSQL(sql);
+
+                sql = "create table category_article_table " +
+                        "(category_id integer not null," +        // カテゴリID
+                        " article_id integer not null," +        // アーティクルID
+                        " unique (category_id, article_id))";    // ユニーク制約条件
+                db.execSQL(sql);
+
+                // メディアテーブルの新規作成
+                sql = "create table media_table " +
+                        "(file_name text unique not null, " +
+                        "type integer not null," +
+                        "article_id integer," +
+                        "modified integer)";
+                db.execSQL(sql);
+
+                // カテゴリーとメディアの関係ビュー
+                sql = "create view category_media_view as " +
+                        "select A.category_id, A.article_id, B.ROWID media_id " +
+                        "from category_article_table A " +
+                        "inner join media_table B " +
+                        "on A.article_id=B.article_id";
+                db.execSQL(sql);
+
+                /****  サンプルデータセット ***/
+                File imageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                File movieDir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+
+                SQLiteStatement statement, statement2;
+                String sql2;
+
+                // CategoryTable作成
+                String[] catNames = {"くるま", "その他"};
+                Category[] categories = new Category[2];
+                for (int i=0; i<categories.length; i++) {
+                    Category category = new Category(db, context, catNames[i]);
+                    categories[i] = category;
+                }
+                // ArticleTable
+                String[] artName = {"ふつうしゃ", "けい", "イギリスのバス"};
+                String[] artDesc = {"ふつうのおおきさのくるま", "ちいさいくるま", "にかいだてのバス"};
+                String[][] paths = {
+                        {"legacy.jpg", "legacy2.jpg"},
+                        {"r1.jpg"},
+                        {"buss.mp4"}
+                };
+                long[][] types = {
+                        {Media.PHOTO, Media.PHOTO},
+                        {Media.PHOTO},
+                        {Media.MOVIE}
+                };
+                Category[] articleCategories = {categories[0]};
+
+                for (int i = 0; i < artName.length; i++) {
+                    Article article = new Article(db, context, artName[i], artDesc[i], articleCategories);
+                    for (int j = 0; j < paths[i].length; j++) {
+                        File file = copyFromAssets(types[i][j], paths[i][j]);
+                        Media media = new Media(db, context, paths[i][j], types[i][j], article);
+                        if(j==0){
+                            Bitmap iconSrc = IconFactory.loadBitmapFromFileAndType(file, types[i][j]);
+                            Bitmap iconBitmap = IconFactory.makeNormalIcon(iconSrc);
+                            article.updateIcon(db);
+                        }
+                    }
+                    article.updateIcon(db);
+                }
+
+                // カテゴリのアイコンを作成する
+                List<Category> cs = Category.getAllCategory(db, context);
+                for (Category category : cs) {
+                    category.updateIcon(db);
+                }
+
+                db.setTransactionSuccessful();
+            }catch (Exception e){
+                e.printStackTrace();
+            }finally {
+                db.endTransaction();
+            }
+        }
+
+        public File copyFromAssets(long type, String filename){
+            String filePath = null;
+            byte[] buffer = new byte[1024*4];
+            File dir = null;
+            if(type == Media.PHOTO){
+                dir =context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            }else if(type == Media.MOVIE){
+                dir = context.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+            }
+            File outFile = new File(dir, filename);
+            InputStream is = null;
+            FileOutputStream fos = null;
+            try{
+                is = context.getAssets().open(filename);
+                fos = new FileOutputStream(outFile);
+                int num = -1;
+                while(-1 != (num = is.read(buffer))){
+                    fos.write(buffer, 0, buffer.length);
+                }
+                filePath = outFile.getPath();
+            }catch(IOException e){
+                e.printStackTrace();
+            }finally{
+                try{
+                    fos.close();
+                    is.close();
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
+            }
+			return outFile;
 		}
 		
 		/* (非 Javadoc)
@@ -241,8 +238,7 @@ public class SawaraDBAdapter{
 	/**
 	 * データベースをダンプする
 	 */
-	public void dump(){
-		SQLiteDatabase db = helper.getReadableDatabase();
+	public void dump(SQLiteDatabase db){
 		Cursor cursor = db.rawQuery("select ROWID, * from article_table",null);
 		
 		while(cursor.moveToNext()){
@@ -261,6 +257,7 @@ public class SawaraDBAdapter{
 			}
 			Log.d("category", str);
 		}
+		
 		cursor = db.rawQuery("select ROWID, * from category_article_table", null);
 		while(cursor.moveToNext()){
 			String str = "|";
@@ -270,32 +267,22 @@ public class SawaraDBAdapter{
 			Log.d("category_article", str);
 		}
 		
-		cursor = db.rawQuery("select ROWID, * from image_table", null);
+		cursor = db.rawQuery("select ROWID, * from media_table", null);
 		while(cursor.moveToNext()){
 			String str = "|";
 			for(int i = 0; i < cursor.getColumnCount(); i++){
 				str += cursor.getString(i) + "|";
 			}
-			Log.d("image_table", str);
+			Log.d("media_table", str);
 		}
-		
-		cursor = db.rawQuery("select ROWID, * from movie_table", null);
-		while(cursor.moveToNext()){
-			String str = "|";
-			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + "|";
-			}
-			Log.d("movie_table", str);
-		}
-		
-		cursor = db.rawQuery("select * from category_image_view", null);
-		while(cursor.moveToNext()){
-			String str = "|";
-			for(int i = 0; i < cursor.getColumnCount(); i++){
-				str += cursor.getString(i) + "|";
-			}
-			Log.d("category_image_view", str);
-		}
-		db.close();
+
+        cursor = db.rawQuery("select category_id, article_id, media_id from category_media_view", null);
+        while(cursor.moveToNext()){
+            String str = "|";
+            for(int i=0; i<cursor.getColumnCount(); i++){
+                str += cursor.getString(i) + "|";
+            }
+            Log.d("category_media_view", str);
+        }
 	}
 }
