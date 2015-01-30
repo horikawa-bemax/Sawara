@@ -220,42 +220,43 @@ public class Article{
 
         db.beginTransaction();
         try {
-            // TODO アイコンファイル名を読みだす
-            String sql = "select icon from article_table where ROWID=?";
-            String[] selectionArgs = {""+rowid};
-            Cursor cursor = db.rawQuery(sql, selectionArgs);
-            int row = cursor.getCount();
-            while(cursor.moveToNext()){
-                icon = cursor.getString(0);
-            }
-            cursor.close();
+			// TODO アイコンファイル名を読みだす
+			String sql = "select icon from article_table where ROWID=?";
+			String[] selectionArgs = {"" + rowid};
+			Cursor cursor = db.rawQuery(sql, selectionArgs);
+			int row = cursor.getCount();
+			while (cursor.moveToNext()) {
+				icon = cursor.getString(0);
+			}
+			cursor.close();
 
-            // TODO 画像を保存する
-            icon =  "article_icon_"+rowid+".png";
-            FileOutputStream fos = null;
-            try{
-                Bitmap iconBitmap = makeArticleIconBitmap(db);
-                fos = new FileOutputStream(new File(dir, icon));
-                iconBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+			// TODO 画像を保存する
+			icon = "article_icon_" + rowid + ".png";
+			FileOutputStream fos = null;
+			try {
+				Bitmap iconBitmap = makeArticleIconBitmap(db);
+				fos = new FileOutputStream(new File(dir, icon));
+				if (iconBitmap == null)
+					throw new Exception("アイコンメディアがない");
+				iconBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
 
-                // TODO 新規作成の場合に実行する
-                SQLiteStatement statement = db.compileStatement("update article_table set icon=? where ROWID=?");
-                statement.bindString(1, icon);
-                statement.bindLong(2, rowid);
-                statement.executeUpdateDelete();
+				// TODO 新規作成の場合に実行する
+				SQLiteStatement statement = db.compileStatement("update article_table set icon=? where ROWID=?");
+				statement.bindString(1, icon);
+				statement.bindLong(2, rowid);
+				statement.executeUpdateDelete();
 
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }finally {
-                try{
-                    if(fos != null)
-                        fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            db.setTransactionSuccessful();
+				db.setTransactionSuccessful();
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (fos != null)
+						fos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
         }finally {
             db.endTransaction();
         }

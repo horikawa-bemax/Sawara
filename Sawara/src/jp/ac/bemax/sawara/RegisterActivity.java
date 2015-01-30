@@ -445,16 +445,21 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				// 新しいArticleを作成する
 				db.beginTransaction();
 				try {
+					if(name.length() == 0 || description.length() == 0)
+						throw new Exception("名前または説明がありません");
+
 					thisArticle = new Article(db, this, name, description);
 					//新しいMediaを登録する
 					List<ImageItem> items = imageViewerAdapter.getImageItems();
+
+					if(items.size() == 0)
+						throw new Exception("画像がありません");
+
 					Media[] medias = new Media[items.size()];
-                    Bitmap icon;
                     for(int i=0; i<medias.length; i++){
                         ImageItem item = items.get(i);
                         medias[i] = new Media(db, this, item.getFileName(), item.getType(), thisArticle);
                     }
-                    thisArticle.updateIcon(db);
 
 					//TODO カテゴリーアーティクルテーブルを更新する
                     for(Category category: thisArticleCategories){
@@ -465,6 +470,8 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 					success = true;
 				}catch(Exception e){
 					e.printStackTrace();
+					// TODO エラー画面を表示する
+
 				}finally {
 					db.endTransaction();
 				}
@@ -472,12 +479,16 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
 				// Articleを更新する
 				db.beginTransaction();
 				try {
+					if(name.length() == 0 || description.length() == 0)
+						throw new Exception("名前または説明がありません");
 
                     thisArticle.setName(db, name);
                     thisArticle.setDescription(db, description);
                     thisArticle.setModified(db, System.currentTimeMillis());
 
                     List<ImageItem> items = imageViewerAdapter.getImageItems();
+					if(items.size() == 0)
+						throw new Exception("画像がありません");
 
                     // メディアを更新する
                     Media[] medias = new Media[items.size()];

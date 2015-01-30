@@ -6,7 +6,9 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -134,86 +136,85 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 
 			@Override
 			public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                List<ListItem> listItems;
-                ViewHolder holder = (ViewHolder) homeLayout.getTag();
+				super.handleMessage(msg);
+				List<ListItem> listItems;
+				ViewHolder holder = (ViewHolder) homeLayout.getTag();
 
-                SQLiteDatabase db = dbAdapter.openDb();
-                db.beginTransaction();
-                try {
-                    switch (msg.what) {
-                        case DISPLAY_CHANGE:
+				SQLiteDatabase db = dbAdapter.openDb();
+				db.beginTransaction();
+				try {
+					switch (msg.what) {
+						case DISPLAY_CHANGE:
 
-                            // 各VIEWを初期化＆配置する
-                            switch (viewMode) {
-                                case CATEGORY_VIEW:
-                                    // カテゴリーのリストを取得
-                                    List<Category> categories = Category.getAllCategory(db, thisObj);
-                                    listItems = new ArrayList<ListItem>();
-                                    for (Category category : categories) {
-                                        File iconFile = category.getIconFile(db);
-                                        ListItem item = new ListItem(category.getId(), category.getName(db), iconFile.getPath(), Media.PHOTO);
-                                        listItems.add(item);
-                                        category.updateIcon(db);
-                                    }
-                                    gridAdapter.clear();
-                                    gridAdapter.addAll(listItems);
+							// 各VIEWを初期化＆配置する
+							switch (viewMode) {
+								case CATEGORY_VIEW:
+									// カテゴリーのリストを取得
+									List<Category> categories = Category.getAllCategory(db, thisObj);
+									listItems = new ArrayList<ListItem>();
+									for (Category category : categories) {
+										File iconFile = category.getIconFile(db);
+										ListItem item = new ListItem(category.getId(), category.getName(db), iconFile.getPath(), Media.PHOTO);
+										listItems.add(item);
+									}
+									gridAdapter.clear();
+									gridAdapter.addAll(listItems);
 
-                                    holder.makeCategoryModeDisplay(homeLayout);
-                                    break;
-                                case ARTICLE_VIEW:
-                                    List<Article> articles = thisCategory.getArticles(db);
-                                    listItems = new ArrayList<ListItem>();
-                                    try {
-                                        for (Article article : articles) {
-                                            File iconFile = article.getIconFile(db);
-                                            ListItem item = new ListItem(article.getId(), article.getName(db), iconFile.getPath(), Media.PHOTO);
+									holder.makeCategoryModeDisplay(homeLayout);
+									break;
+								case ARTICLE_VIEW:
+									List<Article> articles = thisCategory.getArticles(db);
+									listItems = new ArrayList<ListItem>();
+									try {
+										for (Article article : articles) {
+											File iconFile = article.getIconFile(db);
+											if(iconFile != null) {
+												ListItem item = new ListItem(article.getId(), article.getName(db), iconFile.getPath(), Media.PHOTO);
+												listItems.add(item);
+											}
+										}
+										gridAdapter.clear();
+										gridAdapter.addAll(listItems);
 
-                                            listItems.add(item);
-                                            article.updateIcon(db);
-                                        }
-                                        gridAdapter.clear();
-                                        gridAdapter.addAll(listItems);
+									}catch (Exception e){
+										e.printStackTrace();
+									}
+									holder.makeArticleModeDisplay(homeLayout);
+									holder.categoryTextView.setText(thisCategory.getName(db));
 
-                                    }catch (Exception e){
-                                        e.printStackTrace();
-                                    }
-                                    holder.makeArticleModeDisplay(homeLayout);
-                                    holder.categoryTextView.setText(thisCategory.getName(db));
+									break;
+							}
 
-                                    break;
-                            }
+							// ウィジェットを登録
+							holder.gridView.setAdapter(gridAdapter);
+							// 各アイテムをクリックした場合のリスナを登録
+							holder.gridView.setOnItemClickListener(thisObj);
 
-                            // ウィジェットを登録
-                            holder.gridView.setAdapter(gridAdapter);
-                            // 各アイテムをクリックした場合のリスナを登録
-                            holder.gridView.setOnItemClickListener(thisObj);
+							break;
+						case THEMA_CHANGE:
+							TypedValue outValue = new TypedValue();
+							getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
+							Bitmap backBitmap = BitmapFactory.decodeResource(getResources(), outValue.resourceId);
+							BitmapDrawable backDrawable = new BitmapDrawable(getResources(), backBitmap);
+							backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
+							homeLayout.setBackground(backDrawable);
 
-                            break;
-                        case THEMA_CHANGE:
-                            TypedValue outValue = new TypedValue();
-                            getTheme().resolveAttribute(R.attr.mainBack, outValue, true);
-                            Bitmap backBitmap = BitmapFactory.decodeResource(getResources(), outValue.resourceId);
-                            BitmapDrawable backDrawable = new BitmapDrawable(getResources(), backBitmap);
-                            backDrawable.setTileModeXY(Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
-                            homeLayout.setBackground(backDrawable);
+							holder.settingButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.setting_button_image));
+							holder.newButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.new_button_image));
+							holder.returnButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.return_button_image));
 
-                            holder.settingButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.setting_button_image));
-                            holder.newButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.new_button_image));
-                            holder.returnButton.setBackground(ButtonFactory.getButtonDrawable(thisObj, R.drawable.return_button_image));
-
-                            int count = holder.gridView.getChildCount();
-                            for (int i = 0; i < count; i++) {
-                                View targetView = holder.gridView.getChildAt(i);
-                                holder.gridView.getAdapter().getView(i, targetView, holder.gridView);
-                            }
-                            break;
-                    }
-                    db.setTransactionSuccessful();
-                }finally {
-                    db.endTransaction();
-                    db.close();
-                }
+							int count = holder.gridView.getChildCount();
+							for (int i = 0; i < count; i++) {
+								View targetView = holder.gridView.getChildAt(i);
+								holder.gridView.getAdapter().getView(i, targetView, holder.gridView);
+							}
+							break;
+					}
+					db.setTransactionSuccessful();
+				}finally {
+					db.endTransaction();
+					db.close();
+				}
             }
 		};
 
@@ -274,9 +275,36 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		SQLiteDatabase db = dbAdapter.openDb();
+		dbAdapter.dump(db);
+
 		switch(requestCode){
 		case REGISTER:
 			if(resultCode == RESULT_OK){
+				db.beginTransaction();
+
+				try {
+					// TODO 更新されたアーティクルのアイコンを更新する
+					long article_id = data.getLongExtra("article_id", -1);
+					Article article = Article.getArticle(this, article_id);
+					article.updateIcon(db);
+
+					// TODO 更新されたアーティクルのカテゴリのアイコンを更新する
+					Category[] categories = article.getCategoriesThis(db);
+					String sql = "select article_id from category_article_table where category_id=?";
+					for (Category category : categories) {
+						String[] selectionArgs = {"" + category.getId()};
+						Cursor cursor = db.rawQuery(sql, selectionArgs);
+						int i = 0;
+						for (boolean next = cursor.moveToFirst(); next && i < 6; next = cursor.moveToNext(), i++) {
+							if (cursor.getLong(0) == article_id)
+								category.updateIcon(db);
+						}
+					}
+					db.setTransactionSuccessful();
+				}finally {
+					db.endTransaction();
+				}
+				/*
 				switch(viewMode){
 				case CATEGORY_VIEW:
                     for(int i=0; i<gridAdapter.getCount(); i++){
@@ -303,12 +331,12 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
                     }
 					break;
 				}
+				*/
 
-				mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			}
+			mHandler.sendEmptyMessage(DISPLAY_CHANGE);
 			break;
 	    }
-        dbAdapter.dump(db);
         db.close();
 	}
 
@@ -363,7 +391,7 @@ public class HomeActivity extends Activity implements OnClickListener, OnMenuIte
 			intent.putExtra("article_id", article.getId());
 			intent.putExtra("mode", RegisterActivity.READ_MODE);
 
-			startActivity(intent);
+			startActivityForResult(intent, REGISTER);
 			break;
 		}
 

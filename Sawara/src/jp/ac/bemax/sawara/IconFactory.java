@@ -20,9 +20,9 @@ import java.io.IOException;
  * 2014/12/03
  */
 public class IconFactory {
-	static final int ICON_WIDTH = 320;
-	static final int ICON_HEIGHT = 240;
-	static final int IMAGE_SIZE = 480;
+	static final int ICON_WIDTH = 160;
+	static final int ICON_HEIGHT = 120;
+	static final int IMAGE_SIZE = 120;
 
     /**
      * Bitmap画像をファイルに保存する
