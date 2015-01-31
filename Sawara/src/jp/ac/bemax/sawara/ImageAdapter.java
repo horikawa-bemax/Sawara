@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,10 +24,11 @@ import android.widget.LinearLayout;
  * 2014/11/22
  */
 public class ImageAdapter extends BaseAdapter {
-	private Context mContext;
+    private Context mContext;
+	private Resources.Theme theme;
 	private List<ImageItem> mList;
 	private int backDrawable;
-	
+
 	private final int LMP = LinearLayout.LayoutParams.MATCH_PARENT;
 	private final int AMP = AbsListView.LayoutParams.MATCH_PARENT;
 	
@@ -34,10 +36,11 @@ public class ImageAdapter extends BaseAdapter {
 	 * ImageAdapter.javaコンストラクタ
 	 * @param context
 	 */
-	public ImageAdapter(SawaraDBAdapter adapter, Context context){
-		mContext = context;
-		TypedValue outValue = new TypedValue();
-		context.getTheme().resolveAttribute(R.attr.frameBack, outValue, true);
+	public ImageAdapter(Context context){
+        mContext = context;
+        this.theme = context.getTheme();
+        TypedValue outValue = new TypedValue();
+        theme.resolveAttribute(R.attr.frameBack, outValue, true);
 		backDrawable = outValue.resourceId;
 		mList = new ArrayList<ImageItem>();
 	}
@@ -54,6 +57,13 @@ public class ImageAdapter extends BaseAdapter {
         for(ImageItem item: items){
             add(item);
         }
+    }
+
+    public void setTheme(Resources.Theme theme){
+        this.theme = theme;
+        TypedValue outValue = new TypedValue();
+        theme.resolveAttribute(R.attr.frameBack, outValue, true);
+        backDrawable = outValue.resourceId;
     }
 
 	/**
@@ -108,7 +118,8 @@ public class ImageAdapter extends BaseAdapter {
 			holder = (ViewHolder)convertView.getTag();
 		}
 
-		holder.imageView.setImageBitmap(mList.get(position).getIcon());
+        Bitmap image = BitmapFactory.decodeFile(mList.get(position).getFile().getPath());
+		holder.imageView.setImageBitmap(image);
 
 		return convertView;
 	}

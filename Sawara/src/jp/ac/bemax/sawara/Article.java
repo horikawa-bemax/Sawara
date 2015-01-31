@@ -419,18 +419,15 @@ public class Article{
 
         db.beginTransaction();
         try {
-            String sql = "select ROWID from media_table where article_id=?";
+            String sql = "select ROWID, icon from media_table where article_id=?";
             String[] selectionArgs = {"" + rowid};
             Cursor cursor = db.rawQuery(sql, selectionArgs);
             if (cursor.getCount() > 0) {
                 while (cursor.moveToNext()) {
                     long mediaId = cursor.getLong(0);
-                    Media media = Media.getMedia(null, context, mediaId);
-                    Bitmap iconBitmap = IconFactory.loadBitmapFromFileAndType(media.getMediaFile(db), media.getType(db));
-                    Bitmap icon = IconFactory.makeNormalIcon(iconBitmap);
-                    String ppp = "/storage/emulated/0/Android/data/jp.ac.bemax.sawara/files/Movies/buss.mp4";
-                    Bitmap bitppp = ThumbnailUtils.createVideoThumbnail(ppp, MediaStore.Video.Thumbnails.MINI_KIND);
-                    ImageItem item = new ImageItem(context, mediaId, media.getMediaFilePath(db), media.getType(db), icon);
+                    String icon = cursor.getString(1);
+                    File iconFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), icon);
+                    ImageItem item = new ImageItem(mediaId, iconFile);
                     iconList.add(item);
                 }
             }

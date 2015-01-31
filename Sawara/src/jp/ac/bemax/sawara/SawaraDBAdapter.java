@@ -122,8 +122,9 @@ public class SawaraDBAdapter{
                 // メディアテーブルの新規作成
                 sql = "create table media_table " +
                         "(file_name text unique not null, " +
-                        "type integer not null," +
-                        "article_id integer," +
+                        "type integer not null, " +
+                        "article_id integer, " +
+                        "icon string unique, " +
                         "modified integer)";
                 db.execSQL(sql);
 

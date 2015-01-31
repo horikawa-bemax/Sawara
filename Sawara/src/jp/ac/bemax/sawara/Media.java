@@ -88,6 +88,18 @@ public class Media {
             long id = statement.executeInsert();
             rowid = id;
 
+            // アイコン画像を作成する
+            File iconFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "media_icon_"+rowid+".png");
+            File mediaFile = new File(getDir(mediaType), fileName);
+            Bitmap icon = IconFactory.makeNormalIcon(IconFactory.loadBitmapFromFileAndType(mediaFile, mediaType));
+            IconFactory.storeBitmapToFile(iconFile, icon);
+
+            sql = "update media_table set icon=? where ROWID=?";
+            statement = db.compileStatement(sql);
+            statement.bindString(1, iconFile.getName());
+            statement.bindLong(2, rowid);
+            statement.executeUpdateDelete();
+
             db.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
@@ -177,6 +189,19 @@ public class Media {
         statement.bindLong(2, rowid);
         statement.executeUpdateDelete();
 	}
+
+    public File getIconFile(SQLiteDatabase db){
+        File iconFile = null;
+        String sql = "select icon form media_table where ROWID=?";
+        String[] selectionArgs ={""+rowid};
+        Cursor cursor = db.rawQuery(sql, selectionArgs);
+        while(cursor.moveToNext()){
+            iconFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), cursor.getString(0));
+        }
+        cursor.close();
+
+        return iconFile;
+    }
 
 	/**
 	 * @return type
