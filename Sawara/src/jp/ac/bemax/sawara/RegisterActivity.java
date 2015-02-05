@@ -494,7 +494,7 @@ public class RegisterActivity extends Activity implements OnClickListener, OnIte
                     Media[] medias = new Media[items.size()];
                     for (int i = 0; i < medias.length; i++) {
                         medias[i] = Media.getMedia(db, this, items.get(i).getId());
-                        if (medias[i].getArticleId(db) == -1) {
+                        if (medias[i].getArticleId(db) <= 0) {
                             medias[i].setArticleId(db, thisArticle.getId());
                         }
                     }

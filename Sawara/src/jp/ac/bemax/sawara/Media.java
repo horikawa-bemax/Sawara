@@ -192,7 +192,7 @@ public class Media {
 
     public File getIconFile(SQLiteDatabase db){
         File iconFile = null;
-        String sql = "select icon form media_table where ROWID=?";
+        String sql = "select icon from media_table where ROWID=?";
         String[] selectionArgs ={""+rowid};
         Cursor cursor = db.rawQuery(sql, selectionArgs);
         while(cursor.moveToNext()){
