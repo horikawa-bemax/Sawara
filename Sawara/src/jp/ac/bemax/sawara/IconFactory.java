@@ -20,8 +20,8 @@ import java.io.IOException;
  * 2014/12/03
  */
 public class IconFactory {
-	static final int ICON_WIDTH = 160;
-	static final int ICON_HEIGHT = 120;
+	static final int ICON_WIDTH = 120;
+	static final int ICON_HEIGHT = 90;
 	static final int IMAGE_SIZE = 120;
 
     /**

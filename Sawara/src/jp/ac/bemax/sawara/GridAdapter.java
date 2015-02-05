@@ -121,6 +121,7 @@ public class GridAdapter extends ArrayAdapter<ListItem> implements OnItemClickLi
 
     }
 
+
     class ViewHolder{
 		ImageView imageView;
 		VTextView vTextView;
